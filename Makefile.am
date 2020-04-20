@@ -1,0 +1,2 @@
+bindir = ./bin
+SUBDIRS = src

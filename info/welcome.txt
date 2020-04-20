@@ -1,0 +1,5 @@
+Welcome to AIME3!
+
+This is a welcome file that can be modified to welcome users to your MUD.
+
+
