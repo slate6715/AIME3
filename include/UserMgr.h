@@ -6,6 +6,7 @@
 #include <thread>
 #include "TCPServer.h"
 #include "Player.h"
+#include "../external/pugixml.hpp"
 
 /****************************************************************************************
  * UserMgr - class that stores and manages the connected players and provides methods for
@@ -36,6 +37,9 @@ public:
 	// Loop through all users, performing maintenance and executing their next
 	// command via their handler
 	void handleUsers();
+
+	// 
+	int loadUser(const char *username);
 
 private:
 
