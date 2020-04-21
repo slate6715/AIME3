@@ -1,6 +1,7 @@
 #ifndef HANDLER_H
 #define HANDLER_H
 
+#include <string>
 
 /***************************************************************************************
  * Handler - Parses the user input and executes commands differently depending on the
@@ -17,7 +18,7 @@ public:
    virtual ~Handler();
 
 	virtual int handleCommand(const char *cmd) = 0;
-	virtual int sendPrompt() = 0;
+	virtual void sendPrompt() = 0;
 
 protected:
 

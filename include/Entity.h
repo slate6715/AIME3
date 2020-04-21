@@ -14,6 +14,8 @@ class Entity
 public:
    virtual ~Entity();
 
+	const char *getID() { return _id.c_str(); };
+
 protected:
 	Entity(const char *id);	// Must be called from the child constructor
 	Entity(const Entity &copy_from);

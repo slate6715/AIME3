@@ -1,3 +1,4 @@
+#include <exceptions.h>
 #include "Handler.h"
 
 
@@ -23,6 +24,7 @@ Handler::~Handler() {
 
 
 LoginHandler::LoginHandler():
+								Handler(),
 								_username(""),
 								_new_passwd(""),
 								_cur_state(AskUser)
@@ -30,6 +32,7 @@ LoginHandler::LoginHandler():
 }
 
 LoginHandler::LoginHandler(const LoginHandler &copy_from):
+								Handler(copy_from),
 								_username(copy_from._username),
 								_new_passwd(copy_from._new_passwd),
 								_cur_state(copy_from._cur_state)
@@ -69,9 +72,11 @@ int LoginHandler::handleCommand(const char *cmd) {
 	
 			break;
 		default:
+			throw std::runtime_error("Unknown state in LoginHandler::handleCommand. Could not handle.");
 
 			break;
 	}
+	return 0;
 }
 
 
@@ -82,6 +87,21 @@ int LoginHandler::handleCommand(const char *cmd) {
  *********************************************************************************************/
 
 void LoginHandler::sendPrompt() {
+
+}
+
+GameHandler::GameHandler():
+                        Handler()
+{
+}
+
+GameHandler::GameHandler(const GameHandler &copy_from):
+                        Handler(copy_from)
+{
+
+}
+
+GameHandler::~GameHandler() {
 
 }
 

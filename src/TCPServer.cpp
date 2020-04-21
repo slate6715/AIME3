@@ -14,8 +14,11 @@
 #include "ALMgr.h"
 
 TCPServer::TCPServer(LogMgr &log):
+								_sockfd(),
 								_log(log),
-								_sockfd()
+								_use_accesslist(false),
+								_whitelist(false),
+								_whitelist_file("")
 {
 }
 
@@ -57,7 +60,7 @@ void TCPServer::listenSvr() {
    std::stringstream msg;
    _sockfd.getIPAddrStr(ipaddr_str);
    msg << "Server listening on IP " << ipaddr_str << "' port '" << _sockfd.getPort() << "'";
-   _server_log.writeLog(msg.str().c_str());
+   _log.writeLog(msg.str().c_str());
 }
 
 
@@ -76,7 +79,7 @@ TCPConn *TCPServer::handleSocket() {
    if (_sockfd.hasData()) {
 
       // Try to accept the connection
-      TCPConn *new_conn = new TCPConn(_log, _verbosity);
+      TCPConn *new_conn = new TCPConn();
       if (!new_conn->accept(_sockfd)) {
          _log.strerrLog("Data received on listening socket but accept failed.");
          return NULL;
@@ -104,7 +107,7 @@ TCPConn *TCPServer::handleSocket() {
 				std::string msg = "Connection by IP address '";
 				msg += ipaddr_str;
 				msg += "' not allowed based on access list config.";
-				_server_log.writeLog(msg);
+				_log.writeLog(msg);
 
 				return NULL;
 			}
@@ -113,7 +116,7 @@ TCPConn *TCPServer::handleSocket() {
       std::string msg = "Connection from IP address '";
       msg += ipaddr_str;
       msg += "'.";
-      _server_log.writeLog(msg);
+      _log.writeLog(msg);
 
       // Send an authentication string in cleartext
 
@@ -161,7 +164,7 @@ void TCPServer::handleConnections() {
                         " failed when trying to send data. Msg: " << e.what();
                if (_verbosity >= 2)
                   std::cout << msg.str() << "\n";
-               _server_log.writeLog(msg.str().c_str());
+               _log.writeLog(msg.str().c_str());
                (*tptr)->disconnect();
                (*tptr)->reconnect = time(NULL) + reconnect_delay;
                tptr++;
@@ -173,7 +176,7 @@ void TCPServer::handleConnections() {
             std::string msg = "Node ID '";
             msg += (*tptr)->getNodeID();
             msg += "' lost connection.";
-            _server_log.writeLog(msg);
+            _log.writeLog(msg);
 
             // Remove them from the connect list
             tptr = _connlist.erase(tptr);
@@ -192,7 +195,7 @@ void TCPServer::handleConnections() {
    }
 
 }
-
+*/
 
 /**********************************************************************************************
  * shutdown - Cleanly closes the socket FD.
@@ -201,7 +204,7 @@ void TCPServer::handleConnections() {
  **********************************************************************************************/
 
 void TCPServer::shutdown() {
-   _server_log.writeLog("Server shutting down.");
+   _log.writeLog("Server shutting down.");
 
    _sockfd.closeFD();
 }

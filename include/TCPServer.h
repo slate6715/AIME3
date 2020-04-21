@@ -17,7 +17,7 @@
 class TCPServer 
 {
 public:
-   TCPServer(LogMgr &log, unsigned int _verbosity = 1);
+   TCPServer(LogMgr &log);
    virtual ~TCPServer();
 
    virtual void bindSvr(const char *ip_addr, unsigned short port);

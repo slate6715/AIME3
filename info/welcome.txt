@@ -2,4 +2,11 @@ Welcome to AIME3!
 
 This is a welcome file that can be modified to welcome users to your MUD.
 
+Supports &+RC&+YO&+BL&+CO&+MR&* &-RBackground!&* &=RBBoth!&*
+Supports &@Blinking!&*
+Supports &_Underline!&*
+Supports &^Bold!&*
+Supports &~Italics!&*
+
+Your terminal may not support all of these.
 

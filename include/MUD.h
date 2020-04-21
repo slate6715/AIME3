@@ -3,7 +3,7 @@
 
 #include <libconfig.h++>
 #include "EntityDB.h"
-#include "UserDB.h"
+#include "UserMgr.h"
 #include "LogMgr.h"
 
 /***************************************************************************************
@@ -23,18 +23,25 @@ public:
 
 	void initialize();
 
+	void bootServer();
+	void startListeningThread();
+	
+	void runMUD();
+	void cleanup();
 
 private:
    // Publicly-accessible attributes
 	libconfig::Config _mud_config;
 
+	LogMgr _mudlog;
+
 	// Stores all the non-player entities in the game
 	EntityDB _entity_db;
 
 	// Stores and manages the players connected to the game
-	UserDB _user_db;
+	UserMgr _users;
 
-	LogMgr _mudlog;
+	bool _shutdown_mud = false;
 };
 
 

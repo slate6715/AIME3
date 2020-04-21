@@ -100,50 +100,25 @@ int main(int argc, char *argv[]) {
 		return(EXIT_FAILURE);
 	}	
 
+	engine.initialize();
 
+	try {
+		engine.bootServer();
 
-/*
-   if (simdata_file.size() == 0) {
-      std::cerr << "You must specify the sim_data inject database file.\n";
-      displayHelp(argv[0]);
-      exit(0);
-   }
+	}
+	catch (const socket_error &e) {
+		std::cerr << "Error bringing listening socket online: " << e.what() << std::endl;
+		return(EXIT_FAILURE);
+	}
 
-   DronePlotDB db;
+	// Primary MUD loop
+	engine.startListeningThread();
 
-   // Kick off the simulation thread by creating the sim management object
-   // This will raise a runtime_exception if the simdata database load fails
-   AntennaSim sim(db, simdata_file.c_str(), time_mult, verbosity);
+	// Primary MUD loop
+	engine.runMUD();
 
-   // Launch the thread
-   pthread_t simthread;
-   if (pthread_create(&simthread, NULL, t_simulator, (void *) &sim) != 0)
-      throw std::runtime_error("Unable to create simulator thread");
+	// If we have gotten to this point, then the MUD is shutting down. Clean up
+	engine.cleanup();
 
-   // Start the replication server
-   ReplServer repl_server(db, ip_addr.c_str(), port, time_mult, verbosity); 
-
-   pthread_t replthread;
-   if (pthread_create(&replthread, NULL, t_replserver, (void *) &repl_server) != 0)
-      throw std::runtime_error("Unable to create replication server thread");
-
-   // Sleep the duration of the simulation
-   sleep(sim_time / time_mult);
-
-   // Stop the replication server
-   repl_server.shutdown();
-
-   // Stop the thread
-   sim.terminate();
-
-   // Wait until the thread has exited
-   pthread_join(simthread, NULL);
-   pthread_join(replthread, NULL);
-
-   // Write the replication database to a CSV file
-   std::cout << "Writing results to: " << outfile << "\n";
-   db.sortByTime();
-   db.writeCSVFile(outfile.c_str());
-   */
    return 0;
 }

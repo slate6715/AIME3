@@ -12,7 +12,9 @@
 
 const unsigned int bufsize = 500;
 
-FileDesc::FileDesc() {
+FileDesc::FileDesc():
+					_fd(0) 
+{
 
 }
 
@@ -156,7 +158,10 @@ void FileDesc::closeFD() {
    
  ****************************************************************************************/
 
-SocketFD::SocketFD():FileDesc() {
+SocketFD::SocketFD():
+					FileDesc(),
+					_fd_addr({0,0,0,0})
+{
 
    // Create the socket
    _fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -322,7 +327,10 @@ void TermFD::setEchoFD(bool echo) {
 }
 
 
-FileFD::FileFD(const char *filename):FileDesc(), _filename(filename) {
+FileFD::FileFD(const char *filename):
+								FileDesc(), 
+								_filename(filename) 
+{
 
 }
 
@@ -392,6 +400,6 @@ ssize_t FileDesc::readStr(std::string &buf) {
 
    strbuf[i] = '\0';
    buf += strbuf;
-   return buf.size();
+   return (ssize_t) buf.size();
 }
 

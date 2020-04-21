@@ -3,6 +3,7 @@
 
 #include <map>
 #include <memory>
+#include <thread>
 #include "TCPServer.h"
 #include "Player.h"
 
@@ -22,10 +23,20 @@ public:
 	// Starts the incoming connection socket
 	void startSocket(libconfig::Config &cfg_info);
 
+	// Launches a thread that listens for new connections and user data 
+	void startListeningThread(libconfig::Config &cfg_info);
+
+	// Sends a signal to the listening thread to stop, then waits for the thread to
+   // exit safely
+	void stopListeningThread();
+
 	// Checks for new users and, if authorized, adds them to the player list
-	void checkNewUsers();
-		
- 
+	void checkNewUsers(const char *welcome_file);
+	
+	// Loop through all users, performing maintenance and executing their next
+	// command via their handler
+	void handleUsers();
+
 private:
 
 	// The log manager passed in by reference on object creation
@@ -38,7 +49,10 @@ private:
 	TCPServer _listen_sock;
 
 	// A rolling index to assign to new user IDs until they fully login
-	unsigned int newuser_idx = 0;
+	unsigned int _newuser_idx = 0;
+
+	std::unique_ptr<std::thread> _listening_thread;
+	bool _exit_listening_thread = false;
 };
 
 

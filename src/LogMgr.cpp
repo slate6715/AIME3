@@ -14,10 +14,16 @@ LogMgr::LogMgr():
 				_log_file(""),
 				_log_lvl(1),
 				_lfptr(NULL)
+{
+}
 				
 
 // Log manager, supports log_lvl for verbosity control
-LogMgr::LogMgr(const char *log_file, unsigned int log_lvl):_log_file(log_file),_log_lvl(log_lvl) {
+LogMgr::LogMgr(const char *log_file, unsigned int log_lvl):
+											_log_file(log_file),
+											_log_lvl(log_lvl),
+											_lfptr(NULL)
+{
 
 }
 
@@ -26,12 +32,19 @@ LogMgr::~LogMgr() {
    closeLog();
 }
 
-LogMgr::LogMgr(const LogMgr &copy_from) {
-	_lfptr = NULL;
+LogMgr::LogMgr(const LogMgr &copy_from):
+										_log_file(copy_from._log_file),
+										_log_lvl(copy_from._log_lvl),
+										_lfptr(NULL)
+{
 }
 
+
 LogMgr &LogMgr::operator = (const LogMgr &copy_from) {
+	_log_file = copy_from._log_file;
+	_log_lvl = copy_from._log_lvl;
 	_lfptr = NULL;
+	return *this;
 }
 
 /***************************************************************************************************
@@ -66,7 +79,7 @@ void LogMgr::writeLog(const char *str, unsigned int lvl) {
    // If the file is not open yet, open it
    if (_lfptr == NULL) {
       if ((_lfptr = fopen(_log_file.c_str(), "a+")) == NULL) {
-         throw logfile_error("Unable to open log file to append.");
+			throw logfile_error("Unable to open log file to append.");
       }
    }
 
