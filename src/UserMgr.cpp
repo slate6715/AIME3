@@ -1,6 +1,8 @@
 #include <libconfig.h++>
 #include <iostream>
 #include "UserMgr.h"
+#include "../external/pugixml.hpp"
+#include "strfuncts.h"
 
 namespace lc = libconfig;
 
@@ -203,6 +205,14 @@ void UserMgr::handleUsers(){
  *********************************************************************************************/
 
 int UserMgr::loadUser(const char *username) {
+	pugi::xml_document userfile;
+
+	std::string filename = username;
+	lower(filename);
+	filename.append(".zone");
+
+	// pugi::xml_parse_result result = 
+
 	return 1;	
 }
 

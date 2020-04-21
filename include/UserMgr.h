@@ -6,7 +6,6 @@
 #include <thread>
 #include "TCPServer.h"
 #include "Player.h"
-#include "../external/pugixml.hpp"
 
 /****************************************************************************************
  * UserMgr - class that stores and manages the connected players and provides methods for

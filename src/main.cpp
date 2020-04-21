@@ -25,7 +25,7 @@ void displayHelp(const char *execname) {
 int main(int argc, char *argv[]) {
 
    // ****** Set up command line parameter defaults ******
-	std::string configfile = "mud.conf";	
+	std::string configfile = "data/mud.conf";	
 	unsigned short cl_port = 0;
 	long portval = 0;
 	std::string cl_ip_addr;
