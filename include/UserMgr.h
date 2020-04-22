@@ -66,6 +66,7 @@ private:
 	std::string _infodir;
 	std::string _userdir;
 	std::string _welcomefile;
+	std::string _motdfile;
 };
 
 

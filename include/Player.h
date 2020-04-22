@@ -40,23 +40,32 @@ public:
 	bool popCommand(std::string &cmd);
 
 	// Sends the command through the current message handler on top of the stack
-	void handleCommand(std::string &cmd);
+	int handleCommand(std::string &cmd);
+
+	// Removes the top handler, calling a postPop function beforehand and returning
+   // data from the handler as appropriate
+	void popHandler(std::vector<std::string> &results);
 
    // Functions for loading and saving user info to disk
    int loadUser(const char *userdir, const char *username);
+   bool saveUser(const char *userdir) const;
+   virtual void saveData(pugi::xml_node &entnode) const;
+   virtual int loadData(LogMgr &log, pugi::xml_node &entnode);
 
-   bool saveUser() const;
 
 	// Create a password for a new user or to change an existing user's password
 	void createPassword(const char *cleartext);
 
-	void generatePasswdHash(const char *cleartext, std::vector<unsigned char> &buf, std::vector<unsigned char> &salt);
+	bool checkPassword(const char *cleartext);
+	
 
 protected:
 
 private:
 
 	void formatForTelnet(const std::string &unformatted, std::string &formatted);
+	void generatePasswdHash(const char *cleartext, std::vector<unsigned char> &buf,
+                                                                           std::vector<unsigned char> &salt);
 
 	std::unique_ptr<TCPConn> _conn;
 

@@ -1,5 +1,6 @@
 #include <libconfig.h++>
 #include <iostream>
+#include <boost/lexical_cast.hpp>
 #include "UserMgr.h"
 #include "strfuncts.h"
 
@@ -54,12 +55,16 @@ void UserMgr::initialize(lc::Config &cfg_info) {
 	cfg_info.lookupValue("datadir.infodir", _infodir);
 	cfg_info.lookupValue("datadir.userdir", _userdir);
 	
-	std::string wc_file;
-	cfg_info.lookupValue("infofiles.welcome", wc_file);
+	std::string buf;
+	cfg_info.lookupValue("infofiles.welcome", buf);
 	_welcomefile = _infodir;
 	_welcomefile += "/";
-	_welcomefile += wc_file;
+	_welcomefile += buf;
 
+	cfg_info.lookupValue("infofiles.motd", buf);
+	_motdfile = _infodir;
+	_motdfile += "/";
+	_motdfile += buf;
 
 }
 
@@ -128,9 +133,11 @@ void UserMgr::startListeningThread(lc::Config &cfg_info) {
 	}
 
 	// Grab the welcome file location
-	std::string welcome_file;
-	cfg_info.lookupValue("infofiles.welcome", welcome_file);
-	
+	std::string welcome_file(_infodir), buf;
+	welcome_file += "/";
+	cfg_info.lookupValue("infofiles.welcome", buf);
+	welcome_file += buf;	
+
 	_exit_listening_thread = false;
 
 	// ******* Lambda function for launching the thread ********
@@ -190,8 +197,7 @@ void UserMgr::checkNewUsers(const char *welcome_file){
 	// While there's a new connection on the socket
 	while ((new_conn = _listen_sock.handleSocket()) != NULL) {
 		// Assign a rolling number for new users as userID
-		std::string userid("newuser");
-		userid += _newuser_idx++;
+		std::string userid("player@newuser" + boost::lexical_cast<std::string>(_newuser_idx++));
 	
 		// Create a new Player object with this connection and a temp userid
 		std::shared_ptr<Player> new_plr(new Player(userid.c_str(), std::unique_ptr<TCPConn>{new_conn}, _mud_log));
@@ -214,14 +220,55 @@ void UserMgr::handleUsers(){
 
 	// Loop through the players
 	auto plr_it = _db.begin();
-	for (; plr_it != _db.end(); plr_it++) {
+	while (plr_it != _db.end()) {
 		Player &plr = (*plr_it->second);
 
 		std::string cmd;
 		if (plr.popCommand(cmd)) {
-			plr.handleCommand(cmd);
+			int results;
 
+			// If the handler returns other than 0, then we need to do something
+			if ((results = plr.handleCommand(cmd)) > 0) {
+
+				// The handler is ready to be popped
+				if (results == 1) {
+					std::string haction;
+					std::vector<std::string> hresults;
+					plr.popHandler(hresults);
+
+					// This was a LoginHandler and the user just successfully logged in
+					if (hresults[0] == "loggedin") {
+						// We need to remove the player from the user list, change their name, and re-add
+						std::string userkey("player@");
+						userkey += hresults[1];
+
+						// Make sure this doesn't get destroyed
+						std::shared_ptr<Player> pptr = plr_it->second;
+
+						// Erase this player from the user list
+						plr_it = _db.erase(plr_it);
+		
+						// Now re-add the player with their actual name
+						plr.setID(userkey.c_str());
+						_db.insert(std::pair<std::string, std::shared_ptr<Player>>(userkey, pptr));
+
+						// Send the MOTD to the user
+						plr.sendFile(_motdfile.c_str());
+						plr.sendPrompt();
+						continue;	
+					}
+				}
+				else {
+					std::string msg("Message hander returned unexpected results for player: ");
+					msg += plr.getID();
+					_mud_log.writeLog(msg.c_str());
+				}
+
+			}
+
+			
 		}
+		plr_it++;
 	}
 }
 
@@ -252,12 +299,15 @@ int UserMgr::loadUser(const char *username, Player &plr) {
 
 bool UserMgr::saveUser(const char *username) {
 	// Find the user
+	auto plrit = _db.find(username);
+	if (plrit == _db.end())
+		return false;
 
-
-	return true;
+	Player &plr = *(plrit->second);
+	return saveUser(plr);
 }
 
 bool UserMgr::saveUser(const Player &plr) {
-	return plr.saveUser();
+	return plr.saveUser(_userdir.c_str());
 }
 

@@ -94,4 +94,3 @@ void genRandString(std::string &buf, size_t n) {
       buf += char_gen();
 }
 
-

@@ -3,8 +3,10 @@
 #include <bitset>
 #include <argon2.h>
 #include <string.h>
+#include <boost/algorithm/hex.hpp>
 #include "Player.h"
-#include "Handler.h"
+#include "LoginHandler.h"
+#include "GameHandler.h"
 #include "strfuncts.h"
 #include "../external/pugixml.hpp"
 
@@ -123,7 +125,7 @@ void Player::welcomeUser(const char *welcome_file, const char *userdir) {
 	_handler_stack.push(std::unique_ptr<Handler>(new GameHandler(*this)));
 
 	// Now place a login handler on the stack
-	_handler_stack.push(std::unique_ptr<Handler>(new LoginHandler(*this, userdir)));
+	_handler_stack.push(std::unique_ptr<Handler>(new LoginHandler(*this, userdir, _log)));
 
 	// Send him the welcome message in the welcome file (location per the config file)
 	sendFile(welcome_file);	
@@ -367,14 +369,34 @@ void Player::sendPrompt() {
  *
  *********************************************************************************************/
 
-void Player::handleCommand(std::string &cmd) {
+int Player::handleCommand(std::string &cmd) {
 
 	// Execute the command
 	_handler_stack.top()->handleCommand(cmd);
 
+	if (_handler_stack.top()->handler_state != Handler::Active)
+		return 1;
 
-	// Based on the result of the handler, we may need to do a few things here	
+	return 0;
 }
+
+/*********************************************************************************************
+ * popHandler - Calls the prePop function to clean up and get results from the handler, then
+ *					 removes it from the stack
+ *
+ *********************************************************************************************/
+
+void Player::popHandler(std::vector<std::string> &results) {
+	if (_handler_stack.size() <= 1) {
+		throw std::runtime_error("Attempted to pop last handler or no handlers in the stack, "
+										 "which should not have happened");
+	}
+
+	_handler_stack.top()->prePop(results);
+
+	_handler_stack.pop();
+}
+
 
 /*********************************************************************************************
  * loadUser - attempts to load the user into the given Player object
@@ -393,6 +415,7 @@ int Player::loadUser(const char *userdir, const char *username) {
    std::string filename = userdir;
    std::string user = username;
    lower(user);
+	filename += "/";
    filename += user;
    filename += ".xml";
 
@@ -402,6 +425,15 @@ int Player::loadUser(const char *userdir, const char *username) {
       return 0;
    }
 
+	pugi::xml_node pnode = userfile.child("Player");
+	if (pnode == nullptr) {
+		std::string msg("Corrupted player file for player ");
+		msg += user;
+		_log.writeLog(msg);
+		return 0;
+	}
+	loadData(_log, pnode);
+	
    return 1;
 }
 
@@ -414,8 +446,27 @@ int Player::loadUser(const char *userdir, const char *username) {
  *
  *********************************************************************************************/
 
-bool Player::saveUser() const {
+bool Player::saveUser(const char *userdir) const {
 
+	// Populate an XML document with player data, then save it to the file
+
+   pugi::xml_document userfile;
+	std::string buf;
+	
+	// Username needs to be accurately stored in the id field
+   std::string filename;
+	filename += userdir;
+	filename += "/";
+	filename += getNameID(buf);
+	filename += ".xml";
+
+	pugi::xml_node node = userfile.append_child("Player");
+
+	saveData(node);	
+
+	if (!userfile.save_file(filename.c_str())) {
+		return false;
+	}
    return true;
 }
 
@@ -486,3 +537,79 @@ void Player::createPassword(const char *cleartext)
 	_passwd_hash.assign(salt.begin(), salt.end());
 	_passwd_hash.insert(std::end(_passwd_hash), std::begin(hash), std::end(hash));	
 }
+
+/*********************************************************************************************
+ * checkPassword - Hashes a plaintext password and compares against the stored password hash
+ *
+ *    Params:  cleartext - the cleartext password to compare 
+ *
+ *		Returns: true for passwords match, false otherwise
+ *
+ *********************************************************************************************/
+
+bool Player::checkPassword(const char *cleartext)
+{
+   std::vector<unsigned char> salt, hash, comparehash;
+
+   salt.assign(_passwd_hash.begin(), _passwd_hash.begin() + saltlen);
+
+	generatePasswdHash(cleartext, hash, salt);
+	comparehash.assign(_passwd_hash.begin() + saltlen, _passwd_hash.end());
+
+	return (hash == comparehash);
+}
+
+/*********************************************************************************************
+ * saveData - Called by a child class to save Player-specific data into the XML tree
+ *
+ *    Params:  entnode - This entity's node within the XML tree so attributes can be added to
+ *                       it. This should be set up by a child class
+ *             log - to log any errors
+ *
+ *********************************************************************************************/
+
+void Player::saveData(pugi::xml_node &entnode) const {
+   // First, call the parent version
+   Organism::saveData(entnode);
+
+   // Saving the password, we need to convert it to hex
+	std::string hexstr;
+	hexstr.assign(_passwd_hash.size()*2, '0');
+	boost::algorithm::hex(_passwd_hash.begin(), _passwd_hash.end(), hexstr.begin());
+
+   pugi::xml_attribute idnode = entnode.append_attribute("passwd");
+   idnode.set_value(hexstr.c_str());
+
+}
+
+/*********************************************************************************************
+ * loadData - Called by a child class to populate Player-specific data from an XML document
+ *
+ *    Params:  entnode - This entity's node within the XML tree so attributes can be drawn from
+ *                       it
+ *             log - to log any errors
+ *
+ *    Returns: 1 for success, 0 for failure
+ *
+ *********************************************************************************************/
+
+int Player::loadData(LogMgr &log, pugi::xml_node &entnode) {
+
+   // First, call the parent function
+   int results = 0;
+   if ((results = Organism::loadData(log, entnode)) != 1)
+      return results;
+	
+		
+   pugi::xml_attribute attr = entnode.attribute("passwd");
+   if (attr == nullptr) {
+      log.writeLog("Player save file missing mandatory 'passwd' field.", 2);
+      return 0;
+   }
+	std::string pwdhash = attr.value();
+	_passwd_hash.assign(hashlen+saltlen, 0);
+	boost::algorithm::unhex(pwdhash.begin(), pwdhash.end(), _passwd_hash.begin());
+
+	return 1;
+}
+
