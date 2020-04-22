@@ -28,6 +28,11 @@ PKG_CHECK_MODULES([LIBCONFIGXX], [libconfig++ >= 1.5],,
    AC_MSG_ERROR([libconfig++ 1.7 or newer not found. It is required for managing config files.])
    )
 
+AC_CHECK_LIB([argon2], [argon2i_hash_raw], [], [
+   echo "You are missing libargon2. It is required for password authentication."
+   exit -1;
+   ])
+
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_FILES([Makefile
 		 src/Makefile])

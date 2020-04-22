@@ -1,7 +1,6 @@
 #include <libconfig.h++>
 #include <iostream>
 #include "UserMgr.h"
-#include "../external/pugixml.hpp"
 #include "strfuncts.h"
 
 namespace lc = libconfig;
@@ -15,7 +14,10 @@ UserMgr::UserMgr(LogMgr &mud_log):
 					_db(),
 					_listen_sock(_mud_log),
 					_newuser_idx(0),
-					_listening_thread(nullptr)
+					_listening_thread(nullptr),
+					_infodir("data/info"),
+					_userdir("data/users"),
+					_welcomefile("welcome.info")
 {
 
 
@@ -27,13 +29,37 @@ UserMgr::UserMgr(const UserMgr &copy_from):
 					_db(copy_from._db),
 					_listen_sock(copy_from._listen_sock),
 					_newuser_idx(copy_from._newuser_idx),
-					_listening_thread(nullptr)
+					_listening_thread(nullptr),
+					_infodir(copy_from._infodir),
+					_userdir(copy_from._userdir),
+					_welcomefile(copy_from._welcomefile)
 {
 
 }
 
 
 UserMgr::~UserMgr() {
+
+}
+
+/*********************************************************************************************
+ * initialize - pulls config settings required for this class from the config file into the object
+ *
+ *    Params:  cfg_info - The libconfig::Config object that stores all the necessary config info
+ *                        to set up the user manager 
+ *
+ *********************************************************************************************/
+
+void UserMgr::initialize(lc::Config &cfg_info) {
+	cfg_info.lookupValue("datadir.infodir", _infodir);
+	cfg_info.lookupValue("datadir.userdir", _userdir);
+	
+	std::string wc_file;
+	cfg_info.lookupValue("infofiles.welcome", wc_file);
+	_welcomefile = _infodir;
+	_welcomefile += "/";
+	_welcomefile += wc_file;
+
 
 }
 
@@ -172,7 +198,7 @@ void UserMgr::checkNewUsers(const char *welcome_file){
 
 		_db.insert(std::pair<std::string, std::shared_ptr<Player>>(userid, new_plr));
 
-		new_plr->welcomeUser(welcome_file);
+		new_plr->welcomeUser(welcome_file, _userdir.c_str());
 
 	}
 }
@@ -193,26 +219,45 @@ void UserMgr::handleUsers(){
 
 		std::string cmd;
 		if (plr.popCommand(cmd)) {
-			std::cout << "Command: " << cmd << std::endl;
+			plr.handleCommand(cmd);
+
 		}
 	}
 }
 
 
 /*********************************************************************************************
- * loadUser - attempts to load the 
+ * loadUser - attempts to load the user into the given Player object
+ *				  
+ *		Params:	username - self-explanatory
+ *					plr - an existing Player class that will be populated (note: id will not be
+ *						   changed and should not be until authentication happens)
+ *
+ *		Returns:	1 if loaded, 0 if not found
  *
  *********************************************************************************************/
 
-int UserMgr::loadUser(const char *username) {
-	pugi::xml_document userfile;
+int UserMgr::loadUser(const char *username, Player &plr) {
+	return plr.loadUser(_userdir.c_str(), username);
+}
 
-	std::string filename = username;
-	lower(filename);
-	filename.append(".zone");
+/*********************************************************************************************
+ * saveUser - saves the user data to a file
+ *
+ *    Params:  username - self-explanatory
+ *
+ *    Returns: 1 if loaded, 0 if not found
+ *
+ *********************************************************************************************/
 
-	// pugi::xml_parse_result result = 
+bool UserMgr::saveUser(const char *username) {
+	// Find the user
 
-	return 1;	
+
+	return true;
+}
+
+bool UserMgr::saveUser(const Player &plr) {
+	return plr.saveUser();
 }
 

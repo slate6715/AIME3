@@ -1,9 +1,16 @@
 #include <fstream>
 #include <sstream>
 #include <bitset>
+#include <argon2.h>
+#include <string.h>
 #include "Player.h"
 #include "Handler.h"
 #include "strfuncts.h"
+#include "../external/pugixml.hpp"
+
+// Defines the password hash/salt bytelength
+const unsigned int hashlen = 16;
+const unsigned int saltlen = 8;
 
 /*********************************************************************************************
  * Player (constructor)
@@ -20,7 +27,8 @@ Player::Player(const char *id, std::unique_ptr<TCPConn> conn, LogMgr &log):
 																_cmd_mutex(),
 																_commands(),
 																_use_color(true),
-																_log(log)
+																_log(log),
+																_passwd_hash()
 {
 
 }
@@ -33,7 +41,8 @@ Player::Player(const Player &copy_from):
 								_cmd_mutex(),
 								_commands(copy_from._commands),
 								_use_color(copy_from._use_color),
-								_log(copy_from._log)
+								_log(copy_from._log),
+								_passwd_hash(copy_from._passwd_hash)
 {
 }
 
@@ -108,16 +117,18 @@ void Player::sendMsg(std::string &msg) {
  *
  *********************************************************************************************/
 
-void Player::welcomeUser(const char *welcome_file) {
+void Player::welcomeUser(const char *welcome_file, const char *userdir) {
 
 	// First, place a GameHandler on the stack that should not be popped
-	_handler_stack.push(std::unique_ptr<Handler>(new GameHandler()));
+	_handler_stack.push(std::unique_ptr<Handler>(new GameHandler(*this)));
 
 	// Now place a login handler on the stack
-	_handler_stack.push(std::unique_ptr<Handler>(new LoginHandler()));
+	_handler_stack.push(std::unique_ptr<Handler>(new LoginHandler(*this, userdir)));
 
 	// Send him the welcome message in the welcome file (location per the config file)
 	sendFile(welcome_file);	
+	
+	sendPrompt();
 }
 
 /*********************************************************************************************
@@ -334,3 +345,144 @@ void Player::formatForTelnet(const std::string &unformatted, std::string &format
 	}
 }
 
+/*********************************************************************************************
+ * sendPrompt - Sends the prompt of the message handler on top of the stack to the user
+ *
+ *
+ *********************************************************************************************/
+
+void Player::sendPrompt() {
+	std::string prompt;
+
+	Handler &cur_handler = *(_handler_stack.top());
+	cur_handler.getPrompt(prompt);
+
+	sendMsg(prompt);
+}
+
+
+/*********************************************************************************************
+ * handleCommand - sends the command to the top message handler for it to execute for this
+ *                 player
+ *
+ *********************************************************************************************/
+
+void Player::handleCommand(std::string &cmd) {
+
+	// Execute the command
+	_handler_stack.top()->handleCommand(cmd);
+
+
+	// Based on the result of the handler, we may need to do a few things here	
+}
+
+/*********************************************************************************************
+ * loadUser - attempts to load the user into the given Player object
+ *
+ *    Params:  username - self-explanatory
+ *             plr - an existing Player class that will be populated (note: id will not be
+ *                   changed and should not be until authentication happens)
+ *
+ *    Returns: 1 if loaded, 0 if not found
+ *
+ *********************************************************************************************/
+
+int Player::loadUser(const char *userdir, const char *username) {
+   pugi::xml_document userfile;
+
+   std::string filename = userdir;
+   std::string user = username;
+   lower(user);
+   filename += user;
+   filename += ".xml";
+
+   pugi::xml_parse_result result = userfile.load_file(filename.c_str());
+
+   if (!result) {
+      return 0;
+   }
+
+   return 1;
+}
+
+/*********************************************************************************************
+ * saveUser - saves the user data to a file
+ *
+ *    Params:  username - self-explanatory
+ *
+ *    Returns: 1 if loaded, 0 if not found
+ *
+ *********************************************************************************************/
+
+bool Player::saveUser() const {
+
+   return true;
+}
+
+/*********************************************************************************************
+ * generatePasswdHash - takes a plaintext password and generate a password hash based on that
+ *          passwd. If the salt parameter is empty, this function will generate a random salt. 
+ *          If it's not empty, that salt will be used instead. The salt must be stored as-is
+ *          in the user account in order to be able to replicate the hash.
+ *
+ *    Params:  cleartext - the cleartext password to hash
+ *					buf - vector buffer that stores the password hash
+ *					salt - vector salt - empty = generate random salt, otherwise should be the
+ *                    appropriate salt length
+ *
+ *
+ *********************************************************************************************/
+
+void Player::generatePasswdHash(const char *cleartext, std::vector<unsigned char> &buf, 
+																									std::vector<unsigned char> &salt)
+{
+   uint8_t hashbuf[hashlen];
+
+   srand(time(0));
+
+   // Generate a random salt string
+   uint8_t saltbuf[saltlen];
+
+   // If the user provided a salt, use that...otherwise, randomly generate one
+   if (salt.size() != saltlen) {
+		salt.clear();
+		salt.reserve(saltlen);
+      for (unsigned int i=0; i<saltlen; i++) {
+         saltbuf[i] = ((rand() % 93)+33);  // ascii characters ! through ~
+			salt.push_back(saltbuf[i]);
+		}
+   }
+	else
+		std::copy(salt.begin(), salt.end(), saltbuf);
+
+   const uint32_t t_cost = 2;          // 1 pass computation
+   const uint32_t m_cost = (1<<16);    // 64 MB memory usage
+   const uint32_t parallelism = 1;     // number of threads and lanes
+
+   // hash and place into the hashstr array
+   argon2i_hash_raw(t_cost, m_cost, parallelism, cleartext, strlen(cleartext), saltbuf, saltlen, hashbuf, hashlen);
+
+   buf.clear();
+   buf.reserve(hashlen);
+   for (unsigned int i=0; i<hashlen; i++)
+      buf.push_back(hashbuf[i]);
+
+}
+
+/*********************************************************************************************
+ * createPassword - Creates a new password hash and saves it into this user's password field. 
+ *
+ *    Params:  cleartext - the cleartext password to hash
+ *
+ *
+ *********************************************************************************************/
+
+void Player::createPassword(const char *cleartext)
+{
+	std::vector<unsigned char> hash, salt;
+
+	generatePasswdHash(cleartext, hash, salt);
+	_passwd_hash.clear();
+	_passwd_hash.assign(salt.begin(), salt.end());
+	_passwd_hash.insert(std::end(_passwd_hash), std::begin(hash), std::end(hash));	
+}

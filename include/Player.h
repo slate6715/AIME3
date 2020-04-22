@@ -32,9 +32,25 @@ public:
 
 	void handleConnection();
 
-	void welcomeUser(const char *welcome_file);
+	void welcomeUser(const char *welcome_file, const char *userdir);
+
+	// Sends the prompt of the top message handler to the player
+	void sendPrompt();
 
 	bool popCommand(std::string &cmd);
+
+	// Sends the command through the current message handler on top of the stack
+	void handleCommand(std::string &cmd);
+
+   // Functions for loading and saving user info to disk
+   int loadUser(const char *userdir, const char *username);
+
+   bool saveUser() const;
+
+	// Create a password for a new user or to change an existing user's password
+	void createPassword(const char *cleartext);
+
+	void generatePasswdHash(const char *cleartext, std::vector<unsigned char> &buf, std::vector<unsigned char> &salt);
 
 protected:
 
@@ -55,6 +71,11 @@ private:
 	bool _use_color = true;
 
 	LogMgr &_log;
+
+	// **************** Player-specific variables ************************
+
+	// The salt/hash generated from the password
+	std::vector<unsigned char> _passwd_hash;
 };
 
 
