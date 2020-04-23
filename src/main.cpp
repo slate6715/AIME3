@@ -2,7 +2,7 @@
  * main (AIME3) - Primary reads in the command line and launches the MUD class
  *
  *
- ****************************************************************************************/  
+ ****************************************************************************************/
 
 #include <iostream>
 #include <getopt.h>
@@ -25,7 +25,7 @@ void displayHelp(const char *execname) {
 int main(int argc, char *argv[]) {
 
    // ****** Set up command line parameter defaults ******
-	std::string configfile = "data/mud.conf";	
+	std::string configfile = "data/mud.conf";
 	unsigned short cl_port = 0;
 	long portval = 0;
 	std::string cl_ip_addr;
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]) {
    while ((c = getopt_long(argc, argv, "c:a:p:", long_options, &option_index)) != -1) {
       switch (c) {
 
-      // Override the default or config port number via command line argument 
+      // Override the default or config port number via command line argument
       case 'p':
          portval = strtol(optarg, NULL, 10);
          if ((portval < 1) || (portval > 65535)) {
@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
 	// Create the MUD object and start configuring it
 	MUD engine;
 
-	
+
 	// Initialize the config file defaults, then read in the config file
 	engine.initConfig();
 
@@ -95,10 +95,10 @@ int main(int argc, char *argv[]) {
 	}
 	catch (const libconfig::ParseException &pex)
 	{
-		std::cerr << "Parse error in " << pex.getFile() << ", line: " << pex.getLine() 
+		std::cerr << "Parse error in " << pex.getFile() << ", line: " << pex.getLine()
 								<< " - " << pex.getError() << std::endl;
 		return(EXIT_FAILURE);
-	}	
+	}
 
 	engine.initialize();
 

@@ -1,8 +1,8 @@
 # AIME3
 Advanced Interative Mud Engine - 3 - code engine designed to run old-fashioned text adventures.
 
-# AIME3
-Advanced Interative Mud Engine - 3 - code engine designed to run old-fashioned text adventures.
+## Building
+autoreconf -i && PYTHON_VERSION=3 ./configure && make
 
 ## AIME3 with Docker
 Please note to run any of the below commands you must have [Docker](https://www.docker.com) installed. You can find getting started guides for your preferred OS [here](https://docs.docker.com/get-started/).  Please note at this time AIME v3 has not been published to the Docker Hub so you will need to build from scratch.
