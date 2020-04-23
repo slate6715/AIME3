@@ -106,6 +106,7 @@ void MUD::initialize() {
 	_mudlog.changeFilename(cstr_setting.c_str());
 	_mudlog.setLogLvl((unsigned int) cint_setting);
 
+	_users.initialize(_mud_config);
 }
 
 /*********************************************************************************************

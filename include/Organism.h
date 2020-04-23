@@ -19,6 +19,9 @@ protected:
 	Organism(const char *id);	// Must be called from the child constructor
 	Organism(const Organism &copy_from);
 
+   virtual void saveData(pugi::xml_node &entnode) const;
+   virtual int loadData(LogMgr &log, pugi::xml_node &entnode);
+
 private:
 };
 

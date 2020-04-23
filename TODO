@@ -1,0 +1,3 @@
+- add regex to allowed usernames
+- add incorrect password attempt limits
+- password prompt turns off local echo

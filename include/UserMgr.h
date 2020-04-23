@@ -20,6 +20,9 @@ public:
    UserMgr(const UserMgr &copy_from);
    virtual ~UserMgr();
 
+	// Initialize certain variables for this class from the config file
+	void initialize(libconfig::Config &cfg_info);
+
 	// Starts the incoming connection socket
 	void startSocket(libconfig::Config &cfg_info);
 
@@ -37,8 +40,11 @@ public:
 	// command via their handler
 	void handleUsers();
 
-	// 
-	int loadUser(const char *username);
+	// Functions for loading and saving user info to disk 
+	int loadUser(const char *username, Player &plr);
+	
+	bool saveUser(const char *username);
+	bool saveUser(const Player &plr);
 
 private:
 
@@ -56,6 +62,11 @@ private:
 
 	std::unique_ptr<std::thread> _listening_thread;
 	bool _exit_listening_thread = false;
+
+	std::string _infodir;
+	std::string _userdir;
+	std::string _welcomefile;
+	std::string _motdfile;
 };
 
 

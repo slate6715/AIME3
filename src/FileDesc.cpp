@@ -108,7 +108,7 @@ ssize_t FileDesc::readFD(std::string &buf) {
    }
    
    buf = readbuf;
-   delete readbuf;
+   delete[] readbuf;
    return amt_read;
 }
 

@@ -2,63 +2,42 @@
 #define HANDLER_H
 
 #include <string>
+#include <vector>
+
+class Player;
 
 /***************************************************************************************
  * Handler - Parses the user input and executes commands differently depending on the
  *				 handler actually used. 
  *
  ***************************************************************************************/
+
+// Generic class, should not be enstantiated
 class Handler
 {
 public:
 	
-	Handler();
+	Handler(Player &plr);
 	Handler(const Handler &copy_from);
 
    virtual ~Handler();
 
-	virtual int handleCommand(const char *cmd) = 0;
-	virtual void sendPrompt() = 0;
+	virtual int handleCommand(std::string &cmd) = 0;
+	virtual void getPrompt(std::string &buf) = 0;
+	virtual void prePop(std::vector<std::string> &results) = 0;
+
+	// The handler state - finished = read to pop
+	enum hstate_types { Active, Finished, Disconnect };
+	hstate_types handler_state;
+
+	// When the handler is complete or in a non-Active state, this provides more details
+	std::string return_val;
 
 protected:
+	Player &_plr;
 
 private:
 
-};
-
-class LoginHandler : public Handler 
-{
-public:
-	LoginHandler();
-	LoginHandler(const LoginHandler &copy_from);
-
-	virtual ~LoginHandler();
-
-	enum login_state {AskUser, AskCreate, CreatePasswd1, CreatePasswd2, AskPasswd};
-
-	virtual int handleCommand(const char *cmd);
-	virtual void sendPrompt();
-
-private:
-	std::string _username;
-	std::string _new_passwd;
-
-	login_state _cur_state;
-};
-
-class GameHandler : public Handler
-{
-public:
-	GameHandler();
-	GameHandler(const GameHandler &copy_from);
-
-	virtual ~GameHandler();
-
-	virtual int handleCommand(const char *cmd);
-	virtual void sendPrompt();
-
-private:
-		
 };
 
 #endif
