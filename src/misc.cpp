@@ -6,7 +6,9 @@
 #include <random>
 #include <functional>
 #include <chrono>
-#include "strfuncts.h"
+#include <libconfig.h++>
+#include "misc.h"
+#include "Player.h"
 
 /*******************************************************************************************
  * clrNewlines - removes \r and \n from the string passed into buf
@@ -94,3 +96,35 @@ void genRandString(std::string &buf, size_t n) {
       buf += char_gen();
 }
 
+/*******************************************************************************************
+ * sendInfoFiles - sends a file or multiple files to the player, depending on if the config file
+ *			has a single string or a list of strings
+ *
+ *******************************************************************************************/
+
+void sendInfoFiles(Player &plr, libconfig::Config &cfg, const char *setting) {
+
+   // Set up the directory string
+   std::string infodir;
+   cfg.lookupValue("datadir.infodir", infodir);
+   infodir += "/";
+
+   libconfig::Setting &info_files = cfg.lookup("infofiles.welcome");
+
+   std::string filename, path;
+   int count = info_files.getLength();
+
+   // If it's not a list, then just send it
+   if (count == 0) {
+      path = infodir;
+      path += (const char *) info_files;
+      plr.sendFile(path.c_str());
+   } else {
+      for (int i=0; i<count; i++) {
+         path = infodir;
+         path += (const char *) info_files[i];
+         plr.sendFile(path.c_str());
+      }
+   }
+
+}

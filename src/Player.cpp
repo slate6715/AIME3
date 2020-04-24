@@ -7,7 +7,8 @@
 #include "Player.h"
 #include "LoginHandler.h"
 #include "GameHandler.h"
-#include "strfuncts.h"
+#include "ActionMgr.h"
+#include "misc.h"
 #include "../external/pugixml.hpp"
 
 // Defines the password hash/salt bytelength
@@ -119,18 +120,14 @@ void Player::sendMsg(std::string &msg) {
  *
  *********************************************************************************************/
 
-void Player::welcomeUser(const char *welcome_file, const char *userdir) {
+void Player::welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions) {
 
 	// First, place a GameHandler on the stack that should not be popped
-	_handler_stack.push(std::unique_ptr<Handler>(new GameHandler(*this)));
+	_handler_stack.push(std::unique_ptr<Handler>(new GameHandler(*this, actions)));
 
 	// Now place a login handler on the stack
-	_handler_stack.push(std::unique_ptr<Handler>(new LoginHandler(*this, userdir, _log)));
-
-	// Send him the welcome message in the welcome file (location per the config file)
-	sendFile(welcome_file);	
-	
-	sendPrompt();
+	_handler_stack.push(std::unique_ptr<Handler>(new LoginHandler(*this, mud_cfg, _log)));
+	_handler_stack.top()->postPush();
 }
 
 /*********************************************************************************************

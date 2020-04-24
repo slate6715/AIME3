@@ -26,9 +26,8 @@ int main(int argc, char *argv[]) {
 
    // ****** Set up command line parameter defaults ******
 	std::string configfile = "data/mud.conf";	
-	unsigned short cl_port = 0;
-	long portval = 0;
-	std::string cl_ip_addr;
+	int portval = 0;
+	std::string cl_ip_addr("");
 
 	static struct option long_options[] = {
 		{"address", required_argument, 0, 'a'},
@@ -46,13 +45,7 @@ int main(int argc, char *argv[]) {
 
       // Override the default or config port number via command line argument 
       case 'p':
-         portval = strtol(optarg, NULL, 10);
-         if ((portval < 1) || (portval > 65535)) {
-            std::cout << "Invalid port on command line. Value must be between 1 and 65535";
-            std::cout << "Format: " << argv[0] << " [<max_range>] [<max_threads>]\n";
-            exit(0);
-         }
-         cl_port = (unsigned short) portval;
+         portval = (int) strtol(optarg, NULL, 10);
          break;
 
       // IP address to attempt to bind to
@@ -102,8 +95,22 @@ int main(int argc, char *argv[]) {
 
 	engine.initialize();
 
+   // Will throw a SettingTypeException if these are not found. Get server info.
+	if (cl_ip_addr.size() == 0)
+		engine.getConfig()->lookupValue("network.ip_addr", cl_ip_addr);
+	if (portval == 0)
+		engine.getConfig()->lookupValue("network.port", portval);
+
+   if ((portval < 0) || (portval > 65535)) {
+      std::string msg("Invalid port ");
+      msg += portval;
+      msg += " in server config.";
+
+      throw socket_error(msg.c_str());
+   }
+
 	try {
-		engine.bootServer();
+		engine.bootServer(cl_ip_addr.c_str(), (unsigned short) portval);
 
 	}
 	catch (const socket_error &e) {

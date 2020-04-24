@@ -16,7 +16,9 @@ MUD::MUD():
 		_mud_config(),
 		_mudlog(),
 		_entity_db(),
-		_users(_mudlog)
+		_actions(_mudlog),
+		_users(_mudlog, _actions),
+		_time_between_heartbeat(100000)
 {
 
 
@@ -27,7 +29,9 @@ MUD::MUD(MUD &copy_from):
 		_mud_config(),
 		_mudlog(copy_from._mudlog),
 		_entity_db(copy_from._entity_db),
-		_users(copy_from._users)
+		_actions(copy_from._actions),
+		_users(copy_from._users),
+		_time_between_heartbeat(copy_from._time_between_heartbeat)
 {
 
 }
@@ -99,14 +103,22 @@ void MUD::initialize() {
 	// Start up the logs
 	std::string cstr_setting;
 	int cint_setting;
+	int heartbeat_per_sec;
 
 	_mud_config.lookupValue("misc.logfile", cstr_setting);
 	_mud_config.lookupValue("misc.loglvl", cint_setting);
 
 	_mudlog.changeFilename(cstr_setting.c_str());
 	_mudlog.setLogLvl((unsigned int) cint_setting);
+	
+	_mud_config.lookupValue("misc.heartbeat_per_sec", heartbeat_per_sec);
+	_time_between_heartbeat = 1000000 / heartbeat_per_sec;
 
+	// Init the user database
 	_users.initialize(_mud_config);
+	
+	// Init out actions manager
+	_actions.initialize(_mud_config);
 }
 
 /*********************************************************************************************
@@ -118,8 +130,8 @@ void MUD::initialize() {
  *
  *********************************************************************************************/
 
-void MUD::bootServer() {
-	_users.startSocket(_mud_config);
+void MUD::bootServer(const char *ip_addr, unsigned short port) {
+	_users.startSocket(ip_addr, port);
 }
 
 /*********************************************************************************************
@@ -149,9 +161,21 @@ void MUD::runMUD() {
 
 	// Main mud loop
 	while (!_shutdown_mud) {
+		
+		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
+
+		// Goes through the user's handlers, creating actions as required on the queue 
 		_users.handleUsers();
 
-		usleep(10000);
+		// Go through the actions in the queue, handling those that are being executed now
+		_actions.handleActions();
+
+		std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+
+		long sleep_duration = _time_between_heartbeat - 
+										std::chrono::duration_cast<std::chrono::microseconds>(end-start).count();
+		if (sleep_duration > 0)
+			usleep(sleep_duration);
 	}
 
 }

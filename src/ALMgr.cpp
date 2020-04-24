@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
 #include <stdexcept>
 #include "ALMgr.h"
-#include "strfuncts.h"
+#include "misc.h"
 
 ALMgr::ALMgr(const char *al_file, bool is_whitelist):_al_file(al_file),_is_whitelist(is_whitelist) {
 

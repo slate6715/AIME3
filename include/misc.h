@@ -1,4 +1,7 @@
 #include <string>
+#include <libconfig.h++>
+
+class Player;
 
 // Remove /r and /n from a string
 void clrNewlines(std::string &str);
@@ -18,3 +21,6 @@ int hideInput(int fd, bool hide);
 // Generates a random string of the assigned length
 void genRandString(std::string &buf, size_t n);
 
+// sends a file or multiple files to the player, depending on if the config file
+// has a single string or a list of strings
+void sendInfoFiles(Player &plr, libconfig::Config &cfg, const char *setting);

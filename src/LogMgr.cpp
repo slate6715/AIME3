@@ -6,7 +6,7 @@
 #include <string>
 #include <string.h>
 #include "LogMgr.h"
-#include "strfuncts.h"
+#include "misc.h"
 #include "exceptions.h"
 
 

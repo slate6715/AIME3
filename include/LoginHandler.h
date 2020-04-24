@@ -2,6 +2,7 @@
 #define LOGINHANDLER_H
 
 #include <string>
+#include <libconfig.h++>
 #include "Handler.h"
 #include "LogMgr.h"
 
@@ -9,7 +10,7 @@
 class LoginHandler : public Handler 
 {
 public:
-	LoginHandler(Player &plr, const char *userdir, LogMgr &log);
+	LoginHandler(Player &plr, libconfig::Config &mud_cfg, LogMgr &log);
 	LoginHandler(const LoginHandler &copy_from);
 
 	virtual ~LoginHandler();
@@ -19,12 +20,13 @@ public:
 	virtual int handleCommand(std::string &cmd);
 	virtual void getPrompt(std::string &buf);
    virtual void prePop(std::vector<std::string> &results);
+	virtual void postPush();
 
 	bool validateUsername(std::string &name);
 
 private:
 
-	std::string _userdir;
+	libconfig::Config &_mud_cfg;
 	
 	LogMgr &_log;
 

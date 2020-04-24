@@ -5,6 +5,7 @@
 #include "EntityDB.h"
 #include "UserMgr.h"
 #include "LogMgr.h"
+#include "ActionMgr.h"
 
 /***************************************************************************************
  * MUD - class that manages the mud as a whole. Each instance of a MUD class will be its
@@ -23,11 +24,13 @@ public:
 
 	void initialize();
 
-	void bootServer();
+	void bootServer(const char *ip_addr, unsigned short port);
 	void startListeningThread();
 	
 	void runMUD();
 	void cleanup();
+
+	libconfig::Config *getConfig() { return &_mud_config; };
 
 private:
    // Publicly-accessible attributes
@@ -38,10 +41,14 @@ private:
 	// Stores all the non-player entities in the game
 	EntityDB _entity_db;
 
+	ActionMgr _actions;
+
 	// Stores and manages the players connected to the game
 	UserMgr _users;
 
 	bool _shutdown_mud = false;
+
+	long _time_between_heartbeat;
 };
 
 

@@ -2,13 +2,13 @@
 #include <cstring>
 #include <iostream>
 #include "LoginHandler.h"
-#include "strfuncts.h"
+#include "misc.h"
 #include "Player.h"
 
 
-LoginHandler::LoginHandler(Player &plr, const char *userdir, LogMgr &log):
+LoginHandler::LoginHandler(Player &plr, libconfig::Config &mud_cfg, LogMgr &log):
 								Handler(plr),
-								_userdir(userdir),
+								_mud_cfg(mud_cfg),
 								_log(log),
 								_username(""),
 								_new_passwd(""),
@@ -18,7 +18,7 @@ LoginHandler::LoginHandler(Player &plr, const char *userdir, LogMgr &log):
 
 LoginHandler::LoginHandler(const LoginHandler &copy_from):
 								Handler(copy_from),
-								_userdir(copy_from._userdir),
+								_mud_cfg(copy_from._mud_cfg),
 								_log(copy_from._log),
 								_username(copy_from._username),
 								_new_passwd(copy_from._new_passwd),
@@ -59,7 +59,7 @@ bool LoginHandler::validateUsername(std::string &name) {
 
 int LoginHandler::handleCommand(std::string &cmd) {
 
-	std::string tempname, plrid;
+	std::string tempname, plrid, userdir;
 
 	switch(_cur_state) {
 		// The user has entered a username?
@@ -71,7 +71,8 @@ int LoginHandler::handleCommand(std::string &cmd) {
 			}	
 
 			plrid = _plr.getID();
-			if (!_plr.loadUser(_userdir.c_str(), cmd.c_str())) {
+			_mud_cfg.lookupValue("datadir.userdir", userdir);	
+			if (!_plr.loadUser(userdir.c_str(), cmd.c_str())) {
 				_username = cmd;
 				_plr.sendMsg("That user does not exist.\n");
 				_cur_state = AskCreate;
@@ -120,9 +121,11 @@ int LoginHandler::handleCommand(std::string &cmd) {
 			plrid = "player@" + _username;
 			_plr.setID(plrid.c_str());
 
-			if (!_plr.saveUser(_userdir.c_str())) {
+			_mud_cfg.lookupValue("datadir.userdir", userdir);
+
+			if (!_plr.saveUser(userdir.c_str())) {
 				std::string msg("Unable to save user file to ");
-				msg += _userdir;
+				msg += userdir;
 				_log.writeLog(msg.c_str());
 				_plr.sendMsg("Failed saving your user file. Alert an Admin.\n");
 				handler_state = Disconnect;
@@ -201,4 +204,20 @@ void LoginHandler::prePop(std::vector<std::string> &results) {
 	results.push_back("loggedin");
 	results.push_back(_username);
 }
+
+/*********************************************************************************************
+ * postPush - called right after this handler is created and pushed onto the stack.
+ *
+ *
+ *********************************************************************************************/
+
+
+void LoginHandler::postPush() {
+
+	sendInfoFiles(_plr, _mud_cfg, "infofiles.welcome");
+
+	_plr.sendPrompt();	
+}
+
+
 

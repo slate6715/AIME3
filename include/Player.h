@@ -5,10 +5,13 @@
 #include <queue>
 #include <memory>
 #include <mutex>
+#include <libconfig.h++>
 #include "Organism.h"
 #include "Handler.h"
 #include "LogMgr.h"
 #include "TCPConn.h"
+
+class ActionMgr;
 
 /***************************************************************************************
  * Player - a living entity that can usually be killed and sometimes moves around. Used
@@ -32,7 +35,7 @@ public:
 
 	void handleConnection();
 
-	void welcomeUser(const char *welcome_file, const char *userdir);
+	void welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions);
 
 	// Sends the prompt of the top message handler to the player
 	void sendPrompt();

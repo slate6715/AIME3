@@ -44,7 +44,7 @@ AC_CHECK_LIB([argon2], [argon2i_hash_raw], [], [
    exit -1;
    ])
 
-AX_BOOST_BASE([1.67.0],,
+AX_BOOST_BASE([1.60.0],,
 	AC_MSG_ERROR([Program requires Boost but it was not found on your system])
 	)
 

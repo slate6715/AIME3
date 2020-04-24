@@ -2,7 +2,6 @@
 #include <cstring>
 #include <iostream>
 #include "Handler.h"
-#include "strfuncts.h"
 #include "Player.h"
 
 

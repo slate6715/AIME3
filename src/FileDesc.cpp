@@ -8,7 +8,7 @@
 #include <unistd.h>
 
 #include "FileDesc.h"
-#include "strfuncts.h"
+#include "misc.h"
 
 const unsigned int bufsize = 500;
 

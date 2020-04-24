@@ -2,17 +2,20 @@
 #include <cstring>
 #include <iostream>
 #include "GameHandler.h"
-#include "strfuncts.h"
+#include "misc.h"
 #include "Player.h"
+#include "ActionMgr.h"
 
 
-GameHandler::GameHandler(Player &plr):
-                        Handler(plr)
+GameHandler::GameHandler(Player &plr, ActionMgr &actions):
+                        Handler(plr),
+								_actions(actions)
 {
 }
 
 GameHandler::GameHandler(const GameHandler &copy_from):
-                        Handler(copy_from)
+                        Handler(copy_from),
+								_actions(copy_from._actions)
 {
 
 }
@@ -63,3 +66,13 @@ void GameHandler::prePop(std::vector<std::string> &results) {
 	throw std::runtime_error("This should not be called.");
 }
 
+
+/*********************************************************************************************
+ * postPush - called right after this handler is created and pushed onto the stack.
+ *
+ *
+ *********************************************************************************************/
+
+
+void GameHandler::postPush() {
+}

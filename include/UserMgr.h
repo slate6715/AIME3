@@ -6,6 +6,7 @@
 #include <thread>
 #include "TCPServer.h"
 #include "Player.h"
+#include "ActionMgr.h"
 
 /****************************************************************************************
  * UserMgr - class that stores and manages the connected players and provides methods for
@@ -16,7 +17,7 @@
 class UserMgr 
 {
 public:
-	UserMgr(LogMgr &mud_log);
+	UserMgr(LogMgr &mud_log, ActionMgr &actions);
    UserMgr(const UserMgr &copy_from);
    virtual ~UserMgr();
 
@@ -24,7 +25,7 @@ public:
 	void initialize(libconfig::Config &cfg_info);
 
 	// Starts the incoming connection socket
-	void startSocket(libconfig::Config &cfg_info);
+	void startSocket(const char *ip_addr, unsigned short port);
 
 	// Launches a thread that listens for new connections and user data 
 	void startListeningThread(libconfig::Config &cfg_info);
@@ -34,7 +35,7 @@ public:
 	void stopListeningThread();
 
 	// Checks for new users and, if authorized, adds them to the player list
-	void checkNewUsers(const char *welcome_file);
+	void checkNewUsers(libconfig::Config &mud_cfg);
 	
 	// Loop through all users, performing maintenance and executing their next
 	// command via their handler
@@ -50,6 +51,9 @@ private:
 
 	// The log manager passed in by reference on object creation
 	LogMgr &_mud_log;
+
+	// Used by the handlers to queue up commands/actions to be executed
+	ActionMgr &_actions;
 
 	// List of active users
 	std::map<std::string, std::shared_ptr<Player>> _db;

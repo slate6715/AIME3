@@ -25,6 +25,7 @@ public:
 	virtual int handleCommand(std::string &cmd) = 0;
 	virtual void getPrompt(std::string &buf) = 0;
 	virtual void prePop(std::vector<std::string> &results) = 0;
+	virtual void postPush() = 0;
 
 	// The handler state - finished = read to pop
 	enum hstate_types { Active, Finished, Disconnect };

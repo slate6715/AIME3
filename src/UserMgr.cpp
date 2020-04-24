@@ -2,7 +2,7 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include "UserMgr.h"
-#include "strfuncts.h"
+#include "misc.h"
 
 namespace lc = libconfig;
 
@@ -10,8 +10,9 @@ namespace lc = libconfig;
  * UserMgr (constructor) - 
  *
  *********************************************************************************************/
-UserMgr::UserMgr(LogMgr &mud_log):
+UserMgr::UserMgr(LogMgr &mud_log, ActionMgr &actions):
 					_mud_log(mud_log),
+					_actions(actions),
 					_db(),
 					_listen_sock(_mud_log),
 					_newuser_idx(0),
@@ -27,6 +28,7 @@ UserMgr::UserMgr(LogMgr &mud_log):
 
 UserMgr::UserMgr(const UserMgr &copy_from):
 					_mud_log(copy_from._mud_log),
+					_actions(copy_from._actions),
 					_db(copy_from._db),
 					_listen_sock(copy_from._listen_sock),
 					_newuser_idx(copy_from._newuser_idx),
@@ -80,26 +82,10 @@ void UserMgr::initialize(lc::Config &cfg_info) {
  *
  *********************************************************************************************/
 
-void UserMgr::startSocket(lc::Config &cfg_info) {
+void UserMgr::startSocket(const char *ip_addr, unsigned short port) {
 	
-	std::string ip_addr;
-	int port;
-
-
-	// Will throw a SettingTypeException if these are not found
-	cfg_info.lookupValue("network.ip_addr", ip_addr);
-	cfg_info.lookupValue("network.port", port);
-
-	if ((port < 0) || (port > 65535)) {
-		std::string msg("Invalid port ");
-		msg += port;
-		msg += " in server config.";
-		
-		throw socket_error(msg.c_str());
-	}
-
 	// Bind the server - throws a socket_error if there's an issue
-	_listen_sock.bindSvr(ip_addr.c_str(), (unsigned short) port);
+	_listen_sock.bindSvr(ip_addr, port);
 	_listen_sock.listenSvr();
 	
 }
@@ -142,7 +128,7 @@ void UserMgr::startListeningThread(lc::Config &cfg_info) {
 
 	// ******* Lambda function for launching the thread ********
 	_listening_thread = std::unique_ptr<std::thread>(new std::thread(
-									[this, listening_loop, welcome_file](){
+									[this, listening_loop, &cfg_info](){
 
 		long long interval = 1000000 / listening_loop;
 		long long sleep_duration;
@@ -151,7 +137,7 @@ void UserMgr::startListeningThread(lc::Config &cfg_info) {
 			auto start_loop = std::chrono::high_resolution_clock::now();
 
 			// Check the listening socket for new connections
-			checkNewUsers(welcome_file.c_str());
+			checkNewUsers(cfg_info);
 	
 			// Loop through our players, handling their connection data	
 			auto user_it = _db.begin();
@@ -186,11 +172,11 @@ void UserMgr::stopListeningThread() {
  * checkNewUsers - Checks the socket for incoming connections and accepts them if they're
  *					    authorized on the access list
  *
- *		Params:	welcome_file - the path/filename for the file to send to users
+ *		Params:	mud_cfg - the config with all the files to send to users when they connect
  *
  *********************************************************************************************/
 
-void UserMgr::checkNewUsers(const char *welcome_file){
+void UserMgr::checkNewUsers(libconfig::Config &mud_cfg){
 
 	TCPConn *new_conn = NULL;
 
@@ -204,7 +190,7 @@ void UserMgr::checkNewUsers(const char *welcome_file){
 
 		_db.insert(std::pair<std::string, std::shared_ptr<Player>>(userid, new_plr));
 
-		new_plr->welcomeUser(welcome_file, _userdir.c_str());
+		new_plr->welcomeUser(mud_cfg, _actions);
 
 	}
 }
@@ -213,6 +199,9 @@ void UserMgr::checkNewUsers(const char *welcome_file){
 /*********************************************************************************************
  * handleUsers - Loops through all users, performing maintenance and executing their next
  *					  command via their handler
+ *
+ *		Params:	actions - used to lookup Actions and place new ones in the queue based on user
+ *							    input.
  *
  *********************************************************************************************/
 

@@ -5,7 +5,7 @@
 #include <algorithm>
 #include <iostream>
 #include "TCPConn.h"
-#include "strfuncts.h"
+#include "misc.h"
 
 TCPConn::TCPConn():
 					_connfd(),
