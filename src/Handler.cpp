@@ -10,7 +10,7 @@
  *	
  *
  *********************************************************************************************/
-Handler::Handler(Player &plr):
+Handler::Handler(std::shared_ptr<Player> plr):
 							handler_state(Active),
 							return_val(""),
 							_plr(plr)

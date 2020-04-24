@@ -168,7 +168,7 @@ void MUD::runMUD() {
 		_users.handleUsers();
 
 		// Go through the actions in the queue, handling those that are being executed now
-		_actions.handleActions();
+		_actions.handleActions(*this);
 
 		std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
 

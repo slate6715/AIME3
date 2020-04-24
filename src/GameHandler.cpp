@@ -7,7 +7,7 @@
 #include "ActionMgr.h"
 
 
-GameHandler::GameHandler(Player &plr, ActionMgr &actions):
+GameHandler::GameHandler(std::shared_ptr<Player> plr, ActionMgr &actions):
                         Handler(plr),
 								_actions(actions)
 {
@@ -33,13 +33,24 @@ GameHandler::~GameHandler() {
 
 int GameHandler::handleCommand(std::string &cmd) {
 
-	std::string buf("Received command: ");
-	buf += cmd;
-	buf += "\n";
-	
-	_plr.sendMsg(buf);
+	Action *new_action = NULL;
+	std::string errmsg;
 
-	_plr.sendPrompt();
+	// Try to find the command to execute--if NULL, there was an error
+	if ((new_action = _actions.preAction(cmd.c_str(), errmsg)) == NULL) {
+		errmsg += "\n";
+		_plr->sendMsg(errmsg);
+		_plr->sendPrompt();
+		return 0;
+	}
+
+	// Set up any necessary parameters 
+	new_action->setAgent(_plr);
+
+	// Now add it to the queue to be executed
+	_actions.execAction(new_action);
+
+	_plr->sendPrompt();
 
 	return 0;
 }

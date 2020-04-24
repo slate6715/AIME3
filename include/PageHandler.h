@@ -10,7 +10,7 @@
 class PageHandler : public Handler
 {
 public:
-	PageHandler(Player &plr, LogMgr &log, unsigned int lines_per_page);
+	PageHandler(std::shared_ptr<Player> plr, LogMgr &log, unsigned int lines_per_page);
 	PageHandler(const PageHandler &copy_from);
 
 	virtual ~PageHandler();

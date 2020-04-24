@@ -6,7 +6,7 @@
 #include "Player.h"
 
 
-LoginHandler::LoginHandler(Player &plr, libconfig::Config &mud_cfg, LogMgr &log):
+LoginHandler::LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_cfg, LogMgr &log):
 								Handler(plr),
 								_mud_cfg(mud_cfg),
 								_log(log),
@@ -66,20 +66,20 @@ int LoginHandler::handleCommand(std::string &cmd) {
 		case AskUser:
 			lower(cmd);
 			if (!validateUsername(cmd)) {
-				_plr.sendMsg("Invalid username. Name can only consist of letters or numbers.");
+				_plr->sendMsg("Invalid username. Name can only consist of letters or numbers.");
 				break;
 			}	
 
-			plrid = _plr.getID();
+			plrid = _plr->getID();
 			_mud_cfg.lookupValue("datadir.userdir", userdir);	
-			if (!_plr.loadUser(userdir.c_str(), cmd.c_str())) {
+			if (!_plr->loadUser(userdir.c_str(), cmd.c_str())) {
 				_username = cmd;
-				_plr.sendMsg("That user does not exist.\n");
+				_plr->sendMsg("That user does not exist.\n");
 				_cur_state = AskCreate;
 				break;
 			} else {
 				_username = cmd;
-				_plr.setID(plrid.c_str());
+				_plr->setID(plrid.c_str());
 				_cur_state = AskPasswd;
 			}
 			break;
@@ -97,7 +97,7 @@ int LoginHandler::handleCommand(std::string &cmd) {
 		case CreatePasswd1:
 			_new_passwd = cmd;
 			if (_new_passwd.length() < 8) {
-				_plr.sendMsg("Password must be at least 8 characters in length.\n");
+				_plr->sendMsg("Password must be at least 8 characters in length.\n");
 				break;
 			}
 
@@ -107,42 +107,42 @@ int LoginHandler::handleCommand(std::string &cmd) {
 
 		case CreatePasswd2:
 			if (cmd.compare(_new_passwd) != 0) {
-				_plr.sendMsg("You must enter the same password twice.\n");
+				_plr->sendMsg("You must enter the same password twice.\n");
 				_cur_state = CreatePasswd1;
 				break;
 			}
 			
 			// Create the account
-			_plr.createPassword(cmd.c_str());
+			_plr->createPassword(cmd.c_str());
 
 			// Temporarily set the name so we can save the user data--can't permanently change it yet as
 			// this will be done when the handler is popped.
-			tempname = _plr.getID();
+			tempname = _plr->getID();
 			plrid = "player@" + _username;
-			_plr.setID(plrid.c_str());
+			_plr->setID(plrid.c_str());
 
 			_mud_cfg.lookupValue("datadir.userdir", userdir);
 
-			if (!_plr.saveUser(userdir.c_str())) {
+			if (!_plr->saveUser(userdir.c_str())) {
 				std::string msg("Unable to save user file to ");
 				msg += userdir;
 				_log.writeLog(msg.c_str());
-				_plr.sendMsg("Failed saving your user file. Alert an Admin.\n");
+				_plr->sendMsg("Failed saving your user file. Alert an Admin.\n");
 				handler_state = Disconnect;
 				return 1;
 			}
-			_plr.setID(tempname.c_str());
+			_plr->setID(tempname.c_str());
 			handler_state = Finished;		
-			_plr.sendMsg("Successfully created your user!\n");	
+			_plr->sendMsg("Successfully created your user!\n");	
 			return 1;
 
 		case AskPasswd:
-			if (_plr.checkPassword(cmd.c_str())) {
+			if (_plr->checkPassword(cmd.c_str())) {
 				handler_state = Finished;
-				_plr.sendMsg("Successfully logged in!\n");
+				_plr->sendMsg("Successfully logged in!\n");
 			   break;					
 			}
-			_plr.sendMsg("Incorrect password.\n");
+			_plr->sendMsg("Incorrect password.\n");
 	
 			break;
 		default:
@@ -150,7 +150,7 @@ int LoginHandler::handleCommand(std::string &cmd) {
 
 			break;
 	}
-	_plr.sendPrompt();
+	_plr->sendPrompt();
 
 	return 0;
 }
@@ -216,7 +216,7 @@ void LoginHandler::postPush() {
 
 	sendInfoFiles(_plr, _mud_cfg, "infofiles.welcome");
 
-	_plr.sendPrompt();	
+	_plr->sendPrompt();	
 }
 
 

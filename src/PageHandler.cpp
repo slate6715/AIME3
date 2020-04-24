@@ -8,7 +8,7 @@
 #include "Player.h"
 
 
-PageHandler::PageHandler(Player &plr, LogMgr &log, unsigned int lines_per_page):
+PageHandler::PageHandler(std::shared_ptr<Player> plr, LogMgr &log, unsigned int lines_per_page):
                         Handler(plr),
 								_log(log),
 								_lines_per_page(lines_per_page),
@@ -126,7 +126,7 @@ void PageHandler::addFileContent(const char *filename) {
 
       // Read in the file all at once
       buf.assign((std::istreambuf_iterator<char>(readfile)), std::istreambuf_iterator<char>());
-      _plr.sendMsg(buf);
+      _plr->sendMsg(buf);
 
       readfile.close();
 		_to_display += buf;
@@ -134,7 +134,8 @@ void PageHandler::addFileContent(const char *filename) {
    catch (std::ifstream::failure &e) {
       std::stringstream msg;
 
-      msg << "Attempted to open/send file '" << filename << "' to player '" << _plr.getID() << "' failed. Error: " << e.what();
+      msg << "Attempted to open/send file '" << filename << "' to player '" << _plr->getID() << 
+																						"' failed. Error: " << e.what();
       _log.writeLog(msg.str().c_str());
    }
 
@@ -157,13 +158,13 @@ bool PageHandler::showNextPage() {
 	std::string sendbuf;
 	if (pos == std::string::npos) {
 		sendbuf = _to_display;
-		_plr.sendMsg(sendbuf);
+		_plr->sendMsg(sendbuf);
 		return true;
 	}
 
 	sendbuf = _to_display.substr(0, pos+1);
 	_to_display.erase(0, pos+1);
-	_plr.sendMsg(sendbuf);
-	_plr.sendPrompt();
+	_plr->sendMsg(sendbuf);
+	_plr->sendPrompt();
 	return false;
 }

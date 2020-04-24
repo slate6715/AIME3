@@ -47,6 +47,8 @@ AC_CHECK_LIB([argon2], [argon2i_hash_raw], [], [
 AX_BOOST_BASE([1.60.0],,
 	AC_MSG_ERROR([Program requires Boost but it was not found on your system])
 	)
+AX_BOOST_FILESYSTEM
+AX_BOOST_SYSTEM
 
 AX_PYTHON_DEVEL([>= '3'],,
 	AC_MSG_ERROR([Program requires python3 but it was not found on your system])

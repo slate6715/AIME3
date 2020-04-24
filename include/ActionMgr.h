@@ -34,7 +34,11 @@ public:
 	void initialize(libconfig::Config &cfg_info);
 
 	// Go through the action queue, executing those whose timer is < now()
-	void handleActions();
+	void handleActions(MUD &engine);
+
+	Action *preAction(const char *cmd, std::string &errmsg);
+	Action *cloneAction(const char *cmd);
+	void execAction(Action *exec_act);
 
 private:
 
@@ -44,8 +48,20 @@ private:
 	// The database of available actions and aliases 
 	std::map<std::string, std::shared_ptr<Action>> _action_db;
 
+	// One for each letter--points to the first action of that letter for quick lookup on
+	// abbreviated actions
+	std::map<std::string, std::shared_ptr<Action>>::iterator abbrev_table[26];
+
 	std::multiset<std::shared_ptr<Action>, compare_msa> _action_queue;
 
+};
+
+
+struct hardcoded_actions {
+   std::string act_id;
+   int (*funct_ptr)(MUD &, Action &);
+   Action::parse_type ptype;
+   std::string aliases;
 };
 
 

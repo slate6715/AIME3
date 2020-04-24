@@ -120,13 +120,13 @@ void Player::sendMsg(std::string &msg) {
  *
  *********************************************************************************************/
 
-void Player::welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions) {
+void Player::welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions, std::shared_ptr<Player> thisplr) {
 
 	// First, place a GameHandler on the stack that should not be popped
-	_handler_stack.push(std::unique_ptr<Handler>(new GameHandler(*this, actions)));
+	_handler_stack.push(std::unique_ptr<Handler>(new GameHandler(thisplr, actions)));
 
 	// Now place a login handler on the stack
-	_handler_stack.push(std::unique_ptr<Handler>(new LoginHandler(*this, mud_cfg, _log)));
+	_handler_stack.push(std::unique_ptr<Handler>(new LoginHandler(thisplr, mud_cfg, _log)));
 	_handler_stack.top()->postPush();
 }
 

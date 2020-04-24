@@ -35,7 +35,7 @@ public:
 
 	void handleConnection();
 
-	void welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions);
+	void welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions, std::shared_ptr<Player> thisplr);
 
 	// Sends the prompt of the top message handler to the player
 	void sendPrompt();

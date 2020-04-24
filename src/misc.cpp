@@ -102,7 +102,7 @@ void genRandString(std::string &buf, size_t n) {
  *
  *******************************************************************************************/
 
-void sendInfoFiles(Player &plr, libconfig::Config &cfg, const char *setting) {
+void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, const char *setting) {
 
    // Set up the directory string
    std::string infodir;
@@ -118,12 +118,12 @@ void sendInfoFiles(Player &plr, libconfig::Config &cfg, const char *setting) {
    if (count == 0) {
       path = infodir;
       path += (const char *) info_files;
-      plr.sendFile(path.c_str());
+      plr->sendFile(path.c_str());
    } else {
       for (int i=0; i<count; i++) {
          path = infodir;
          path += (const char *) info_files[i];
-         plr.sendFile(path.c_str());
+         plr->sendFile(path.c_str());
       }
    }
 

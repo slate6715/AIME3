@@ -1,5 +1,6 @@
 #include <string>
 #include <libconfig.h++>
+#include <boost/filesystem.hpp>
 
 class Player;
 
@@ -23,4 +24,13 @@ void genRandString(std::string &buf, size_t n);
 
 // sends a file or multiple files to the player, depending on if the config file
 // has a single string or a list of strings
-void sendInfoFiles(Player &plr, libconfig::Config &cfg, const char *setting);
+void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, const char *setting);
+
+// Used for iterating files in a directory
+struct path_leaf_string 
+{
+	std::string operator()(const boost::filesystem::directory_entry &entry) const
+	{
+		return entry.path().leaf().string();
+	}
+};

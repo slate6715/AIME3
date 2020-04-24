@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <memory>
 
 class Player;
 
@@ -17,7 +18,7 @@ class Handler
 {
 public:
 	
-	Handler(Player &plr);
+	Handler(std::shared_ptr<Player> plr);
 	Handler(const Handler &copy_from);
 
    virtual ~Handler();
@@ -35,7 +36,7 @@ public:
 	std::string return_val;
 
 protected:
-	Player &_plr;
+	std::shared_ptr<Player> _plr;
 
 private:
 

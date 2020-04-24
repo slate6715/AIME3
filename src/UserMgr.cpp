@@ -190,7 +190,7 @@ void UserMgr::checkNewUsers(libconfig::Config &mud_cfg){
 
 		_db.insert(std::pair<std::string, std::shared_ptr<Player>>(userid, new_plr));
 
-		new_plr->welcomeUser(mud_cfg, _actions);
+		new_plr->welcomeUser(mud_cfg, _actions, new_plr);
 
 	}
 }

@@ -73,14 +73,15 @@ int main(int argc, char *argv[]) {
 	// Create the MUD object and start configuring it
 	MUD engine;
 
+	std::cout << "Bootstrapping AIME3 MUD\n";
 
+	std::cout << "   Loading config file..." << std::flush;
 	// Initialize the config file defaults, then read in the config file
 	engine.initConfig();
 
 	try {
 		engine.loadConfig(configfile.c_str());
 	}
-
 	catch (const libconfig::FileIOException &fioex)
 	{
 		std::cerr << "I/O error reading config file: " << configfile << std::endl;
@@ -92,8 +93,11 @@ int main(int argc, char *argv[]) {
 								<< " - " << pex.getError() << std::endl;
 		return(EXIT_FAILURE);
 	}
+	std::cout << "done.\n";
 
+	std::cout << "   Initializing MUD engine:\n";
 	engine.initialize();
+	std::cout << "   Initialization complete.\n";
 
    // Will throw a SettingTypeException if these are not found. Get server info.
 	if (cl_ip_addr.size() == 0)
@@ -109,6 +113,7 @@ int main(int argc, char *argv[]) {
       throw socket_error(msg.c_str());
    }
 
+	std::cout << "   Binding listening socket to '" << cl_ip_addr << "' port '" << portval << "'..." << std::flush;
 	try {
 		engine.bootServer(cl_ip_addr.c_str(), (unsigned short) portval);
 
@@ -117,15 +122,21 @@ int main(int argc, char *argv[]) {
 		std::cerr << "Error bringing listening socket online: " << e.what() << std::endl;
 		return(EXIT_FAILURE);
 	}
+	std::cout << "done.\n";
 
 	// Primary MUD loop
+	std::cout << "   Starting listening thread..." << std::flush;
 	engine.startListeningThread();
+	std::cout << "done.\n";
 
+	std::cout << "MUD online. Starting primary loop.\n";
 	// Primary MUD loop
 	engine.runMUD();
 
+	std::cout << "Shutdown initiated. Cleaning up.\n";
 	// If we have gotten to this point, then the MUD is shutting down. Clean up
 	engine.cleanup();
 
+	std::cout << "Exiting.\n";
    return 0;
 }

@@ -10,7 +10,7 @@
 class LoginHandler : public Handler 
 {
 public:
-	LoginHandler(Player &plr, libconfig::Config &mud_cfg, LogMgr &log);
+	LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_cfg, LogMgr &log);
 	LoginHandler(const LoginHandler &copy_from);
 
 	virtual ~LoginHandler();
