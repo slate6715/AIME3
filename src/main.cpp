@@ -2,7 +2,7 @@
  * main (AIME3) - Primary reads in the command line and launches the MUD class
  *
  *
- ****************************************************************************************/  
+ ****************************************************************************************/
 
 #include <iostream>
 #include <getopt.h>
@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
    while ((c = getopt_long(argc, argv, "c:a:p:", long_options, &option_index)) != -1) {
       switch (c) {
 
-      // Override the default or config port number via command line argument 
+      // Override the default or config port number via command line argument
       case 'p':
          portval = (int) strtol(optarg, NULL, 10);
          break;
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 	// Create the MUD object and start configuring it
 	MUD engine;
 
-	
+
 	// Initialize the config file defaults, then read in the config file
 	engine.initConfig();
 
@@ -88,10 +88,10 @@ int main(int argc, char *argv[]) {
 	}
 	catch (const libconfig::ParseException &pex)
 	{
-		std::cerr << "Parse error in " << pex.getFile() << ", line: " << pex.getLine() 
+		std::cerr << "Parse error in " << pex.getFile() << ", line: " << pex.getLine()
 								<< " - " << pex.getError() << std::endl;
 		return(EXIT_FAILURE);
-	}	
+	}
 
 	engine.initialize();
 

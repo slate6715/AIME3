@@ -48,6 +48,12 @@ AX_BOOST_BASE([1.60.0],,
 	AC_MSG_ERROR([Program requires Boost but it was not found on your system])
 	)
 
+AX_PYTHON_DEVEL([>= '3'],,
+	AC_MSG_ERROR([Program requires python3 but it was not found on your system])
+	)
+
+AX_BOOST_PYTHON
+
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_FILES([Makefile
 		 src/Makefile])
