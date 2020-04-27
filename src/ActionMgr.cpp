@@ -7,17 +7,12 @@
 
 namespace lc = libconfig;
 
-hardcoded_actions cmd_array[] = {
-   {"info", infocom, Action::ActSubj, ""},
-   {"",0, Action::Undef, ""}
-};
-
 /*********************************************************************************************
  * ActionMgr (constructor) - 
  *
  *********************************************************************************************/
-ActionMgr::ActionMgr(LogMgr &mud_log):
-					_mud_log(mud_log),
+ActionMgr::ActionMgr(LogMgr &mud_mud_log):
+					_mud_log(mud_mud_log),
 					_action_db(),
 					_action_queue()
 {
@@ -50,24 +45,6 @@ ActionMgr::~ActionMgr() {
 
 void ActionMgr::initialize(lc::Config &cfg_info) {
 	
-	unsigned int i = 0;
-	
-	Action *aptr = NULL;
-
-	// Loop through the command list, creating hard-coded actions
-	while (cmd_array[i].act_id.size() > 0) {
-		aptr = new Action(cmd_array[i].act_id.c_str(), cmd_array[i].funct_ptr, cmd_array[i].ptype);
-
-		// Set up aliases here (TODO)
-
-
-		// Add this new action to the database of available commands
-		_action_db.insert(std::pair<std::string, std::shared_ptr<Action>>(aptr->getID(), 
-																	std::shared_ptr<Action>(aptr)));
-		std::cout << "Added action: " << aptr->getID() << std::endl;
-		i++;
-	}
-
 	// Load the script actions from the Actions directory
 	std::string actiondir;
 	cfg_info.lookupValue("datadir.actiondir", actiondir);
@@ -81,9 +58,42 @@ void ActionMgr::initialize(lc::Config &cfg_info) {
 	boost::filesystem::directory_iterator start(p), end;
 	std::transform(start, end, std::back_inserter(files), path_leaf_string());	
 
-
+	pugi::xml_document actionfile;
 	for (unsigned int i=0; i<files.size(); i++) {
 		std::cout << "Action file: " << files[i] << std::endl;
+			std::string filepath(actiondir);
+			filepath += "/";
+			filepath += files[i].c_str();
+	
+		   pugi::xml_parse_result result = actionfile.load_file(filepath.c_str());
+
+		   if (!result) {
+				std::string msg("Unable to open/parse Action file: ");
+				msg += filepath;
+				_mud_log.writeLog(msg.c_str());
+				continue;	
+			}
+
+			pugi::xml_node pnode = actionfile.child("Action");
+			if (pnode == nullptr) {
+				std::string msg("Corrupted action file for: ");
+				msg += filepath;
+				_mud_log.writeLog(msg);
+				continue;;
+			}
+
+			Action *new_act = new Action("temp");
+			if (!new_act->loadEntity(_mud_log, pnode)) {
+            std::string msg("Corrupted action file for: ");
+            msg += new_act->getID();
+            _mud_log.writeLog(msg);
+				delete new_act;
+            continue;
+			}
+
+			_action_db.insert(std::pair<std::string, std::shared_ptr<Action>>(new_act->getID(),
+                                                   std::shared_ptr<Action>(new_act)));
+     
 		// TODO - add code to load the files
 	}
 
@@ -155,21 +165,83 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg) {
 	std::cout << "Looking up command: " << elements[0] << std::endl;
 
 	lower(elements[0]);
+	std::string fullname("action@");
+	fullname += elements[0];
 
-	auto aptr = _action_db.find(elements[0]);
+	auto mapptr = _action_db.find(fullname);
 
 	// Find it using a literal search
-	if (aptr != _action_db.end()) {
-		return new Action(*(aptr->second));
+	if (mapptr != _action_db.end()) {
+		// return new Action(*(aptr->second).;
 	}
 
 	// If not found using a literal search, use an abbreviated search
 
 	// Not found, return NULL
-	errmsg = "I do not understand the command '";
-	errmsg += elements[0];
-	errmsg += "'";
-	return NULL;		
+	if (mapptr == _action_db.end()) {
+		errmsg = "I do not understand the command '";
+		errmsg += elements[0];
+		errmsg += "'";
+		return NULL;
+	}
+
+	std::shared_ptr<Action> aptr = mapptr->second;
+
+	size_t start = pos+1;
+	// We expect format <action> <subject> [<from> <container>]
+	if ((aptr->getParseType() == Action::ActTargOptCont) || (aptr->getParseType() == Action::ActTarg)) {
+		while ((pos = buf.find(" ", start)) != std::string::npos) {
+			elements.push_back(buf.substr(start, pos-start));
+			start = pos + 1;
+		}
+
+		// Get the last element
+		if (start < buf.size()) {
+			elements.push_back(buf.substr(start, buf.size() - start));
+		}
+
+	} else if ((aptr->getParseType() == Action::Tell) || (aptr->getParseType() == Action::Chat)) {
+	
+		// Get the target if it's a tell
+		if (aptr->getParseType() == Action::Tell) {
+			if ((pos = buf.find(" ", start)) == std::string::npos) {
+				errmsg = "Invalid format. Should be: ";
+				errmsg += aptr->getFormat();
+				return NULL;
+			}
+			elements.push_back(buf.substr(start, pos - start));
+			start = pos + 1;
+		}
+
+		// Get the string
+		if (start >= buf.size()) {
+         errmsg = "Invalid format. Should be: ";
+         errmsg += aptr->getFormat();
+         return NULL;
+		}
+
+		elements.push_back(buf.substr(start, buf.size() - start));
+	}
+	// If it's not single, then we don't recognize this type 
+	else if (aptr->getParseType() != Action::Single) {
+		errmsg = "Unrecognized command type for command: ";
+		errmsg += aptr->getID();
+		throw std::runtime_error(errmsg.c_str()); 
+	}
+
+	Action *new_act = new Action(*aptr);
+
+	// Action does some custom error-checking on the parse structure and preps for execution
+	if (!new_act->configAction(elements, errmsg)) {
+		delete new_act;
+		return NULL;
+	}
+	// Command line actions are executed right away
+	new_act->setExecuteNow();
+
+	// _action_queue.insert(std::shared_ptr<Action>(new_act));
+
+	return new_act;
 }
 
 /*********************************************************************************************

@@ -22,6 +22,8 @@ public:
 
 	void setID(const char *new_id);	// Be careful setting this, must be unique ID
 
+	int loadEntity(LogMgr &log, pugi::xml_node &enode);
+
 protected:
 	Entity(const char *id);	// Must be called from the child constructor
 	Entity(const Entity &copy_from);

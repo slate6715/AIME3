@@ -28,9 +28,9 @@ public:
 
    virtual ~Player();
 
-	void sendFile(const char *filename);
-	void sendMsg(const char *msg);
-	void sendMsg(std::string &msg);
+	virtual bool sendFile(const char *filename);
+	virtual void sendMsg(const char *msg);
+	virtual void sendMsg(std::string &msg);
 // 	friend std::ostream & operator<<(std::ostream &out, const Player &p);
 
 	void handleConnection();
@@ -38,7 +38,7 @@ public:
 	void welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions, std::shared_ptr<Player> thisplr);
 
 	// Sends the prompt of the top message handler to the player
-	void sendPrompt();
+	virtual void sendPrompt();
 
 	bool popCommand(std::string &cmd);
 

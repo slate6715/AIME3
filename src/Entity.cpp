@@ -110,4 +110,18 @@ int Entity::loadData(LogMgr &log, pugi::xml_node &entnode) {
 
 }
 
+/*********************************************************************************************
+ * loadEntity - Public entrypoint for all entities to load their class-specific details
+ *
+ *    Params:  entnode - This entity's node within the XML tree so attributes can be drawn from
+ *                       it
+ *             log - to log any errors
+ *
+ *    Returns: 1 for success, 0 for failure
+ *
+ *********************************************************************************************/
+
+int Entity::loadEntity(LogMgr &log, pugi::xml_node &enode) {
+	return loadData(log, enode);
+}
 

@@ -9,6 +9,7 @@
 #include <libconfig.h++>
 #include "misc.h"
 #include "Player.h"
+#include "LogMgr.h"
 
 /*******************************************************************************************
  * clrNewlines - removes \r and \n from the string passed into buf
@@ -70,9 +71,9 @@ int hideInput(int fd, bool hide) {
       return -1;
 
    if (hide)
-      tattr.c_lflag &= ~ECHO;
+      tattr.c_lflag &= (tcflag_t) ~ECHO;
    else
-      tattr.c_lflag |= ECHO;
+      tattr.c_lflag |= (tcflag_t) ECHO;
 
    if (tcsetattr(fd, TCSAFLUSH, &tattr) != 0)
       return -1; 
@@ -100,16 +101,22 @@ void genRandString(std::string &buf, size_t n) {
  * sendInfoFiles - sends a file or multiple files to the player, depending on if the config file
  *			has a single string or a list of strings
  *
+ *		Params:	plr - where are we sending the files
+ *					cfg - Used to get the infofiles directory
+ *					log - record any issues accessing the files
+ *				   ifile_setting - the text identifier for the config setting that defines the infofile
+ *					
+ *
  *******************************************************************************************/
 
-void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, const char *setting) {
+void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, LogMgr &log, const char *ifile_setting) {
 
    // Set up the directory string
    std::string infodir;
    cfg.lookupValue("datadir.infodir", infodir);
    infodir += "/";
 
-   libconfig::Setting &info_files = cfg.lookup("infofiles.welcome");
+   libconfig::Setting &info_files = cfg.lookup(ifile_setting);
 
    std::string filename, path;
    int count = info_files.getLength();
@@ -123,7 +130,12 @@ void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, const ch
       for (int i=0; i<count; i++) {
          path = infodir;
          path += (const char *) info_files[i];
-         plr->sendFile(path.c_str());
+         if (!plr->sendFile(path.c_str())) {
+				std::string errmsg("Unable to open or read info file '");
+				errmsg += (const char *) info_files[i];
+				errmsg += "'";
+				log.writeLog(errmsg.c_str());
+			}
       }
    }
 

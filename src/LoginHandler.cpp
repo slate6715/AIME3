@@ -214,7 +214,7 @@ void LoginHandler::prePop(std::vector<std::string> &results) {
 
 void LoginHandler::postPush() {
 
-	sendInfoFiles(_plr, _mud_cfg, "infofiles.welcome");
+	sendInfoFiles(_plr, _mud_cfg, _log, "infofiles.welcome");
 
 	_plr->sendPrompt();	
 }

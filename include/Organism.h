@@ -15,6 +15,12 @@ public:
 	
    virtual ~Organism();
 
+	// Virtual functions that do nothing for NPCs
+   virtual bool sendFile(const char *filename) { (void) filename; return true; };
+   virtual void sendMsg(const char *msg) { (void) msg; };
+   virtual void sendMsg(std::string &msg) { (void) msg; };
+	virtual void sendPrompt() {};
+//
 protected:
 	Organism(const char *id);	// Must be called from the child constructor
 	Organism(const Organism &copy_from);

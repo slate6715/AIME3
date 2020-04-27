@@ -74,6 +74,8 @@ void GameHandler::getPrompt(std::string &buf) {
 
 
 void GameHandler::prePop(std::vector<std::string> &results) {
+	results.clear();
+
 	throw std::runtime_error("This should not be called.");
 }
 

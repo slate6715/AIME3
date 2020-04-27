@@ -57,12 +57,4 @@ private:
 };
 
 
-struct hardcoded_actions {
-   std::string act_id;
-   int (*funct_ptr)(MUD &, Action &);
-   Action::parse_type ptype;
-   std::string aliases;
-};
-
-
 #endif

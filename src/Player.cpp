@@ -58,10 +58,11 @@ Player::~Player() {
  * sendFile - takes a filename and opens/sends the file to the user. Useful for things like 
  *			     the welcome message or motd, help files, info files, etc
  *
+ *		Returns: true if successfully read, false otherwise
  *
  *********************************************************************************************/
 
-void Player::sendFile(const char *filename) {
+bool Player::sendFile(const char *filename) {
 	
 	std::ifstream readfile;
 
@@ -79,17 +80,15 @@ void Player::sendFile(const char *filename) {
 
 		// Read in the file all at once
 		buf.assign((std::istreambuf_iterator<char>(readfile)), std::istreambuf_iterator<char>());
+		sendMsg("\n");
 		sendMsg(buf);
 
 		readfile.close();
 	}
 	catch (std::ifstream::failure &e) {
-		std::stringstream msg;
-		
-		msg << "Attempted to open/send file '" << filename << "' to player '" << getID() << "' failed. Error: " << e.what();
-		_log.writeLog(msg.str().c_str());	
+		return false;
 	}
-	
+	return true;
 }
 
 /*********************************************************************************************
