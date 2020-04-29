@@ -428,7 +428,29 @@ void Player::sendCurLocation() {
 	sendMsg("\n\n");
 	sendMsg(locptr->getDesc());
 	sendMsg("\n");
+
+	sendExits();
+	sendMsg("\n");
 }
+
+/*********************************************************************************************
+ * sendExits - displays all the visible exits to the user for their location
+ *
+ *
+ *********************************************************************************************/
+
+void Player::sendExits() {
+   std::shared_ptr<Location> locptr;
+
+   if ((locptr = std::dynamic_pointer_cast<Location>(getCurLoc())) == nullptr) {
+      sendMsg("You appear to be trapped inside a non-location entity. Speak to an Admin!\n");
+      return;
+   }
+
+	std::string buf;
+	sendMsg(locptr->getExitsStr(buf));
+}
+
 
 /*********************************************************************************************
  * handleCommand - sends the command to the top message handler for it to execute for this

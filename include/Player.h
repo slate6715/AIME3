@@ -40,6 +40,9 @@ public:
 	// Displays the current location to the user
 	virtual void sendCurLocation();
 
+	// Displays the exits of the current location to the user
+	virtual void sendExits();
+
 	// configures the connecting user for entering the MUD
 	void welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions, std::shared_ptr<Player> thisplr);
 

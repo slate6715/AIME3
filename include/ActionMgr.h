@@ -41,6 +41,8 @@ public:
 	Action *preAction(const char *cmd, std::string &errmsg);
 	Action *cloneAction(const char *cmd);
 	void execAction(Action *exec_act);
+	
+	std::shared_ptr<Action> findAction(const char *cmd);
 
 private:
 
@@ -49,7 +51,7 @@ private:
 
 	// One for each letter--points to the first action of that letter for quick lookup on
 	// abbreviated actions
-	std::map<std::string, std::shared_ptr<Action>>::iterator abbrev_table[26];
+	std::map<std::string, std::shared_ptr<Action>>::iterator _abbrev_table[26];
 
 	std::multiset<std::shared_ptr<Action>, compare_msa> _action_queue;
 

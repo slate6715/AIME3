@@ -49,11 +49,14 @@ unsigned int ActionMgr::initialize(lc::Config &cfg_info) {
 	// Load the actions from the Actions directory
 	std::string actiondir;
 	cfg_info.lookupValue("datadir.actiondir", actiondir);
-	
+
+   // Initialize the fast lookup iterators
+   for (unsigned int i=0; i<26; i++)
+      _abbrev_table[i] = _action_db.end();
+
+	// Load our actions from the actiondir files	
 	unsigned int count = loadActions(actiondir.c_str());
 
-	
-	// Build our abbrev_table for fast abbreviation lookups
 	return count;
 }
 
@@ -126,6 +129,24 @@ unsigned int ActionMgr::loadActions(const char *actiondir) {
 			count++;
 		}
 	}
+
+	// Now generate an abbreviation lookup lexical table
+	auto action_it = _action_db.begin();
+	char last_ltr = '.';
+	std::string id;
+
+	// Loop through all the actions
+	for (; action_it != _action_db.end(); action_it++) {
+		action_it->second->getNameID(id);
+
+		// If this is the start of a new first letter, assign a lookup iterator
+		if (id[0] != last_ltr) {
+			unsigned int idx = (unsigned int) id[0] - (unsigned int) 'a';
+			_abbrev_table[idx] = action_it;
+			last_ltr = id[0];
+		}
+	}	
+
 	return count;
 }
 
@@ -190,30 +211,16 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg) {
 		elements.push_back(buf.substr(0, pos));
 	}
 
-	std::cout << "Looking up command: " << elements[0] << std::endl;
-
 	lower(elements[0]);
-	std::string fullname("action@");
-	fullname += elements[0];
-
-	auto mapptr = _action_db.find(fullname);
-
-	// Find it using a literal search
-	if (mapptr != _action_db.end()) {
-		// return new Action(*(aptr->second).;
-	}
-
-	// If not found using a literal search, use an abbreviated search
+	std::shared_ptr<Action> aptr = findAction(elements[0].c_str());
 
 	// Not found, return NULL
-	if (mapptr == _action_db.end()) {
+	if (aptr == nullptr) {
 		errmsg = "I do not understand the command '";
 		errmsg += elements[0];
 		errmsg += "'";
 		return NULL;
 	}
-
-	std::shared_ptr<Action> aptr = mapptr->second;
 
 	size_t start = pos+1;
 	// We expect format <action> <subject> [<from> <container>]
@@ -344,4 +351,52 @@ void ActionMgr::execAction(Action *exec_act) {
 	_action_queue.insert(std::shared_ptr<Action>(exec_act));
 }
 
+/*********************************************************************************************
+ * findAction - takes a string command and first does a literal search on it. If not found,
+ *				    then does a slower iterative search assuming this was an abbreviation
+ *
+ *    Params:  cmd - the string provided by the player
+ *             errmsg - buffer that gets populated with error information if there is an issue
+ *
+ *    Returns: NULL if it failed, a point to a cloned Action object if successful. This object
+ *             should be returned using the execAction() function or deleted to avoid mem leaks
+ *
+ *********************************************************************************************/
 
+std::shared_ptr<Action> ActionMgr::findAction(const char *cmd) {
+	std::string cmdstr(cmd);
+
+   std::string fullname("action@");
+   fullname += cmdstr;
+
+   // Look for it using a literal search
+   auto mapptr = _action_db.find(fullname);
+
+	// Found it, return!
+   if (mapptr != _action_db.end()) {
+		return mapptr->second;
+   }
+
+   // If not found using a literal search, use an abbreviated search
+	unsigned int idx = (unsigned int) cmdstr[0] - (unsigned int) 'a';
+
+	// If there's no index'd commands, then no commands start with this letter
+	if (_abbrev_table[idx] == _action_db.end())
+		return nullptr;
+
+	// Else we found indexed commands, start searching
+	auto a_iter = _abbrev_table[idx];
+	std::string buf;
+	while (a_iter != _action_db.end()) {
+		a_iter->second->getNameID(buf);
+
+		// If we moved into different letters
+		if (buf[0] != cmdstr[0])
+			return nullptr;
+
+		// We have a match!
+		if (cmdstr.compare(0, cmdstr.size(), buf))
+			return a_iter->second;
+	}
+	return nullptr;
+}

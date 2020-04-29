@@ -45,6 +45,9 @@ public:
    // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
    virtual void addLinks(EntityDB &edb);
 
+	// Assembles a formatted list of the visible exits
+	const char *getExitsStr(std::string &buf);
+
 protected:
 
    virtual void saveData(pugi::xml_node &entnode) const;

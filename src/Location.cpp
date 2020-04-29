@@ -305,3 +305,40 @@ void Location::addLinks(EntityDB &edb) {
 }
 
 
+/*********************************************************************************************
+ * getExitsStr - Formats a display string of the exits that can be sent to the player
+ *
+ *		Params:	buf - the buffer where the string is populated
+ *	
+ *		Returns: pointer to the string in the param buffer
+ *
+ *********************************************************************************************/
+
+const char *Location::getExitsStr(std::string &buf) {
+	buf.clear();
+
+	buf += "Exits:\n";
+	std::string dir;
+	unsigned int count = 0;
+	for (unsigned int i=0; i<_exits.size(); i++) {
+
+		// Skip hidden exits
+		if (_exits[i].eflags[(size_t) Hidden])
+			continue;
+
+		dir = _exits[i].dir;
+		dir[0] = toupper(dir[0]);
+		
+		buf += "   ";
+		buf += dir;
+		buf += ": ";
+		buf += _exits[i].link_loc->getTitle();
+		buf += "\n";
+		count++;
+	}
+
+	if (count == 0) 
+		buf += "   None\n";
+	return buf.c_str();
+}
+

@@ -1,0 +1,3 @@
+<?xml version="1.0"?>
+<action id="action@exits" acttype="Hardcoded" parsetype="Single" format="exits" function="exitscom">
+</action> 

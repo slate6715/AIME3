@@ -21,6 +21,7 @@ public:
    virtual void sendMsg(std::string &msg) { (void) msg; };
 	virtual void sendPrompt() {};
 	virtual void sendCurLocation() {};
+	virtual void sendExits() {};
 //
 protected:
 	Organism(const char *id);	// Must be called from the child constructor

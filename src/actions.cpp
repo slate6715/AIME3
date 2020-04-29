@@ -94,3 +94,15 @@ int lookcom(MUD &engine, Action &act_used) {
 	return 1;
 }
 
+/*******************************************************************************************
+ * exitscom - used to show all the exits from this location
+ *******************************************************************************************/
+int exitscom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> agent = act_used.getAgent();
+
+	agent->sendMsg("\n");
+   agent->sendExits();
+	agent->sendMsg("\n");
+   return 1;
+}
+
