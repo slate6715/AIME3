@@ -4,13 +4,12 @@
 #include <string>
 #include <libconfig.h++>
 #include "Handler.h"
-#include "LogMgr.h"
 
 // Handles the entire login process, including account creation
 class LoginHandler : public Handler 
 {
 public:
-	LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_cfg, LogMgr &log);
+	LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_cfg);
 	LoginHandler(const LoginHandler &copy_from);
 
 	virtual ~LoginHandler();
@@ -28,8 +27,6 @@ private:
 
 	libconfig::Config &_mud_cfg;
 	
-	LogMgr &_log;
-
 	std::string _username;
 	std::string _new_passwd;
 

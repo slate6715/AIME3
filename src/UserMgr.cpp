@@ -2,7 +2,9 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include "UserMgr.h"
+#include "EntityDB.h"
 #include "misc.h"
+#include "global.h"
 
 namespace lc = libconfig;
 
@@ -10,11 +12,10 @@ namespace lc = libconfig;
  * UserMgr (constructor) - 
  *
  *********************************************************************************************/
-UserMgr::UserMgr(LogMgr &mud_log, ActionMgr &actions):
-					_mud_log(mud_log),
+UserMgr::UserMgr(ActionMgr &actions):
 					_actions(actions),
 					_db(),
-					_listen_sock(_mud_log),
+					_listen_sock(),
 					_newuser_idx(0),
 					_listening_thread(nullptr),
 					_infodir("data/info"),
@@ -27,7 +28,6 @@ UserMgr::UserMgr(LogMgr &mud_log, ActionMgr &actions):
 
 
 UserMgr::UserMgr(const UserMgr &copy_from):
-					_mud_log(copy_from._mud_log),
 					_actions(copy_from._actions),
 					_db(copy_from._db),
 					_listen_sock(copy_from._listen_sock),
@@ -114,7 +114,7 @@ void UserMgr::startListeningThread(lc::Config &cfg_info) {
 	int listening_loop = 8;
 	cfg_info.lookupValue("misc.listening_loop", listening_loop);
 	if (listening_loop < 1) {
-		_mud_log.writeLog("ERROR - Config setting listening_loop is less than 1 and invalid. Defaulting to 8.\n");
+		mudlog->writeLog("ERROR - Config setting listening_loop is less than 1 and invalid. Defaulting to 8.\n");
 		listening_loop = 8;
 	}
 
@@ -186,7 +186,7 @@ void UserMgr::checkNewUsers(libconfig::Config &mud_cfg){
 		std::string userid("player@newuser" + boost::lexical_cast<std::string>(_newuser_idx++));
 	
 		// Create a new Player object with this connection and a temp userid
-		std::shared_ptr<Player> new_plr(new Player(userid.c_str(), std::unique_ptr<TCPConn>{new_conn}, _mud_log));
+		std::shared_ptr<Player> new_plr(new Player(userid.c_str(), std::unique_ptr<TCPConn>{new_conn}));
 
 		_db.insert(std::pair<std::string, std::shared_ptr<Player>>(userid, new_plr));
 
@@ -205,7 +205,7 @@ void UserMgr::checkNewUsers(libconfig::Config &mud_cfg){
  *
  *********************************************************************************************/
 
-void UserMgr::handleUsers(){
+void UserMgr::handleUsers(libconfig::Config &cfg_info, EntityDB &edb){
 
 	// Loop through the players
 	auto plr_it = _db.begin();
@@ -241,8 +241,27 @@ void UserMgr::handleUsers(){
 						plr.setID(userkey.c_str());
 						_db.insert(std::pair<std::string, std::shared_ptr<Player>>(userkey, pptr));
 
+						std::string startloc;
+						cfg_info.lookupValue("gameplay.startloc", startloc);
+
+						std::shared_ptr<Entity> curloc;
+						if ((curloc = edb.getEntity(startloc.c_str())) == nullptr) {
+							std::string msg("Unable to assign incoming player to start loc '");
+							msg += startloc;
+							msg += "' defined in config file.";
+							mudlog->writeLog(msg.c_str());
+							
+							// Add code to boot the player
+							plr.sendMsg("Unable to assign you to a start location. Login filed.\n");
+							continue;	
+						}
+			
+						plr.moveEntity(curloc, plr_it->second);
+
 						// Send the MOTD to the user
 						plr.sendFile(_motdfile.c_str());
+
+						plr.sendCurLoc();
 						plr.sendPrompt();
 						continue;	
 					}
@@ -250,7 +269,7 @@ void UserMgr::handleUsers(){
 				else {
 					std::string msg("Message hander returned unexpected results for player: ");
 					msg += plr.getID();
-					_mud_log.writeLog(msg.c_str());
+					mudlog->writeLog(msg.c_str());
 				}
 
 			}

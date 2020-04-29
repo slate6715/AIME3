@@ -4,12 +4,12 @@
 #include "LoginHandler.h"
 #include "misc.h"
 #include "Player.h"
+#include "global.h"
 
 
-LoginHandler::LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_cfg, LogMgr &log):
+LoginHandler::LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_cfg):
 								Handler(plr),
 								_mud_cfg(mud_cfg),
-								_log(log),
 								_username(""),
 								_new_passwd(""),
 								_cur_state(AskUser)
@@ -19,7 +19,6 @@ LoginHandler::LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_c
 LoginHandler::LoginHandler(const LoginHandler &copy_from):
 								Handler(copy_from),
 								_mud_cfg(copy_from._mud_cfg),
-								_log(copy_from._log),
 								_username(copy_from._username),
 								_new_passwd(copy_from._new_passwd),
 								_cur_state(copy_from._cur_state)
@@ -126,7 +125,7 @@ int LoginHandler::handleCommand(std::string &cmd) {
 			if (!_plr->saveUser(userdir.c_str())) {
 				std::string msg("Unable to save user file to ");
 				msg += userdir;
-				_log.writeLog(msg.c_str());
+				mudlog->writeLog(msg.c_str());
 				_plr->sendMsg("Failed saving your user file. Alert an Admin.\n");
 				handler_state = Disconnect;
 				return 1;
@@ -214,7 +213,7 @@ void LoginHandler::prePop(std::vector<std::string> &results) {
 
 void LoginHandler::postPush() {
 
-	sendInfoFiles(_plr, _mud_cfg, _log, "infofiles.welcome");
+	sendInfoFiles(_plr, _mud_cfg, "infofiles.welcome");
 
 	_plr->sendPrompt();	
 }

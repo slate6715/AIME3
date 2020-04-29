@@ -1,15 +1,19 @@
 #include <fstream>
 #include <sstream>
+#include <iostream>
 #include <bitset>
 #include <argon2.h>
 #include <string.h>
 #include <boost/algorithm/hex.hpp>
+#include <memory>
 #include "Player.h"
 #include "LoginHandler.h"
 #include "GameHandler.h"
 #include "ActionMgr.h"
+#include "Location.h"
 #include "misc.h"
 #include "../external/pugixml.hpp"
+#include "global.h"
 
 // Defines the password hash/salt bytelength
 const unsigned int hashlen = 16;
@@ -23,14 +27,13 @@ const unsigned int saltlen = 8;
  *						    when this player object is destroyed
  *
  *********************************************************************************************/
-Player::Player(const char *id, std::unique_ptr<TCPConn> conn, LogMgr &log):
+Player::Player(const char *id, std::unique_ptr<TCPConn> conn):
 																Organism(id),
 																_conn(std::move(conn)),
 																_handler_stack(),
 																_cmd_mutex(),
 																_commands(),
 																_use_color(true),
-																_log(log),
 																_passwd_hash()
 {
 
@@ -44,7 +47,6 @@ Player::Player(const Player &copy_from):
 								_cmd_mutex(),
 								_commands(copy_from._commands),
 								_use_color(copy_from._use_color),
-								_log(copy_from._log),
 								_passwd_hash(copy_from._passwd_hash)
 {
 }
@@ -125,7 +127,7 @@ void Player::welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions, std::sh
 	_handler_stack.push(std::unique_ptr<Handler>(new GameHandler(thisplr, actions)));
 
 	// Now place a login handler on the stack
-	_handler_stack.push(std::unique_ptr<Handler>(new LoginHandler(thisplr, mud_cfg, _log)));
+	_handler_stack.push(std::unique_ptr<Handler>(new LoginHandler(thisplr, mud_cfg)));
 	_handler_stack.top()->postPush();
 }
 
@@ -358,6 +360,26 @@ void Player::sendPrompt() {
 	sendMsg(prompt);
 }
 
+/*********************************************************************************************
+ * sendCurLoc - displays all the pertinant information about the current location to the player
+ *
+ *
+ *********************************************************************************************/
+
+void Player::sendCurLoc() {
+	std::shared_ptr<Location> locptr;
+
+	if ((locptr = std::dynamic_pointer_cast<Location>(getCurLoc())) == nullptr) {
+		sendMsg("You appear to be trapped inside a non-location entity. Speak to an Admin!\n");
+		return;
+	}
+
+	sendMsg("\n");
+	sendMsg(locptr->getTitle());
+	sendMsg("\n\n");
+	sendMsg(locptr->getDesc());
+	sendMsg("\n");
+}
 
 /*********************************************************************************************
  * handleCommand - sends the command to the top message handler for it to execute for this
@@ -425,10 +447,10 @@ int Player::loadUser(const char *userdir, const char *username) {
 	if (pnode == nullptr) {
 		std::string msg("Corrupted player file for player ");
 		msg += user;
-		_log.writeLog(msg);
+		mudlog->writeLog(msg);
 		return 0;
 	}
-	loadData(_log, pnode);
+	loadData(pnode);
 	
    return 1;
 }
@@ -560,7 +582,6 @@ bool Player::checkPassword(const char *cleartext)
  *
  *    Params:  entnode - This entity's node within the XML tree so attributes can be added to
  *                       it. This should be set up by a child class
- *             log - to log any errors
  *
  *********************************************************************************************/
 
@@ -583,23 +604,22 @@ void Player::saveData(pugi::xml_node &entnode) const {
  *
  *    Params:  entnode - This entity's node within the XML tree so attributes can be drawn from
  *                       it
- *             log - to log any errors
  *
  *    Returns: 1 for success, 0 for failure
  *
  *********************************************************************************************/
 
-int Player::loadData(LogMgr &log, pugi::xml_node &entnode) {
+int Player::loadData(pugi::xml_node &entnode) {
 
    // First, call the parent function
    int results = 0;
-   if ((results = Organism::loadData(log, entnode)) != 1)
+   if ((results = Organism::loadData(entnode)) != 1)
       return results;
 	
 		
    pugi::xml_attribute attr = entnode.attribute("passwd");
    if (attr == nullptr) {
-      log.writeLog("Player save file missing mandatory 'passwd' field.", 2);
+      mudlog->writeLog("Player save file missing mandatory 'passwd' field.", 2);
       return 0;
    }
 	std::string pwdhash = attr.value();
@@ -607,5 +627,39 @@ int Player::loadData(LogMgr &log, pugi::xml_node &entnode) {
 	boost::algorithm::unhex(pwdhash.begin(), pwdhash.end(), _passwd_hash.begin());
 
 	return 1;
+}
+
+/*********************************************************************************************
+ * setFlagInternal - given the flag string, first checks the parent for the flag, then checks
+ *							this class' flags
+ *
+ *
+ *********************************************************************************************/
+
+bool Player::setFlagInternal(const char *flagname, bool newval) {
+	if (Organism::setFlagInternal(flagname, newval))
+		return true;
+
+	// Here we would look for player flags
+
+	return false;
+}
+
+/*********************************************************************************************
+ * isFlagSetInternal - given the flag string, first checks the parent for the flag, then checks
+ *                   this class' flags 
+ *
+ *		Params:	flagname - flag to set
+ *					results - if found, what the flag is set to
+ *	
+ *    Returns: true if the flag was found, false otherwise
+ *
+ *********************************************************************************************/
+
+bool Player::isFlagSetInternal(const char *flagname, bool &results) {
+	if (Organism::isFlagSetInternal(flagname, results))
+		return true;
+	
+	return false;
 }
 

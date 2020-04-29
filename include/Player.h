@@ -8,7 +8,6 @@
 #include <libconfig.h++>
 #include "Organism.h"
 #include "Handler.h"
-#include "LogMgr.h"
 #include "TCPConn.h"
 
 class ActionMgr;
@@ -23,7 +22,7 @@ class Player : public Organism
 {
 public:
 	
-	Player(const char *id, std::unique_ptr<TCPConn> conn, LogMgr &log);
+	Player(const char *id, std::unique_ptr<TCPConn> conn);
 	Player(const Player &copy_from);
 
    virtual ~Player();
@@ -31,14 +30,18 @@ public:
 	virtual bool sendFile(const char *filename);
 	virtual void sendMsg(const char *msg);
 	virtual void sendMsg(std::string &msg);
-// 	friend std::ostream & operator<<(std::ostream &out, const Player &p);
 
-	void handleConnection();
+   // Sends the prompt of the top message handler to the player
+   virtual void sendPrompt();
 
+	// Displays the current location to the user
+	virtual void sendCurLoc();
+
+	// configures the connecting user for entering the MUD
 	void welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions, std::shared_ptr<Player> thisplr);
 
-	// Sends the prompt of the top message handler to the player
-	virtual void sendPrompt();
+	// Loops through the player's connection, handling data
+	void handleConnection();
 
 	bool popCommand(std::string &cmd);
 
@@ -53,16 +56,21 @@ public:
    int loadUser(const char *userdir, const char *username);
    bool saveUser(const char *userdir) const;
    virtual void saveData(pugi::xml_node &entnode) const;
-   virtual int loadData(LogMgr &log, pugi::xml_node &entnode);
+   virtual int loadData(pugi::xml_node &entnode);
 
 
 	// Create a password for a new user or to change an existing user's password
 	void createPassword(const char *cleartext);
 
 	bool checkPassword(const char *cleartext);
-	
 
 protected:
+
+	// For any future player flags
+   virtual bool setFlagInternal(const char *flagname, bool newval);
+   virtual bool isFlagSetInternal(const char *flagname, bool &results);
+	
+
 
 private:
 
@@ -82,12 +90,13 @@ private:
 	// User-specific formatting variables
 	bool _use_color = true;
 
-	LogMgr &_log;
-
 	// **************** Player-specific variables ************************
 
 	// The salt/hash generated from the password
 	std::vector<unsigned char> _passwd_hash;
+
+	// **** Game-specific attributes ****
+
 };
 
 

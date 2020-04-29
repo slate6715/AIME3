@@ -1,7 +1,10 @@
 #include <iostream>
 #include "MUD.h"
+#include "global.h"
 
 namespace lc = libconfig;
+
+LogMgr *mudlog = NULL;
 
 /*********************************************************************************************
  * MUD (constructor) - creates our ReplServer. Initializes:
@@ -16,8 +19,8 @@ MUD::MUD():
 		_mud_config(),
 		_mudlog(),
 		_entity_db(),
-		_actions(_mudlog),
-		_users(_mudlog, _actions),
+		_actions(),
+		_users(_actions),
 		_time_between_heartbeat(100000)
 {
 
@@ -91,6 +94,25 @@ void MUD::loadConfig(const char *filename) {
 }
 
 /*********************************************************************************************
+ * startLog - configures the log and assigns the global pointer
+ *
+ *    Throws:
+ *
+ *
+ *********************************************************************************************/
+void MUD::startLog() {
+	std::string cstr_setting;
+	int cint_setting;
+	
+   _mud_config.lookupValue("misc.logfile", cstr_setting);
+   _mud_config.lookupValue("misc.loglvl", cint_setting);
+
+   _mudlog.changeFilename(cstr_setting.c_str());
+   _mudlog.setLogLvl((unsigned int) cint_setting);
+   mudlog = &_mudlog;
+}
+
+/*********************************************************************************************
  * initialize - Set up the MUD for operation
  *
  *    Throws:  
@@ -101,16 +123,8 @@ void MUD::loadConfig(const char *filename) {
 void MUD::initialize() {
 
 	// Start up the logs
-	std::string cstr_setting;
-	int cint_setting;
 	int heartbeat_per_sec;
 
-	_mud_config.lookupValue("misc.logfile", cstr_setting);
-	_mud_config.lookupValue("misc.loglvl", cint_setting);
-
-	_mudlog.changeFilename(cstr_setting.c_str());
-	_mudlog.setLogLvl((unsigned int) cint_setting);
-	
 	_mud_config.lookupValue("misc.heartbeat_per_sec", heartbeat_per_sec);
 	_time_between_heartbeat = 1000000 / heartbeat_per_sec;
 
@@ -119,6 +133,9 @@ void MUD::initialize() {
 	
 	// Init out actions manager
 	_actions.initialize(_mud_config);
+
+	// Load all entities
+	_entity_db.loadEntities(_mud_config);
 }
 
 /*********************************************************************************************
@@ -165,7 +182,7 @@ void MUD::runMUD() {
 		std::chrono::system_clock::time_point start = std::chrono::system_clock::now();
 
 		// Goes through the user's handlers, creating actions as required on the queue 
-		_users.handleUsers();
+		_users.handleUsers(_mud_config, _entity_db);
 
 		// Go through the actions in the queue, handling those that are being executed now
 		_actions.handleActions(*this);

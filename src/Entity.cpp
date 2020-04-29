@@ -1,5 +1,7 @@
 #include <cstring>
+#include <iostream>
 #include "Entity.h"
+#include "global.h"
 
 
 /*********************************************************************************************
@@ -75,7 +77,6 @@ void Entity::setID(const char *new_id) {
  *
  *		Params:	entnode - This entity's node within the XML tree so attributes can be added to
  *                       it. This should be set up by a child class
- *					log - to log any errors
  *
  *********************************************************************************************/
 
@@ -92,17 +93,16 @@ void Entity::saveData(pugi::xml_node &entnode) const {
  *
  *    Params:  entnode - This entity's node within the XML tree so attributes can be drawn from
  *								 it
- *					log - to log any errors
  *
  *		Returns: 1 for success, 0 for failure
  *
  *********************************************************************************************/
 
-int Entity::loadData(LogMgr &log, pugi::xml_node &entnode) {
+int Entity::loadData(pugi::xml_node &entnode) {
 
 	pugi::xml_attribute attr = entnode.attribute("id");
 	if (attr == nullptr) {
-		log.writeLog("Entity save file missing mandatory 'id' field.", 2);
+		mudlog->writeLog("Entity save file missing mandatory 'id' field.", 2);
 		return 0;
 	}
 	_id = attr.value();
@@ -115,13 +115,168 @@ int Entity::loadData(LogMgr &log, pugi::xml_node &entnode) {
  *
  *    Params:  entnode - This entity's node within the XML tree so attributes can be drawn from
  *                       it
- *             log - to log any errors
  *
  *    Returns: 1 for success, 0 for failure
  *
  *********************************************************************************************/
 
-int Entity::loadEntity(LogMgr &log, pugi::xml_node &enode) {
-	return loadData(log, enode);
+int Entity::loadEntity(pugi::xml_node &enode) {
+	return loadData(enode);
 }
+
+/*********************************************************************************************
+ * containsEntity - Checks if the entity is contained within this entity's container
+ *
+ *    Returns: true for contained, false otherwise
+ *
+ *********************************************************************************************/
+
+bool Entity::containsEntity(std::shared_ptr<Entity> ent_ptr) {
+	auto cptr = _contained.begin();
+	for ( ; cptr != _contained.end(); cptr++) {
+		if (ent_ptr == *cptr)
+			return true;
+	}
+	return false;
+}
+
+/*********************************************************************************************
+ * addEntity - adds the specified entity to the container
+ *
+ *    Returns: true if added, false if it was already contained
+ *
+ *********************************************************************************************/
+
+bool Entity::addEntity(std::shared_ptr<Entity> new_ent) {
+	if (containsEntity(new_ent))
+		return false;
+
+	_contained.push_back(new_ent);
+	return true;
+}
+
+/*********************************************************************************************
+ * removeEntity - Removes the entity from the container
+ *
+ *    Returns: true if found and removed, false if it was not found
+ *
+ *********************************************************************************************/
+
+bool Entity::removeEntity(std::shared_ptr<Entity> ent_ptr) {
+	auto cptr = _contained.begin();
+
+   for ( ; cptr != _contained.end(); cptr++) {
+      if (ent_ptr == *cptr){
+         _contained.erase(cptr);
+			return true;
+		}
+   }
+   return false;
+}
+
+/*********************************************************************************************
+ * moveEntity - Moves this entity to a new location, first removing it from the old locale and
+ *					 planting it in the new one
+ *
+ *		Params:	new_ent - the new location for this object
+ *					self - shared_ptr of itself - if null, will look in the _cur_loc for its shared
+ *							 pointer
+ *
+ *    Returns: true if successful, false if there was an anomaly
+ *
+ *********************************************************************************************/
+
+bool Entity::moveEntity(std::shared_ptr<Entity> new_ent, std::shared_ptr<Entity> self) {
+	bool results = true;
+
+	if (new_ent == nullptr) {
+		throw std::runtime_error("Entity::moveEntity: attempted to set location to null Entity");
+	}
+
+	if (self == nullptr) {
+		self = _cur_loc->getContained(this);
+		if (self == nullptr){
+			throw std::runtime_error("Entity::moveEntity: Could not retrieve self shared_ptr");
+		}
+
+		if (_cur_loc != nullptr)
+			results &= _cur_loc->removeEntity(self);
+	}
+	_cur_loc = new_ent;
+
+	results &= new_ent->addEntity(self);
+	return results;
+}
+
+/*********************************************************************************************
+ * getContained - retrieves the shared pointer of the contained entity based on a regular pointer
+ *
+ *    Returns: applicable shared pointer (which points to null if failed) 
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Entity> Entity::getContained(Entity *eptr) {
+   auto cptr = _contained.begin();
+
+   for ( ; cptr != _contained.end(); cptr++) {
+      if (eptr == &(**cptr)){
+			return *cptr;
+      }
+   }
+   return std::shared_ptr<Entity>(nullptr);
+}
+
+/*********************************************************************************************
+ * setFlag, setFlagInternal - given the flag string, sets the flag or returns false if not found.
+ *								Internal version calls up to parents to check their flags.
+ *
+ *		Throws: invalid_argument if the flag is not a valid flag
+ *
+ *********************************************************************************************/
+
+void Entity::setFlag(const char *flagname, bool newval) {
+	if (!setFlagInternal(flagname, newval)) {
+		std::string msg("Unrecognized flag for entity class '");
+		msg += flagname;
+		msg += "'";
+		throw std::invalid_argument(msg.c_str());
+	}
+}
+
+bool Entity::setFlagInternal(const char *flagname, bool newval) {
+	// Does nothing right now
+	(void) flagname;
+	(void) newval;
+	return false;
+}
+
+/*********************************************************************************************
+ * isFlagSet, isFlagSetInternal - given the flag string, returns the flag setting for this entity
+ *                      Internal version calls up to parents to check their flags.
+ *
+ *    Returns: true if flag is set, false otherwise
+ *
+ *    Throws: invalid_argument if the flag is not a valid flag
+ *
+ *********************************************************************************************/
+
+bool Entity::isFlagSet(const char *flagname) {
+	bool results;
+
+	if (!isFlagSetInternal(flagname, results)) {
+      std::string msg("Unrecognized flag for entity class '");
+      msg += flagname;
+      msg += "'";
+      throw std::invalid_argument(msg.c_str());
+	}
+	return results;
+}
+
+bool Entity::isFlagSetInternal(const char *flagname, bool &results) {
+	// No entity flags yet
+	(void) flagname; 
+	(void) results;
+	return false;
+}
+
 

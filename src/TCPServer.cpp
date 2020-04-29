@@ -12,10 +12,10 @@
 #include <sstream>
 #include "TCPServer.h"
 #include "ALMgr.h"
+#include "global.h"
 
-TCPServer::TCPServer(LogMgr &log):
+TCPServer::TCPServer():
 								_sockfd(),
-								_log(log),
 								_use_accesslist(false),
 								_whitelist(false),
 								_whitelist_file("")
@@ -60,7 +60,7 @@ void TCPServer::listenSvr() {
    std::stringstream msg;
    _sockfd.getIPAddrStr(ipaddr_str);
    msg << "Server listening on IP " << ipaddr_str << "' port '" << _sockfd.getPort() << "'";
-   _log.writeLog(msg.str().c_str());
+   mudlog->writeLog(msg.str().c_str());
 }
 
 
@@ -81,7 +81,7 @@ TCPConn *TCPServer::handleSocket() {
       // Try to accept the connection
       TCPConn *new_conn = new TCPConn();
       if (!new_conn->accept(_sockfd)) {
-         _log.strerrLog("Data received on listening socket but accept failed.");
+         mudlog->strerrLog("Data received on listening socket but accept failed.");
          return NULL;
       }
 
@@ -107,7 +107,7 @@ TCPConn *TCPServer::handleSocket() {
 				std::string msg = "Connection by IP address '";
 				msg += ipaddr_str;
 				msg += "' not allowed based on access list config.";
-				_log.writeLog(msg);
+				mudlog->writeLog(msg);
 
 				return NULL;
 			}
@@ -116,7 +116,7 @@ TCPConn *TCPServer::handleSocket() {
       std::string msg = "Connection from IP address '";
       msg += ipaddr_str;
       msg += "'.";
-      _log.writeLog(msg);
+      mudlog->writeLog(msg);
 
       // Send an authentication string in cleartext
 
@@ -164,7 +164,7 @@ void TCPServer::handleConnections() {
                         " failed when trying to send data. Msg: " << e.what();
                if (_verbosity >= 2)
                   std::cout << msg.str() << "\n";
-               _log.writeLog(msg.str().c_str());
+               mudlog->writeLog(msg.str().c_str());
                (*tptr)->disconnect();
                (*tptr)->reconnect = time(NULL) + reconnect_delay;
                tptr++;
@@ -176,7 +176,7 @@ void TCPServer::handleConnections() {
             std::string msg = "Node ID '";
             msg += (*tptr)->getNodeID();
             msg += "' lost connection.";
-            _log.writeLog(msg);
+            mudlog->writeLog(msg);
 
             // Remove them from the connect list
             tptr = _connlist.erase(tptr);
@@ -204,7 +204,7 @@ void TCPServer::handleConnections() {
  **********************************************************************************************/
 
 void TCPServer::shutdown() {
-   _log.writeLog("Server shutting down.");
+   mudlog->writeLog("Server shutting down.");
 
    _sockfd.closeFD();
 }

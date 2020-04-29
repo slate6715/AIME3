@@ -4,7 +4,6 @@
 #include <memory>
 #include "FileDesc.h"
 #include "TCPConn.h"
-#include "LogMgr.h"
 
 /********************************************************************************************
  * TCPServer - Basic functionality to manage a server socket and a list of connections. 
@@ -17,7 +16,7 @@
 class TCPServer 
 {
 public:
-   TCPServer(LogMgr &log);
+   TCPServer();
    virtual ~TCPServer();
 
    virtual void bindSvr(const char *ip_addr, unsigned short port);
@@ -36,8 +35,6 @@ protected:
 private:
    // Class to manage the server socket
    SocketFD _sockfd;
-
-	LogMgr &_log;
 
 	// Access control
 	bool _use_accesslist = false;

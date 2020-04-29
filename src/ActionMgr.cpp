@@ -4,6 +4,7 @@
 #include <boost/filesystem.hpp>
 #include "ActionMgr.h"
 #include "misc.h"
+#include "global.h"
 
 namespace lc = libconfig;
 
@@ -11,8 +12,7 @@ namespace lc = libconfig;
  * ActionMgr (constructor) - 
  *
  *********************************************************************************************/
-ActionMgr::ActionMgr(LogMgr &mud_mud_log):
-					_mud_log(mud_mud_log),
+ActionMgr::ActionMgr():
 					_action_db(),
 					_action_queue()
 {
@@ -22,7 +22,6 @@ ActionMgr::ActionMgr(LogMgr &mud_mud_log):
 
 
 ActionMgr::ActionMgr(const ActionMgr &copy_from):
-					_mud_log(copy_from._mud_log),
 					_action_db(copy_from._action_db),
 					_action_queue(copy_from._action_queue)
 {
@@ -41,66 +40,82 @@ ActionMgr::~ActionMgr() {
  *    Params:  cfg_info - The libconfig::Config object that stores all the necessary config info
  *                        to set up the user manager 
  *
+ *		Returns: number of actions loaded
+ *
  *********************************************************************************************/
 
-void ActionMgr::initialize(lc::Config &cfg_info) {
+unsigned int ActionMgr::initialize(lc::Config &cfg_info) {
 	
-	// Load the script actions from the Actions directory
+	// Load the actions from the Actions directory
 	std::string actiondir;
 	cfg_info.lookupValue("datadir.actiondir", actiondir);
-	std::vector<std::string> files;
-	boost::filesystem::path p(actiondir);
-	if (!boost::filesystem::exists(p)) {
-		std::string msg("Actiondir defined in config file doesn't appear to exist at: ");
-		msg += actiondir;
-		throw std::runtime_error(msg.c_str());
-	}
-	boost::filesystem::directory_iterator start(p), end;
-	std::transform(start, end, std::back_inserter(files), path_leaf_string());	
-
-	pugi::xml_document actionfile;
-	for (unsigned int i=0; i<files.size(); i++) {
-		std::cout << "Action file: " << files[i] << std::endl;
-			std::string filepath(actiondir);
-			filepath += "/";
-			filepath += files[i].c_str();
 	
-		   pugi::xml_parse_result result = actionfile.load_file(filepath.c_str());
+	unsigned int count = loadActions(actiondir.c_str());
 
-		   if (!result) {
-				std::string msg("Unable to open/parse Action file: ");
-				msg += filepath;
-				_mud_log.writeLog(msg.c_str());
-				continue;	
-			}
+	
+	// Build our abbrev_table for fast abbreviation lookups
+	return count;
+}
 
-			pugi::xml_node pnode = actionfile.child("Action");
-			if (pnode == nullptr) {
-				std::string msg("Corrupted action file for: ");
-				msg += filepath;
-				_mud_log.writeLog(msg);
-				continue;;
-			}
+/*********************************************************************************************
+ * loadActions - reads in the given actions directory and loads all those files
+ *
+ *    Params:  actiondir - path to the actions directory where the actions files are
+ *
+ *		REturns: the number read in
+ *
+ *********************************************************************************************/
+
+
+unsigned int ActionMgr::loadActions(const char *actiondir) {
+   std::vector<std::string> files;
+   boost::filesystem::path p(actiondir);
+  
+   if (!boost::filesystem::exists(actiondir)) {
+      std::string msg("Actiondir defined in config file doesn't appear to exist at: ");
+      msg += actiondir;
+      throw std::runtime_error(msg.c_str());
+   }
+   boost::filesystem::directory_iterator start(p), end;
+   std::transform(start, end, std::back_inserter(files), path_leaf_string());
+
+	unsigned int count = 0;
+   pugi::xml_document actionfile;
+   for (unsigned int i=0; i<files.size(); i++) {
+      std::cout << "Action file: " << files[i] << std::endl;
+      std::string filepath(actiondir);
+      filepath += "/";
+      filepath += files[i].c_str();
+
+      pugi::xml_parse_result result = actionfile.load_file(filepath.c_str());
+
+      if (!result) {
+         std::string msg("Unable to open/parse Action file: ");
+         msg += filepath;
+         mudlog->writeLog(msg.c_str());
+         continue;
+      }
+
+		// Loop through all the actions in this file
+      for (pugi::xml_node actnode = actionfile.child("Action"); actnode; actnode = actnode.next_sibling("Action")) {
 
 			Action *new_act = new Action("temp");
-			if (!new_act->loadEntity(_mud_log, pnode)) {
-            std::string msg("Corrupted action file for: ");
-            msg += new_act->getID();
-            _mud_log.writeLog(msg);
+			if (!new_act->loadEntity(actnode)) {
+				std::string msg("Corrupted action file for: ");
+				msg += new_act->getID();
+				mudlog->writeLog(msg);
 				delete new_act;
-            continue;
+				continue;
 			}
 
 			_action_db.insert(std::pair<std::string, std::shared_ptr<Action>>(new_act->getID(),
                                                    std::shared_ptr<Action>(new_act)));
-     
-		// TODO - add code to load the files
+			count++;
+		}
 	}
-
-	
-	// Build our abbrev_table for fast abbreviation lookups
-
+	return count;
 }
+
 
 /*********************************************************************************************
  * handleActions - goes through the action queue, executing those actions whose timer is < now().

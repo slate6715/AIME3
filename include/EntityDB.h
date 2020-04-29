@@ -18,7 +18,10 @@ public:
    EntityDB(const EntityDB &copy_from);
    virtual ~EntityDB();
 
-	
+	int loadEntities(libconfig::Config &mud_cfg);
+
+	std::shared_ptr<Entity> getEntity(const char *id);
+
  
 private:
 	std::map<std::string, std::shared_ptr<Entity>> _db;

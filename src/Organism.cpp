@@ -1,5 +1,5 @@
 #include "Organism.h"
-
+#include "global.h"
 
 /*********************************************************************************************
  * Organism (constructor) - Called by a child class to initialize any Organism elements
@@ -49,17 +49,16 @@ void Organism::saveData(pugi::xml_node &entnode) const {
  *
  *    Params:  entnode - This entity's node within the XML tree so attributes can be drawn from
  *                       it
- *             log - to log any errors
  *
  *    Returns: 1 for success, 0 for failure
  *
  *********************************************************************************************/
 
-int Organism::loadData(LogMgr &log, pugi::xml_node &entnode) {
+int Organism::loadData(pugi::xml_node &entnode) {
 
 	// First, call the parent function
 	int results = 0;
-	if ((results = Entity::loadData(log, entnode)) != 1)
+	if ((results = Entity::loadData(entnode)) != 1)
 		return results;
 
 	// Now populate organism data (none yet)
@@ -73,4 +72,36 @@ int Organism::loadData(LogMgr &log, pugi::xml_node &entnode) {
 	return 1;
 }
 
+/*********************************************************************************************
+ * setFlagInternal - given the flag string, first checks the parent for the flag, then checks
+ *                   this class' flags
+ *
+ *
+ *********************************************************************************************/
+
+bool Organism::setFlagInternal(const char *flagname, bool newval) {
+   if (Entity::setFlagInternal(flagname, newval))
+      return true;
+
+   // Here we would look for player flags
+	return false;
+}
+
+/*********************************************************************************************
+ * isFlagSetInternal - given the flag string, first checks the parent for the flag, then checks
+ *                   this class' flags
+ *
+ *    Params:  flagname - flag to set
+ *             results - if found, what the flag is set to
+ *
+ *    Returns: true if the flag was found, false otherwise
+ *
+ *********************************************************************************************/
+
+bool Organism::isFlagSetInternal(const char *flagname, bool &results) {
+   if (Entity::isFlagSetInternal(flagname, results))
+      return true;
+
+	return false;
+}
 

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<Location id="start@thevoid" Title="The Void">
+<Exit name="east" location="start@light" eflags="" />
+<LFlag name="Outdoors" />
+<Desc>A void extends in all directions to infinity. While most voids are often just dark, foreboding places, this one is without any form whatsoever...just...empty. Nothing. Well, nothing, except the dark surface that you stand upon. Beneath that hard surface is a sense of further depth, stretching into the unknown. The surface seems to flex slightly under your weight, hinting at its fragility. Jumping too hard upon it may cause cracking and infinite plunging into the nothing that lies in the deep places of the void. 
+
+To the east, there's appears to be slightly less darkness.
+</Desc>
+</Location> 
+
+<Location id="start@light" Title="The Light">
+<Exit name="west" location="start@thevoid" eflags="" />
+<Exit name="east" location="start@thesea" eflags="" />
+<LFlag name="Outdoors" />
+<LFlag name="Bright" />
+<Desc>The light above is blinding white, accented only by a dark surface beneath your feet. The horizon, split between light and dark, extends as far as the eye can see in all directions. To the west, the light appears to let up slightly. A salty smell drifts in from the east on a gentle breeze. 
+</Desc>
+</Location>
+
+

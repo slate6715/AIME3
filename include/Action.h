@@ -66,7 +66,10 @@ public:
 protected:
 
    virtual void saveData(pugi::xml_node &entnode) const;
-   virtual int loadData(LogMgr &log, pugi::xml_node &entnode);
+   virtual int loadData(pugi::xml_node &entnode);
+
+   virtual bool setFlagInternal(const char *flagname, bool newval);
+   virtual bool isFlagSetInternal(const char *flagname, bool &results);
 
 private:
 

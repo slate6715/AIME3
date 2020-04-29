@@ -20,13 +20,17 @@ public:
    virtual void sendMsg(const char *msg) { (void) msg; };
    virtual void sendMsg(std::string &msg) { (void) msg; };
 	virtual void sendPrompt() {};
+	virtual void sendCurLocation() {};
 //
 protected:
 	Organism(const char *id);	// Must be called from the child constructor
 	Organism(const Organism &copy_from);
 
    virtual void saveData(pugi::xml_node &entnode) const;
-   virtual int loadData(LogMgr &log, pugi::xml_node &entnode);
+   virtual int loadData(pugi::xml_node &entnode);
+
+   virtual bool setFlagInternal(const char *flagname, bool newval);
+   virtual bool isFlagSetInternal(const char *flagname, bool &results);
 
 private:
 };

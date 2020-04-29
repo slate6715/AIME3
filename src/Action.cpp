@@ -4,6 +4,7 @@
 #include "MUD.h"
 #include "actions.h"
 #include "misc.h"
+#include "global.h"
 
 
 const char *ptype_list[] = {"undef", "single", "acttarg", "acttargoptcont", "chat", "tell", NULL};
@@ -85,11 +86,11 @@ void Action::saveData(pugi::xml_node &entnode) const {
  *
  *********************************************************************************************/
 
-int Action::loadData(LogMgr &log, pugi::xml_node &entnode) {
+int Action::loadData(pugi::xml_node &entnode) {
 
 	// First, call the parent function
 	int results = 0;
-	if ((results = Entity::loadData(log, entnode)) != 1)
+	if ((results = Entity::loadData(entnode)) != 1)
 		return results;
 
 	std::stringstream errmsg;
@@ -98,7 +99,7 @@ int Action::loadData(LogMgr &log, pugi::xml_node &entnode) {
    pugi::xml_attribute attr = entnode.attribute("ActType");
    if (attr == nullptr) {
 		errmsg << "Action '" << getID() << "' missing mandatory ActType field."; 
-		log.writeLog(errmsg.str().c_str());
+		mudlog->writeLog(errmsg.str().c_str());
 		return 0;
 	}
 
@@ -110,7 +111,7 @@ int Action::loadData(LogMgr &log, pugi::xml_node &entnode) {
 		_atype = Script;
 	else {
 		errmsg << "Action '" << getID() << "' ActType field has invalid value: " << attstr;
-		log.writeLog(errmsg.str().c_str());
+		mudlog->writeLog(errmsg.str().c_str());
 		return 0;
 	}
 
@@ -118,7 +119,7 @@ int Action::loadData(LogMgr &log, pugi::xml_node &entnode) {
    attr = entnode.attribute("ParseType");
    if (attr == nullptr) {
       errmsg << "Action '" << getID() << "' missing mandatory ParseType field.";
-      log.writeLog(errmsg.str().c_str());
+      mudlog->writeLog(errmsg.str().c_str());
       return 0;
    }
 	
@@ -131,7 +132,7 @@ int Action::loadData(LogMgr &log, pugi::xml_node &entnode) {
 
    if ((i == 0) || (ptype_list[i] == NULL)) {
       errmsg << "Action '" << getID() << "' ParseType field has invalid value: " << attstr;
-      log.writeLog(errmsg.str().c_str());
+      mudlog->writeLog(errmsg.str().c_str());
       return 0;
    }
 	_ptype = (parse_type) i;
@@ -141,7 +142,7 @@ int Action::loadData(LogMgr &log, pugi::xml_node &entnode) {
 		attr = entnode.attribute("Function");
 		if (attr == nullptr) {
 			errmsg << "Hardcoded Action '" << getID() << "' missing mandatory Function field.";
-			log.writeLog(errmsg.str().c_str());
+			mudlog->writeLog(errmsg.str().c_str());
 			return 0;
 		}
 
@@ -153,7 +154,7 @@ int Action::loadData(LogMgr &log, pugi::xml_node &entnode) {
 
 		if (cmd_array[i].funct_ptr == NULL) {
 			errmsg << "Hardcoded Action '" << getID() << "' function mapping '" << attstr << "' not found.";
-			log.writeLog(errmsg.str().c_str());
+			mudlog->writeLog(errmsg.str().c_str());
 			return 0;
 		}
 		_act_ptr = cmd_array[i].funct_ptr;
@@ -167,21 +168,15 @@ int Action::loadData(LogMgr &log, pugi::xml_node &entnode) {
 
 	// Get the Action Flags (if any)
 	for (pugi::xml_node flag = entnode.child("ActFlag"); flag; flag = flag.next_sibling("ActFlag")) {
-		std::string flagstr = flag.child_value();
-		lower(flagstr);
-	
-		i=0;
-		while ((aflag_list[i] != NULL) && (flagstr.compare(aflag_list[i]) != 0))
-			i++;
-
-		if (ptype_list[i] == NULL)
-		{
-			errmsg << "Action '" << getID() << "' ActFlag '" << flagstr << "' is not recognized.";
-			log.writeLog(errmsg.str().c_str());
+		try {
+			setFlag(flag.child_value(), true);
+		} 
+		catch (std::invalid_argument &e) {
+			errmsg << "Action '" << getID() << "' ActFlag error: " << e.what();
+			mudlog->writeLog(errmsg.str().c_str());
 			return 0;
 		}
 
-		_actflags[i] = true;
 	}	
 
 	return 1;
@@ -277,6 +272,64 @@ void Action::setFormat(const char *format) {
 bool Action::configAction(std::vector<std::string> &tokens, std::string &errmsg) {
 	_tokens = tokens;
 
+	// Prob more to come here
+	(void) errmsg;
+
 	return true;	
+}
+
+/*********************************************************************************************
+ * setFlagInternal - given the flag string, first checks the parent for the flag, then checks
+ *                   this class' flags
+ *
+ *
+ *********************************************************************************************/
+
+bool Action::setFlagInternal(const char *flagname, bool newval) {
+   if (Entity::setFlagInternal(flagname, newval))
+      return true;
+
+	std::string flagstr = flagname;
+   lower(flagstr);
+
+   size_t i=0;
+   while ((aflag_list[i] != NULL) && (flagstr.compare(aflag_list[i]) != 0))
+      i++;
+
+   if (aflag_list[i] == NULL)
+      return false;
+
+   _actflags[i] = true;
+	return true;
+}
+
+/*********************************************************************************************
+ * isFlagSetInternal - given the flag string, first checks the parent for the flag, then checks
+ *                   this class' flags
+ *
+ *    Params:  flagname - flag to set
+ *             results - if found, what the flag is set to
+ *
+ *    Returns: true if the flag was found, false otherwise
+ *
+ *********************************************************************************************/
+
+bool Action::isFlagSetInternal(const char *flagname, bool &results) {
+   if (Entity::isFlagSetInternal(flagname, results))
+      return true;
+
+   std::string flagstr = flagname;
+   lower(flagstr);
+
+   size_t i=0;
+   while ((aflag_list[i] != NULL) && (flagstr.compare(aflag_list[i]) != 0))
+      i++;
+
+   if (aflag_list[i] == NULL)
+      return false;
+
+	results =_actflags[i];
+   return true;
+
 }
 

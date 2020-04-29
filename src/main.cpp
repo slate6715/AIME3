@@ -7,6 +7,7 @@
 #include <iostream>
 #include <getopt.h>
 #include "MUD.h"
+#include "global.h"
 
 /*****************************************************************************************
  * displayHelp - Shows command line parameters to the user.
@@ -95,9 +96,14 @@ int main(int argc, char *argv[]) {
 	}
 	std::cout << "done.\n";
 
+	engine.startLog();
+
+	mudlog->writeLog("Bootstrapping AIME3 MUD");
+
 	std::cout << "   Initializing MUD engine:\n";
 	engine.initialize();
 	std::cout << "   Initialization complete.\n";
+
 
    // Will throw a SettingTypeException if these are not found. Get server info.
 	if (cl_ip_addr.size() == 0)

@@ -9,7 +9,7 @@
 #include <libconfig.h++>
 #include "misc.h"
 #include "Player.h"
-#include "LogMgr.h"
+#include "global.h"
 
 /*******************************************************************************************
  * clrNewlines - removes \r and \n from the string passed into buf
@@ -109,7 +109,7 @@ void genRandString(std::string &buf, size_t n) {
  *
  *******************************************************************************************/
 
-void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, LogMgr &log, const char *ifile_setting) {
+void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, const char *ifile_setting) {
 
    // Set up the directory string
    std::string infodir;
@@ -134,7 +134,7 @@ void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, LogMgr &
 				std::string errmsg("Unable to open or read info file '");
 				errmsg += (const char *) info_files[i];
 				errmsg += "'";
-				log.writeLog(errmsg.c_str());
+				mudlog->writeLog(errmsg.c_str());
 			}
       }
    }

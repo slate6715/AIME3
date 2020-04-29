@@ -26,12 +26,14 @@ struct compare_msa {
 class ActionMgr 
 {
 public:
-	ActionMgr(LogMgr &mud_log);
+	ActionMgr();
    ActionMgr(const ActionMgr &copy_from);
    virtual ~ActionMgr();
 
 	// Initialize certain variables for this class from the config file
-	void initialize(libconfig::Config &cfg_info);
+	unsigned int initialize(libconfig::Config &cfg_info);
+
+	unsigned int loadActions(const char *actiondir);
 
 	// Go through the action queue, executing those whose timer is < now()
 	void handleActions(MUD &engine);
@@ -41,9 +43,6 @@ public:
 	void execAction(Action *exec_act);
 
 private:
-
-	// The log manager passed in by reference on object creation
-	LogMgr &_mud_log;
 
 	// The database of available actions and aliases 
 	std::map<std::string, std::shared_ptr<Action>> _action_db;

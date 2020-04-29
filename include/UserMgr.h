@@ -4,9 +4,11 @@
 #include <map>
 #include <memory>
 #include <thread>
+#include <libconfig.h++>
 #include "TCPServer.h"
 #include "Player.h"
 #include "ActionMgr.h"
+#include "EntityDB.h"
 
 /****************************************************************************************
  * UserMgr - class that stores and manages the connected players and provides methods for
@@ -17,7 +19,7 @@
 class UserMgr 
 {
 public:
-	UserMgr(LogMgr &mud_log, ActionMgr &actions);
+	UserMgr(ActionMgr &actions);
    UserMgr(const UserMgr &copy_from);
    virtual ~UserMgr();
 
@@ -39,7 +41,7 @@ public:
 	
 	// Loop through all users, performing maintenance and executing their next
 	// command via their handler
-	void handleUsers();
+	void handleUsers(libconfig::Config &cfg_info, EntityDB &edb);
 
 	// Functions for loading and saving user info to disk 
 	int loadUser(const char *username, Player &plr);
@@ -48,9 +50,6 @@ public:
 	bool saveUser(const Player &plr);
 
 private:
-
-	// The log manager passed in by reference on object creation
-	LogMgr &_mud_log;
 
 	// Used by the handlers to queue up commands/actions to be executed
 	ActionMgr &_actions;

@@ -22,6 +22,7 @@ public:
 	void initConfig();
 	void loadConfig(const char *filename);
 
+	void startLog();
 	void initialize();
 
 	void bootServer(const char *ip_addr, unsigned short port);

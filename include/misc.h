@@ -25,7 +25,7 @@ void genRandString(std::string &buf, size_t n);
 
 // sends a file or multiple files to the player, depending on if the config file
 // has a single string or a list of strings
-void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, LogMgr &log, const char *ifile_setting);
+void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, const char *ifile_setting);
 
 // Used for iterating files in a directory
 struct path_leaf_string 
