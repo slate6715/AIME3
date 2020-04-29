@@ -81,7 +81,7 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
       }
 
 		// Get all locations
-		for (pugi::xml_node loc = zonefile.child("Location"); loc; loc = loc.next_sibling("Location")) {
+		for (pugi::xml_node loc = zonefile.child("location"); loc; loc = loc.next_sibling("location")) {
 			Location *new_ent = new Location("temp");
 			if (!new_ent->loadEntity(loc)) {
 				std::stringstream msg;
@@ -97,6 +97,14 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
  			 
 		}
 	}
+
+
+	// Now go through linking entities together
+	auto ent_it = _db.begin();
+	for (; ent_it != _db.end(); ent_it++) {
+		ent_it->second->addLinks(*this);
+	}
+
 	return count;
  
 }

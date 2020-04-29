@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<action id="action@go" acttype="Hardcoded" parsetype="ActTarg" format="go <direction>" function="gocom">
+<flag name="NoLookup" />
+<flag name="AliasTarget" />
+<alias name="n" />
+<alias name="s" />
+<alias name="e" />
+<alias name="w" />
+<alias name="ne" />
+<alias name="nw" />
+<alias name="se" />
+<alias name="sw" />
+<alias name="u" />
+<alias name="d" />
+</action> 

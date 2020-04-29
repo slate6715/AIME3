@@ -238,12 +238,39 @@ void Player::formatForTelnet(const std::string &unformatted, std::string &format
 	unsigned int lastpos = 0;
 	for (unsigned int i=0; i<unformatted.size(); i++) {
 
+		// If we're at our word-wrap location, wrap it
+		if ((_wrap_width != 0) && (_last_wrap >= _wrap_width)) {
+
+			// Step backwards to find a space
+			unsigned int j=i;
+			while ((j > 0) && (j > lastpos) && (j--)) {
+				if (unformatted[j] == ' ') {
+					formatted.append(unformatted, lastpos, j-lastpos);
+					formatted.append("\r\n");
+					lastpos = j+1;
+					_last_wrap = 0;
+					break;
+				}
+			}
+			
+			// We did not find a space to wrap. Just chop it at wraplength
+			if ((j == 0) || (j == lastpos)) {
+				formatted.append(unformatted, lastpos, i-lastpos);
+				lastpos = i+1;
+				_last_wrap = 0;
+				break;
+			}	
+		}
+
 		// Keep going while it's just a regular character
-		if (!keychars[(std::size_t) unformatted[i]])
+		if (!keychars[(std::size_t) unformatted[i]]) {
+			_last_wrap++;
 			continue;
+		}
 
 		// /n should be preceeded by a \r
 		if (unformatted[i] == '\n') {
+			_last_wrap = 0;
 			if ((i == 0) || (unformatted[i-1] != '\r')) {
 				if ((i - lastpos) > 1)
 					formatted.append(unformatted, lastpos, i-lastpos);
@@ -260,6 +287,7 @@ void Player::formatForTelnet(const std::string &unformatted, std::string &format
 			if (unformatted[i+1] == '&') {
 				formatted.append(unformatted, lastpos, i-lastpos);
 				lastpos = i + 2;
+				_last_wrap++;
 			}
 			// Turn off colorcodes
 			else if (unformatted[i+1] == '*') {
@@ -361,12 +389,33 @@ void Player::sendPrompt() {
 }
 
 /*********************************************************************************************
+ * clearPrompt - Returns the cursor to the beginning of the line and wipes out the prompt, again
+ *				     returning it to the start for new text.
+ *
+ *
+ *********************************************************************************************/
+
+void Player::clearPrompt() {
+   std::string prompt;
+
+   Handler &cur_handler = *(_handler_stack.top());
+   cur_handler.getPrompt(prompt);
+
+	std::string clrprompt;
+	clrprompt.assign(prompt.size(), ' ');
+	clrprompt.insert(0, "\r");
+	clrprompt += "\r";
+   sendMsg(clrprompt);
+}
+
+
+/*********************************************************************************************
  * sendCurLoc - displays all the pertinant information about the current location to the player
  *
  *
  *********************************************************************************************/
 
-void Player::sendCurLoc() {
+void Player::sendCurLocation() {
 	std::shared_ptr<Location> locptr;
 
 	if ((locptr = std::dynamic_pointer_cast<Location>(getCurLoc())) == nullptr) {
@@ -443,7 +492,7 @@ int Player::loadUser(const char *userdir, const char *username) {
       return 0;
    }
 
-	pugi::xml_node pnode = userfile.child("Player");
+	pugi::xml_node pnode = userfile.child("player");
 	if (pnode == nullptr) {
 		std::string msg("Corrupted player file for player ");
 		msg += user;
@@ -478,7 +527,7 @@ bool Player::saveUser(const char *userdir) const {
 	filename += getNameID(buf);
 	filename += ".xml";
 
-	pugi::xml_node node = userfile.append_child("Player");
+	pugi::xml_node node = userfile.append_child("player");
 
 	saveData(node);	
 

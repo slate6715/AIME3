@@ -36,6 +36,9 @@ int GameHandler::handleCommand(std::string &cmd) {
 	Action *new_action = NULL;
 	std::string errmsg;
 
+	// First, write over the prompt
+	_plr->clearPrompt();
+
 	// Try to find the command to execute--if NULL, there was an error
 	if ((new_action = _actions.preAction(cmd.c_str(), errmsg)) == NULL) {
 		errmsg += "\n";

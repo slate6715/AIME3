@@ -92,12 +92,14 @@ unsigned int ActionMgr::loadActions(const char *actiondir) {
       if (!result) {
          std::string msg("Unable to open/parse Action file: ");
          msg += filepath;
+			msg += ", Error: ";
+			msg += result.description();
          mudlog->writeLog(msg.c_str());
          continue;
       }
 
 		// Loop through all the actions in this file
-      for (pugi::xml_node actnode = actionfile.child("Action"); actnode; actnode = actnode.next_sibling("Action")) {
+      for (pugi::xml_node actnode = actionfile.child("action"); actnode; actnode = actnode.next_sibling("action")) {
 
 			Action *new_act = new Action("temp");
 			if (!new_act->loadEntity(actnode)) {
@@ -108,8 +110,19 @@ unsigned int ActionMgr::loadActions(const char *actiondir) {
 				continue;
 			}
 
-			_action_db.insert(std::pair<std::string, std::shared_ptr<Action>>(new_act->getID(),
+			auto newact_it = _action_db.insert(std::pair<std::string, std::shared_ptr<Action>>(new_act->getID(),
                                                    std::shared_ptr<Action>(new_act)));
+
+			// Add alias entries for this action
+			std::vector<std::string> aliases = new_act->getAliases();
+			for (unsigned int j=0; j<aliases.size(); j++) {
+				std::string full_id("action@");
+				full_id += aliases[j];
+				
+				_action_db.insert(std::pair<std::string, std::shared_ptr<Action>>(
+										full_id.c_str(), newact_it.first->second));
+
+			}
 			count++;
 		}
 	}
@@ -215,7 +228,44 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg) {
 			elements.push_back(buf.substr(start, buf.size() - start));
 		}
 
-	} else if ((aptr->getParseType() == Action::Tell) || (aptr->getParseType() == Action::Chat)) {
+		if (aptr->getParseType() == Action::ActTarg) {
+			if ((elements.size() == 1) && (!aptr->isActFlagSet(Action::AliasTarget))) {
+				errmsg = "Missing target. Format: ";
+				errmsg += aptr->getFormat();
+				return NULL;
+			}
+		}
+
+	} else if (aptr->getParseType() == Action::Look) {
+		// First get the next token. If none exist, then we're done
+		if (start < buf.size()) {
+			if ((pos = buf.find(" ")) == std::string::npos)
+				pos = buf.size();
+
+			std::string token = buf.substr(start, pos-start);
+			start = pos + 1;
+
+			// Check for a preposition
+			lower(token);
+			if ((token.compare("at") == 0) || (token.compare("in") == 0)) {
+				elements.push_back(token);
+
+				// Prepositions need to be followed by a target
+				if (start >= buf.size()) {
+					errmsg = "Missing target. Format: ";
+					errmsg += aptr->getFormat();
+					return NULL;
+				}
+
+				if ((pos = buf.find(" ")) == std::string::npos)
+					pos = buf.size();
+				token = buf.substr(start, pos-start);
+			} 
+			// Now get the target
+			elements.push_back(token);
+		}
+	}
+	else if ((aptr->getParseType() == Action::Tell) || (aptr->getParseType() == Action::Chat)) {
 	
 		// Get the target if it's a tell
 		if (aptr->getParseType() == Action::Tell) {

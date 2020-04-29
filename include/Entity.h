@@ -6,6 +6,8 @@
 #include <memory>
 #include "../external/pugixml.hpp"
 
+class EntityDB;
+
 /***************************************************************************************
  * Entity - the most abstract class of interactable MUD objects. This is a generic class
  *				so you would never create an Entity object. Hence, constructors are protected
@@ -42,6 +44,9 @@ public:
    std::shared_ptr<Entity> getContained(Entity *eptr);
 
 	std::shared_ptr<Entity> getCurLoc() { return _cur_loc; };
+
+	// Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
+	virtual void addLinks(EntityDB &edb) { (void) edb; };
 
 protected:
 	Entity(const char *id);	// Must be called from the child constructor

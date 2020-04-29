@@ -7,11 +7,13 @@
 #include "global.h"
 
 
-const char *ptype_list[] = {"undef", "single", "acttarg", "acttargoptcont", "chat", "tell", NULL};
-const char *aflag_list[] = {"targetorg", "targetloc", "nolookup", NULL};
+const char *ptype_list[] = {"undef", "single", "acttarg", "acttargoptcont", "look", "chat", "tell", NULL};
+const char *aflag_list[] = {"targetorg", "targetloc", "nolookup", "aliastarget", NULL};
 
 hardcoded_actions cmd_array[] = {
 		{"infocom", infocom},
+		{"gocom", gocom},
+		{"lookcom", lookcom},
 		{"",0}
 };
 
@@ -96,9 +98,9 @@ int Action::loadData(pugi::xml_node &entnode) {
 	std::stringstream errmsg;
 
 	// Get the acttype - must be either hardcoded or script
-   pugi::xml_attribute attr = entnode.attribute("ActType");
+   pugi::xml_attribute attr = entnode.attribute("acttype");
    if (attr == nullptr) {
-		errmsg << "Action '" << getID() << "' missing mandatory ActType field."; 
+		errmsg << "Action '" << getID() << "' missing mandatory acttype field."; 
 		mudlog->writeLog(errmsg.str().c_str());
 		return 0;
 	}
@@ -109,16 +111,18 @@ int Action::loadData(pugi::xml_node &entnode) {
 		_atype = Hardcoded;
 	else if (attstr.compare("script") == 0)
 		_atype = Script;
+   else if (attstr.compare("trigger") == 0)
+      _atype = Trigger;
 	else {
-		errmsg << "Action '" << getID() << "' ActType field has invalid value: " << attstr;
+		errmsg << "Action '" << getID() << "' acttype field has invalid value: " << attstr;
 		mudlog->writeLog(errmsg.str().c_str());
 		return 0;
 	}
 
 	// Get the parse type
-   attr = entnode.attribute("ParseType");
+   attr = entnode.attribute("parsetype");
    if (attr == nullptr) {
-      errmsg << "Action '" << getID() << "' missing mandatory ParseType field.";
+      errmsg << "Action '" << getID() << "' missing mandatory parsetype field.";
       mudlog->writeLog(errmsg.str().c_str());
       return 0;
    }
@@ -131,7 +135,7 @@ int Action::loadData(pugi::xml_node &entnode) {
 		i++;
 
    if ((i == 0) || (ptype_list[i] == NULL)) {
-      errmsg << "Action '" << getID() << "' ParseType field has invalid value: " << attstr;
+      errmsg << "Action '" << getID() << "' parsetype field has invalid value: " << attstr;
       mudlog->writeLog(errmsg.str().c_str());
       return 0;
    }
@@ -139,9 +143,9 @@ int Action::loadData(pugi::xml_node &entnode) {
 
    // If it's a hardcoded action, get the mandatory function mapping
 	if (_atype == Hardcoded) {
-		attr = entnode.attribute("Function");
+		attr = entnode.attribute("function");
 		if (attr == nullptr) {
-			errmsg << "Hardcoded Action '" << getID() << "' missing mandatory Function field.";
+			errmsg << "Hardcoded Action '" << getID() << "' missing mandatory tunction field.";
 			mudlog->writeLog(errmsg.str().c_str());
 			return 0;
 		}
@@ -161,21 +165,44 @@ int Action::loadData(pugi::xml_node &entnode) {
 	}
 
    // Get the optional format field
-   attr = entnode.attribute("Format");
+   attr = entnode.attribute("format");
    if (attr != nullptr) {
 		setFormat(attr.value());
 	}
 
 	// Get the Action Flags (if any)
-	for (pugi::xml_node flag = entnode.child("ActFlag"); flag; flag = flag.next_sibling("ActFlag")) {
-		try {
-			setFlag(flag.child_value(), true);
-		} 
-		catch (std::invalid_argument &e) {
-			errmsg << "Action '" << getID() << "' ActFlag error: " << e.what();
+	for (pugi::xml_node flag = entnode.child("flag"); flag; flag = flag.next_sibling("flag")) {
+		pugi::xml_attribute attr = flag.attribute("name");
+
+		if (attr == nullptr) {
+			errmsg << "Action '" << getID() << "' Flag node missing mandatory name attribute.";
 			mudlog->writeLog(errmsg.str().c_str());
 			return 0;
 		}
+		try {
+			setFlag(attr.value(), true);
+		} 
+		catch (std::invalid_argument &e) {
+			errmsg << "Action '" << getID() << "' Flag error: " << e.what();
+			mudlog->writeLog(errmsg.str().c_str());
+			return 0;
+		}
+	}
+
+   // Get the Exits (if any)
+   for (pugi::xml_node alias = entnode.child("alias"); alias; alias = alias.next_sibling("alias")) {
+
+      // Get the alternate alias this command can be called with
+      pugi::xml_attribute attr = alias.attribute("name");
+      if (attr == nullptr) {
+         errmsg << "Action '" << getID() << "' Alias node missing mandatory name field.";
+         mudlog->writeLog(errmsg.str().c_str());
+         return 0;
+      }
+
+		std::string aliasstr = attr.value();
+		lower(aliasstr);
+      _alias.push_back(aliasstr.c_str());
 
 	}	
 
@@ -256,6 +283,16 @@ const char *Action::getToken(unsigned int index) const {
 
 void Action::setFormat(const char *format) {
 	_format = format;
+}
+
+/*********************************************************************************************
+ * isActFlagSet - A faster version of isFlagSet which operates off the enum type for fast
+ *						lookup, but only checks Action flags
+ *
+ *********************************************************************************************/
+
+bool Action::isActFlagSet(act_flags atype) {
+	return _actflags[(unsigned int) atype];
 }
 
 

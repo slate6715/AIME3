@@ -1,11 +1,13 @@
 #include <iostream>
 #include <sstream>
+#include <memory>
 #include "Location.h"
 #include "MUD.h"
 #include "misc.h"
 #include "global.h"
 
-const char *lflag_list[] = {"outdoors", NULL};
+const char *lflag_list[] = {"outdoors", "bright", "death", NULL};
+const char *eflag_list[] = {"hidden", "special", NULL};
 
 
 /*********************************************************************************************
@@ -70,31 +72,88 @@ int Location::loadData(pugi::xml_node &entnode) {
 	std::stringstream errmsg;
 
    // Get the acttype - must be either hardcoded or script
-	pugi::xml_node node = entnode.child("Desc");
+	pugi::xml_node node = entnode.child("desc");
    if (node == nullptr) {
-      errmsg << "Location '" << getID() << "' missing mandatory Desc field.";
+      errmsg << "Location '" << getID() << "' missing mandatory desc field.";
       mudlog->writeLog(errmsg.str().c_str());
       return 0;
    }
 	setDesc(node.child_value());
 
    // Get the acttype - must be either hardcoded or script
-   pugi::xml_attribute attr = entnode.attribute("Title");
+   pugi::xml_attribute attr = entnode.attribute("title");
    if (node == nullptr) {
-      errmsg << "Location '" << getID() << "' missing mandatory Title field.";
+      errmsg << "Location '" << getID() << "' missing mandatory title field.";
       mudlog->writeLog(errmsg.str().c_str());
       return 0;
    }
 
 	setTitle(attr.value());
 
-   // Get the Action Flags (if any)
-   for (pugi::xml_node flag = entnode.child("LocFlag"); flag; flag = flag.next_sibling("LocFlag")) {
+   // Get the Exits (if any)
+   for (pugi::xml_node exitnode = entnode.child("exit"); exitnode; exitnode = exitnode.next_sibling("exit")) {
+		locexit new_exit;
+
+		// Get the direction name such as "east"
+      pugi::xml_attribute attr = exitnode.attribute("name");
+      if (attr == nullptr) {
+         errmsg << "Location '" << getID() << "' Exit node missing mandatory name field.";
+         mudlog->writeLog(errmsg.str().c_str());
+         return 0;
+      }		
+		new_exit.dir = attr.value();
+		
+		// Get the ID string of the location to link
+      attr = exitnode.attribute("location");
+      if (attr == nullptr) {
+         errmsg << "Location '" << getID() << "' Exit node missing mandatory location field.";
+         mudlog->writeLog(errmsg.str().c_str());
+         return 0;
+      }
+      new_exit.link_id = attr.value();
+
+		// Get any exit flags for this exit
+		for (pugi::xml_node eflag = exitnode.child("flag"); eflag; eflag = eflag.next_sibling("flag")) {
+			attr = eflag.attribute("name");
+			if (attr == nullptr) {
+				errmsg << "Location '" << getID() << "' exit '" << new_exit.dir << "' flag missing mandatory name field.";
+				mudlog->writeLog(errmsg.str().c_str());
+				return 0;
+			}
+			new_exit.dir = attr.value();
+
+			// As exit flags are somewhat special, we can't use the normal class find function
+		   std::string flagstr = attr.value();
+			lower(flagstr);
+
+			size_t i=0;
+			while ((eflag_list[i] != NULL) && (flagstr.compare(eflag_list[i]) != 0))
+				i++;
+
+			if (eflag_list[i] == NULL) {
+            errmsg << "Location '" << getID() << "' exit '" << new_exit.dir << "' flag '" << flagstr << 
+																		" is not a recognized exit flag.";
+            mudlog->writeLog(errmsg.str().c_str());
+            return 0;
+			}
+			new_exit.eflags[i] = true;
+		}
+		_exits.push_back(new_exit);
+   }
+
+   // Get the Location Flags (if any)
+   for (pugi::xml_node flag = entnode.child("flag"); flag; flag = flag.next_sibling("flag")) {
       try {
-         setFlag(flag.child_value(), true);
+			pugi::xml_attribute attr = flag.attribute("name");
+			if (attr == nullptr) {
+				errmsg << "Location '" << getID() << "' flag node missing mandatory name field.";
+				mudlog->writeLog(errmsg.str().c_str());
+				return 0;				
+			}
+         setFlag(attr.value(), true);
       }
       catch (std::invalid_argument &e) {
-         errmsg << "Location '" << getID() << "' Flag error: " << e.what();
+         errmsg << "Location '" << getID() << "' flag error: " << e.what();
          mudlog->writeLog(errmsg.str().c_str());
          return 0;
       }
@@ -172,5 +231,77 @@ bool Location::isFlagSetInternal(const char *flagname, bool &results) {
 
 }
 
+/*********************************************************************************************
+ * getExit - given an exit name, such as "east", returns a shared pointer to the new location
+ *				 or nullptr if not found. exitname should be all lowercase.
+ *	getExitAbbrev - Like getExit, but allows for abbreviated cardinal directions and custom
+ *
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Location> Location::getExit(const char *exitname) {
+   if (exitname == NULL)
+      return nullptr;
+
+   for (unsigned int i=0; i<_exits.size(); i++) {
+      if (_exits[i].dir.compare(exitname) == 0)
+         return _exits[i].link_loc;
+   }
+   return nullptr;
+}
+
+std::shared_ptr<Location> Location::getExitAbbrev(const char *exitname) {
+	std::string dir = exitname;
+	if (dir.size() == 0)
+		return nullptr;
+
+	if ((dir.size() == 2) && (dir[0] == 'n')) {
+		if (dir[1] == 'w')
+			dir = "northwest";
+		else if (dir[2] == 'e')
+			dir = "northeast";
+	} else if ((dir.size() == 2) && (dir[0] == 's')) {
+		if (dir[1] == 'w')
+			dir = "southwest";
+		else if (dir[2] == 'e')
+			dir = "southeast";
+	}
+
+	for (unsigned int i=0; i<_exits.size(); i++) {
+		if (_exits[i].dir.compare(0, dir.size(), dir) == 0)
+			return _exits[i].link_loc;
+	}
+	return nullptr;
+}
+   //
+/*********************************************************************************************
+ * addLinks - Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
+ *
+ *
+ *********************************************************************************************/
+
+void Location::addLinks(EntityDB &edb) {
+	std::stringstream msg;
+
+	// Go through the exits, creating links
+	auto exit_it = _exits.begin();
+	while (exit_it != _exits.end()) {
+		std::shared_ptr<Entity> entptr = edb.getEntity(exit_it->link_id.c_str());
+		std::shared_ptr<Location> locptr;
+
+		if (entptr == nullptr) {
+			msg << "Location '" << getID() << "' exit '" << exit_it->dir << "' doesn't appear to exist.";
+			mudlog->writeLog(msg.str().c_str());
+			exit_it = _exits.erase(exit_it);
+		} else if ((locptr = std::dynamic_pointer_cast<Location>(entptr)) == nullptr) {
+         msg << "Location '" << getID() << "' exit '" << exit_it->dir << "' doesn't appear to be a Location class.";
+         mudlog->writeLog(msg.str().c_str());
+         exit_it = _exits.erase(exit_it);
+		} else {
+			exit_it->link_loc = locptr;
+			exit_it++;
+		}
+	}
+}
 
 

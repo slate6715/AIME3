@@ -33,9 +33,12 @@ public:
 
    // Sends the prompt of the top message handler to the player
    virtual void sendPrompt();
+	
+	// Sends the player a blank the size of the prompt to clear it from a line
+	virtual void clearPrompt();
 
 	// Displays the current location to the user
-	virtual void sendCurLoc();
+	virtual void sendCurLocation();
 
 	// configures the connecting user for entering the MUD
 	void welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions, std::shared_ptr<Player> thisplr);
@@ -89,6 +92,8 @@ private:
 
 	// User-specific formatting variables
 	bool _use_color = true;
+	unsigned int _wrap_width = 80;
+	unsigned int _last_wrap = 0;
 
 	// **************** Player-specific variables ************************
 

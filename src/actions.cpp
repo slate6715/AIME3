@@ -1,14 +1,17 @@
 #include <iostream>
 #include <libconfig.h++>
 #include <regex>
+#include <memory>
 #include "actions.h"
 #include "MUD.h"
 #include "Action.h"
 #include "misc.h"
+#include "Location.h"
+#include "global.h"
 
 
 /*******************************************************************************************
- * clrNewlines - removes \r and \n from the string passed into buf
+ * infocom - displays an info file to the user 
  *******************************************************************************************/
 int infocom(MUD &engine, Action &act_used) {
 
@@ -40,6 +43,54 @@ int infocom(MUD &engine, Action &act_used) {
 	}
 	
 	
+	return 1;
+}
+
+/*******************************************************************************************
+ * gocom - moves from room to room 
+ *******************************************************************************************/
+int gocom(MUD &engine, Action &act_used) {
+	std::string dir;
+
+	if (act_used.numTokens() >= 2)
+		dir = act_used.getToken(1);
+	else
+		dir = act_used.getToken(0);
+
+	std::shared_ptr<Organism> agent = act_used.getAgent();
+	std::shared_ptr<Location> cur_loc = std::dynamic_pointer_cast<Location>(agent->getCurLoc());
+
+	if (cur_loc == nullptr) {
+		std::stringstream msg;
+		msg << "SERIOUS ERROR: gocom function, agent " << agent->getID() << 
+					" current location not a Location class or not set.";
+		mudlog->writeLog(msg.str().c_str());
+
+		agent->sendMsg("SERIOUS ERROR: You do not have a valid current location. See an Admin.\n");
+		return 0;
+	}
+
+	std::shared_ptr<Location> exit_loc = cur_loc->getExitAbbrev(dir.c_str());
+
+	if (exit_loc == nullptr) {
+		agent->sendMsg("There is no exit that direction.\n");
+		return 0;
+	}
+
+	agent->moveEntity(exit_loc);
+	agent->sendCurLocation();
+
+	return 1;
+}
+
+/*******************************************************************************************
+ * lookcom - used to display a room or to examine something
+ *******************************************************************************************/
+int lookcom(MUD &engine, Action &act_used) {
+	std::shared_ptr<Organism> agent = act_used.getAgent();
+
+	agent->sendCurLocation();
+
 	return 1;
 }
 

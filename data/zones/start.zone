@@ -1,20 +1,54 @@
 <?xml version="1.0"?>
-<Location id="start@thevoid" Title="The Void">
-<Exit name="east" location="start@light" eflags="" />
-<LFlag name="Outdoors" />
-<Desc>A void extends in all directions to infinity. While most voids are often just dark, foreboding places, this one is without any form whatsoever...just...empty. Nothing. Well, nothing, except the dark surface that you stand upon. Beneath that hard surface is a sense of further depth, stretching into the unknown. The surface seems to flex slightly under your weight, hinting at its fragility. Jumping too hard upon it may cause cracking and infinite plunging into the nothing that lies in the deep places of the void. 
+<location id="start@thevoid" title="The Void">
+<exit name="east" location="start@light"/>
+<flag name="Outdoors" />
+<desc>A void extends in all directions to infinity. While most voids are often just dark, foreboding places, this one is without any form whatsoever...just...empty. Nothing. Well, nothing, except the dark surface that you stand upon. Beneath that hard surface is a sense of further depth, stretching into the unknown. The surface seems to flex slightly under your weight, hinting at its fragility. Jumping too hard upon it may cause cracking and infinite plunging into the nothing that lies in the deep places of the void. 
 
 To the east, there's appears to be slightly less darkness.
-</Desc>
-</Location> 
+</desc>
+</location> 
 
-<Location id="start@light" Title="The Light">
-<Exit name="west" location="start@thevoid" eflags="" />
-<Exit name="east" location="start@thesea" eflags="" />
-<LFlag name="Outdoors" />
-<LFlag name="Bright" />
-<Desc>The light above is blinding white, accented only by a dark surface beneath your feet. The horizon, split between light and dark, extends as far as the eye can see in all directions. To the west, the light appears to let up slightly. A salty smell drifts in from the east on a gentle breeze. 
-</Desc>
-</Location>
+<location id="start@light" title="The Light">
+<exit name="west" location="start@thevoid"/>
+<exit name="east" location="start@sea"/>
+<flag name="Outdoors" />
+<flag name="Bright" />
+<desc>The light above is blinding white, accented only by a dark surface beneath your feet. The horizon, split between light and dark, extends as far as the eye can see in all directions. To the west, the light appears to let up slightly. A salty smell drifts in from the east on a gentle breeze. 
+</desc>
+</location>
 
+<location id="start@sea" title="The Sea">
+<exit name="west" location="start@light"/>
+<exit name="east" location="start@beach"/>
+<flag name="Outdoors" />
+<flag name="Bright" />
+<desc>You stand on a narrow transparent walkway that runs east to west over a raging sea. Large swells come within inches of the platform, glistening in the sunlight. A fine layer of white salt coats the pathway, creating a certain grit under your feet. The pathway extends to the west where the water appears to calm. To the east, a faint shadow can be seen on the horizon.
+</desc>
+</location>
+
+<location id="start@beach" title="Lifeless Beach">
+<exit name="north" location="start@alcove" />
+<exit name="west" location="start@sea"/>
+<exit name="south" location="start@junglecoast"/>
+<flag name="Outdoors" />
+<flag name="Bright" />
+<desc>A beach stretches from north to south, creating a cooridor between a raging sea to the west and impassible chalk cliffs to the east. Large breakers crash a hundred meters off shore and wash onto fine white sand. The sand is devoid of any signs of life--no shells, dead fish or vegetation. A transparent walkway extends over the raging sea to the west and the beach extends both north and south. 
+</desc>
+</location>
+
+<location id="start@alcove" title="Lonely Beach">
+<exit name="south" location="start@beach" />
+<flag name="Outdoors" />
+<flag name="Bright" />
+<desc>Desc TBD
+</desc>
+</location>
+
+<location id="start@junglecoast" title="Jungle Coast">
+<exit name="north" location="start@beach" />
+<flag name="Outdoors" />
+<flag name="Bright" />
+<desc>Desc TBD
+</desc>
+</location>
 

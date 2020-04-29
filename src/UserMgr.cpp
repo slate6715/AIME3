@@ -239,7 +239,7 @@ void UserMgr::handleUsers(libconfig::Config &cfg_info, EntityDB &edb){
 		
 						// Now re-add the player with their actual name
 						plr.setID(userkey.c_str());
-						_db.insert(std::pair<std::string, std::shared_ptr<Player>>(userkey, pptr));
+						auto newplr_it = _db.insert(std::pair<std::string, std::shared_ptr<Player>>(userkey, pptr));
 
 						std::string startloc;
 						cfg_info.lookupValue("gameplay.startloc", startloc);
@@ -256,12 +256,12 @@ void UserMgr::handleUsers(libconfig::Config &cfg_info, EntityDB &edb){
 							continue;	
 						}
 			
-						plr.moveEntity(curloc, plr_it->second);
+						plr.moveEntity(curloc, newplr_it.first->second);
 
 						// Send the MOTD to the user
 						plr.sendFile(_motdfile.c_str());
 
-						plr.sendCurLoc();
+						plr.sendCurLocation();
 						plr.sendPrompt();
 						continue;	
 					}

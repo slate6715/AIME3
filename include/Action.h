@@ -28,16 +28,18 @@ public:
 			Single,	// Simplest command - single word
 			ActTarg,	// <action> <target>
 			ActTargOptCont,// <action> <target> [<preposition> <target2>
+			Look,		// <action> [<preposition>] <target>
 			Chat,		// <action> <string>
 			Tell		// <action> <target> <string>
 		 };
 
-	enum act_types { Hardcoded, Script };
+	enum act_types { Hardcoded, Script, Trigger };
 
 	enum act_flags {
-			TargetOrg,	// Target must be an organism (mobile or player)
-			TargetLoc,	// Target must be in the current location
-			NoLookup		// Action class will not lookup the target object but simply pass in the string
+			TargetOrg,	 // Target must be an organism (mobile or player)
+			TargetLoc,	 // Target must be in the current location
+			NoLookup,	 // Action class will not lookup the target object but simply pass in the string
+			AliasTarget // Aliases can act as the target (such as with "go east" and "east")
 	};
 
 	// Constructors
@@ -57,11 +59,16 @@ public:
 	parse_type getParseType() const { return _ptype; };
 	const char *getFormat() const { return _format.c_str(); };
 	std::shared_ptr<Organism> getAgent() { return _agent; };
+	bool isActFlagSet(act_flags atype);
 
 	// Gets the parsed input token at the given index
 	const char *getToken(unsigned int index) const;
+	unsigned int numTokens() const { return _tokens.size(); };
 
 	bool configAction(std::vector<std::string> &tokens, std::string &errmsg);	
+
+	// Copies the alias list into a new vector
+	std::vector<std::string> getAliases() { return _alias; };
 
 protected:
 
@@ -90,6 +97,9 @@ private:
 
 	// Action flags stored here
 	std::bitset<32>	_actflags;	
+
+	// Alias - alternate names for this command
+	std::vector<std::string> _alias;
 };
 
 struct hardcoded_actions {

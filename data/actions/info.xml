@@ -1,4 +1,4 @@
 <?xml version="1.0"?>
-<Action id="action@info" ActType="Hardcoded" ParseType="ActTarg" Format="info <topic>" Function="infocom">
-<ActFlag>NoLookup</ActFlag>
-</Action> 
+<action id="action@info" acttype="Hardcoded" parsetype="ActTarg" format="info <topic>" function="infocom">
+<flag name="NoLookup" />
+</action> 
