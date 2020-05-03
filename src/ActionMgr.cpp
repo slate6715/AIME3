@@ -2,6 +2,7 @@
 #include <iostream>
 #include <chrono>
 #include <boost/filesystem.hpp>
+#include <memory>
 #include "ActionMgr.h"
 #include "misc.h"
 #include "global.h"
@@ -133,17 +134,23 @@ unsigned int ActionMgr::loadActions(const char *actiondir) {
 	// Now generate an abbreviation lookup lexical table
 	auto action_it = _action_db.begin();
 	char last_ltr = '.';
-	std::string id;
+	std::string id, name;
 
 	// Loop through all the actions
 	for (; action_it != _action_db.end(); action_it++) {
-		action_it->second->getNameID(id);
+		id = action_it->first;
+		size_t pos = id.find("@");
+		if (pos == std::string::npos) {
+			throw std::runtime_error("ActionMgr::loadActions - action in DB without @ in index, "
+																								"should not have happened.");
+		}
+		name = id.substr(pos+1, id.size() - pos);
 
 		// If this is the start of a new first letter, assign a lookup iterator
-		if (id[0] != last_ltr) {
-			unsigned int idx = (unsigned int) id[0] - (unsigned int) 'a';
+		if (name[0] != last_ltr) {
+			unsigned int idx = (unsigned int) name[0] - (unsigned int) 'a';
 			_abbrev_table[idx] = action_it;
-			last_ltr = id[0];
+			last_ltr = name[0];
 		}
 	}	
 
@@ -187,9 +194,12 @@ void ActionMgr::handleActions(MUD &engine) {
  *
  *********************************************************************************************/
 
-Action *ActionMgr::preAction(const char *cmd, std::string &errmsg) {
+Action *ActionMgr::preAction(const char *cmd, std::string &errmsg, 
+																	std::shared_ptr<Organism> actor) {
 	std::string buf = cmd;
-
+	EntityDB &edb = *engine.getEntityDB();
+	UserMgr &umgr = *engine.getUserMgr();
+	
 	// Odd situation where nothing was submitted
 	if (buf.size() == 0)
 	{
@@ -212,19 +222,24 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg) {
 	}
 
 	lower(elements[0]);
-	std::shared_ptr<Action> aptr = findAction(elements[0].c_str());
+	std::shared_ptr<Action> actptr = findAction(elements[0].c_str());
 
 	// Not found, return NULL
-	if (aptr == nullptr) {
+	if (actptr == nullptr) {
 		errmsg = "I do not understand the command '";
 		errmsg += elements[0];
 		errmsg += "'";
 		return NULL;
 	}
 
+
+	Action *new_act = new Action(*actptr);
+	new_act->setAgent(actor);
+
 	size_t start = pos+1;
 	// We expect format <action> <subject> [<from> <container>]
-	if ((aptr->getParseType() == Action::ActTargOptCont) || (aptr->getParseType() == Action::ActTarg)) {
+	if ((new_act->getParseType() == Action::ActTargOptCont) || 
+												(new_act->getParseType() == Action::ActTarg)) {
 		while ((pos = buf.find(" ", start)) != std::string::npos) {
 			elements.push_back(buf.substr(start, pos-start));
 			start = pos + 1;
@@ -235,15 +250,25 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg) {
 			elements.push_back(buf.substr(start, buf.size() - start));
 		}
 
-		if (aptr->getParseType() == Action::ActTarg) {
-			if ((elements.size() == 1) && (!aptr->isActFlagSet(Action::AliasTarget))) {
+		if (new_act->getParseType() == Action::ActTarg) {
+			if ((elements.size() == 1) && (!new_act->isActFlagSet(Action::AliasTarget))) {
 				errmsg = "Missing target. Format: ";
-				errmsg += aptr->getFormat();
+				errmsg += new_act->getFormat();
+				delete new_act;
 				return NULL;
 			}
 		}
 
-	} else if (aptr->getParseType() == Action::Look) {
+		// Get target 1
+		if (!new_act->isActFlagSet(Action::NoLookup)) {
+			std::shared_ptr<Entity> target1 = new_act->findTarget(elements[1], errmsg, edb, umgr);
+			if (target1 == nullptr) {
+				delete new_act;
+				return NULL;
+			}
+			new_act->setTarget1(target1);
+		}
+	} else if (new_act->getParseType() == Action::Look) {
 		// First get the next token. If none exist, then we're done
 		if (start < buf.size()) {
 			if ((pos = buf.find(" ")) == std::string::npos)
@@ -260,7 +285,8 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg) {
 				// Prepositions need to be followed by a target
 				if (start >= buf.size()) {
 					errmsg = "Missing target. Format: ";
-					errmsg += aptr->getFormat();
+					errmsg += new_act->getFormat();
+					delete new_act;
 					return NULL;
 				}
 
@@ -270,15 +296,22 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg) {
 			} 
 			// Now get the target
 			elements.push_back(token);
+
+			new_act->setTarget1(new_act->findTarget(token, errmsg, edb, umgr));
+			if (new_act->getTarget1() == nullptr) {
+				delete new_act;
+				return NULL;
+			}
 		}
 	}
-	else if ((aptr->getParseType() == Action::Tell) || (aptr->getParseType() == Action::Chat)) {
+	else if ((new_act->getParseType() == Action::Tell) || (new_act->getParseType() == Action::Chat)) {
 	
 		// Get the target if it's a tell
-		if (aptr->getParseType() == Action::Tell) {
+		if (new_act->getParseType() == Action::Tell) {
 			if ((pos = buf.find(" ", start)) == std::string::npos) {
 				errmsg = "Invalid format. Should be: ";
-				errmsg += aptr->getFormat();
+				errmsg += new_act->getFormat();
+				delete new_act;
 				return NULL;
 			}
 			elements.push_back(buf.substr(start, pos - start));
@@ -288,20 +321,19 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg) {
 		// Get the string
 		if (start >= buf.size()) {
          errmsg = "Invalid format. Should be: ";
-         errmsg += aptr->getFormat();
+         errmsg += new_act->getFormat();
+			delete new_act;
          return NULL;
 		}
 
 		elements.push_back(buf.substr(start, buf.size() - start));
 	}
 	// If it's not single, then we don't recognize this type 
-	else if (aptr->getParseType() != Action::Single) {
+	else if (new_act->getParseType() != Action::Single) {
 		errmsg = "Unrecognized command type for command: ";
-		errmsg += aptr->getID();
+		errmsg += new_act->getID();
 		throw std::runtime_error(errmsg.c_str()); 
 	}
-
-	Action *new_act = new Action(*aptr);
 
 	// Action does some custom error-checking on the parse structure and preps for execution
 	if (!new_act->configAction(elements, errmsg)) {
@@ -386,17 +418,25 @@ std::shared_ptr<Action> ActionMgr::findAction(const char *cmd) {
 
 	// Else we found indexed commands, start searching
 	auto a_iter = _abbrev_table[idx];
-	std::string buf;
+	std::string fullid, name;
 	while (a_iter != _action_db.end()) {
-		a_iter->second->getNameID(buf);
+		fullid = a_iter->first;
+		size_t pos = fullid.find("@");
+		name = fullid.substr(pos+1, fullid.size() - pos);
 
 		// If we moved into different letters
-		if (buf[0] != cmdstr[0])
+		if (name[0] != cmdstr[0])
 			return nullptr;
 
-		// We have a match!
-		if (cmdstr.compare(0, cmdstr.size(), buf))
+		// No idea why the shortened version of std::string::compare wasn't working here... 
+		pos = 0;
+		while ((pos < cmdstr.size()) && (pos < name.size()) && (cmdstr[pos] == name[pos]))
+			pos++;
+	
+		if (pos == cmdstr.size())
 			return a_iter->second;
+
+		a_iter++;
 	}
 	return nullptr;
 }

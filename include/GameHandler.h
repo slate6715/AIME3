@@ -9,7 +9,7 @@
 class GameHandler : public Handler
 {
 public:
-	GameHandler(std::shared_ptr<Player> plr, ActionMgr &actions);
+	GameHandler(std::shared_ptr<Player> plr);
 	GameHandler(const GameHandler &copy_from);
 
 	virtual ~GameHandler();
@@ -22,7 +22,6 @@ public:
 private:
 
 	ActionMgr &_actions;
-	
 };
 
 #endif

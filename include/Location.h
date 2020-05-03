@@ -43,10 +43,13 @@ public:
    std::shared_ptr<Location> getExitAbbrev(const char *exitname);
 
    // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
-   virtual void addLinks(EntityDB &edb);
+   virtual void addLinks(EntityDB &edb, std::shared_ptr<Entity> self);
 
 	// Assembles a formatted list of the visible exits
 	const char *getExitsStr(std::string &buf);
+
+   virtual std::shared_ptr<Entity> getContained(const char *name_alias, bool allow_abbrev=true);
+
 
 protected:
 

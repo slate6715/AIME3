@@ -3,6 +3,7 @@
 #include <boost/lexical_cast.hpp>
 #include "UserMgr.h"
 #include "EntityDB.h"
+#include "MUD.h"
 #include "misc.h"
 #include "global.h"
 
@@ -12,8 +13,8 @@ namespace lc = libconfig;
  * UserMgr (constructor) - 
  *
  *********************************************************************************************/
-UserMgr::UserMgr(ActionMgr &actions):
-					_actions(actions),
+UserMgr::UserMgr(MUD &engine):
+					_engine(engine),
 					_db(),
 					_listen_sock(),
 					_newuser_idx(0),
@@ -28,7 +29,7 @@ UserMgr::UserMgr(ActionMgr &actions):
 
 
 UserMgr::UserMgr(const UserMgr &copy_from):
-					_actions(copy_from._actions),
+					_engine(copy_from._engine),
 					_db(copy_from._db),
 					_listen_sock(copy_from._listen_sock),
 					_newuser_idx(copy_from._newuser_idx),
@@ -190,7 +191,7 @@ void UserMgr::checkNewUsers(libconfig::Config &mud_cfg){
 
 		_db.insert(std::pair<std::string, std::shared_ptr<Player>>(userid, new_plr));
 
-		new_plr->welcomeUser(mud_cfg, _actions, new_plr);
+		new_plr->welcomeUser(mud_cfg, new_plr);
 
 	}
 }
@@ -317,5 +318,28 @@ bool UserMgr::saveUser(const char *username) {
 
 bool UserMgr::saveUser(const Player &plr) {
 	return plr.saveUser(_userdir.c_str());
+}
+
+/*********************************************************************************************
+ * getPlayer - gets the player based off the parameter
+ *
+ *    Params:  name - the name to search for
+ *             allow_abbrev - if true, search will return the first match to an abbreviated name
+ *
+ *    Returns: pointer to the player if found, nullptr if not
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Player> UserMgr::getPlayer(const char *name, bool allow_abbrev) {
+   std::string namestr = name;
+
+   auto plr_it = _db.begin();
+   for ( ; plr_it != _db.end(); plr_it++) {
+      if ((allow_abbrev) && (namestr.compare(0, namestr.size(), plr_it->second->getID()) == 0))
+         return plr_it->second;
+      else if (!allow_abbrev && (namestr.compare(plr_it->second->getID()) == 0))
+         return plr_it->second;
+   }
+   return nullptr;
 }
 

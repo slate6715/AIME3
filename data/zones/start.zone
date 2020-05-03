@@ -8,6 +8,13 @@ To the east, there's appears to be slightly less darkness.
 </desc>
 </location> 
 
+<static id="surface" startloc="start@thevoid">
+<desc>The surface, while solid enough to hold your weight, flexes with each step. This is accompanied by hundreds of faint crinkling noises that almost sound like static.
+</desc>
+<altname name="ground" />
+<altname name="floor" />
+</static>
+
 <location id="start@light" title="The Light">
 <exit name="west" location="start@thevoid"/>
 <exit name="east" location="start@sea"/>

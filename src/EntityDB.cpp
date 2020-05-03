@@ -7,6 +7,7 @@
 #include "misc.h"
 #include "global.h"
 #include "Location.h"
+#include "Static.h"
 
 
 /*********************************************************************************************
@@ -92,7 +93,20 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
 			}
          _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(),
                                                    std::shared_ptr<Entity>(new_ent)));
-
+			count++;
+		}
+      // Get all locations
+      for (pugi::xml_node loc = zonefile.child("static"); loc; loc = loc.next_sibling("static")) {
+			Static *new_ent = new Static("temp");
+         if (!new_ent->loadEntity(loc)) {
+            std::stringstream msg;
+            msg << "Bad format for static '" << new_ent->getID() << "', file '" << files[i] << "'";
+            mudlog->writeLog(msg.str().c_str());
+            delete new_ent;
+            continue;
+         }
+         _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(),
+                                                   std::shared_ptr<Entity>(new_ent)));
          count++;
  			 
 		}
@@ -102,7 +116,7 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
 	// Now go through linking entities together
 	auto ent_it = _db.begin();
 	for (; ent_it != _db.end(); ent_it++) {
-		ent_it->second->addLinks(*this);
+		ent_it->second->addLinks(*this, ent_it->second);
 	}
 
 	return count;

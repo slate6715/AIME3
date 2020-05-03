@@ -38,7 +38,8 @@ public:
 	// Go through the action queue, executing those whose timer is < now()
 	void handleActions(MUD &engine);
 
-	Action *preAction(const char *cmd, std::string &errmsg);
+	Action *preAction(const char *cmd, std::string &errmsg, 
+														std::shared_ptr<Organism> actor);
 	Action *cloneAction(const char *cmd);
 	void execAction(Action *exec_act);
 	

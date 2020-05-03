@@ -6,7 +6,7 @@
 #include "misc.h"
 #include "global.h"
 
-const char *sflag_list[] = {"outdoors", "bright", "death", NULL};
+const char *sflag_list[] = {"container", NULL};
 
 
 /*********************************************************************************************
@@ -79,6 +79,15 @@ int Static::loadData(pugi::xml_node &entnode) {
    }
 	setDesc(node.child_value());
 
+   // Get the acttype - must be either hardcoded or script
+   pugi::xml_attribute attr = entnode.attribute("startloc");
+   if (attr == nullptr) {
+      errmsg << "Static '" << getID() << "' missing mandatory startloc field.";
+      mudlog->writeLog(errmsg.str().c_str());
+      return 0;
+   }
+   setStartLoc(attr.value());
+
    // Get the Altnames (if any)
    for (pugi::xml_node anode = entnode.child("altname");	anode; anode = 
 																					anode.next_sibling("altname")) {
@@ -96,7 +105,7 @@ int Static::loadData(pugi::xml_node &entnode) {
    // Get the Static Flags (if any)
    for (pugi::xml_node flag = entnode.child("flag"); flag; flag = flag.next_sibling("flag")) {
       try {
-			pugi::xml_attribute attr = flag.attribute("name");
+			attr = flag.attribute("name");
 			if (attr == nullptr) {
 				errmsg << "Static '" << getID() << "' flag node missing mandatory name field.";
 				mudlog->writeLog(errmsg.str().c_str());
@@ -122,6 +131,14 @@ int Static::loadData(pugi::xml_node &entnode) {
 
 void Static::setDesc(const char *newdesc) {
 	_desc = newdesc;
+}
+
+void Static::setStartLoc(const char *newloc) {
+   _startloc = newloc;
+}
+
+void Static::addAltName(const char *names) {
+   _altnames.push_back(names);
 }
 
 
@@ -180,4 +197,73 @@ bool Static::isFlagSetInternal(const char *flagname, bool &results) {
 
 }
 
+/*********************************************************************************************
+ * hasAltName - looks through the list of alt names to see if one matches the parameter
+ *
+ *		Params:	str - the string we're trying to match
+ *					allow_abbrev - should matching allow for abbreviated versions?
+ *
+ *********************************************************************************************/
+
+bool Static::hasAltName(const char *str, bool allow_abbrev) {
+	std::string buf = str;
+
+	for (unsigned int i=0; i<_altnames.size(); i++) {
+		if (allow_abbrev) {
+			if (buf.compare(0, buf.size(), str) == 0)
+				return true;
+		}
+		else {
+			if (buf.compare(str) == 0)
+				return true;
+		}
+	}
+	return false;
+
+}
+
+/*********************************************************************************************
+ * addLinks - Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
+ *
+ *
+ *********************************************************************************************/
+
+void Static::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
+   std::stringstream msg;
+
+	// Place this at its start location
+   std::shared_ptr<Entity> entptr = edb.getEntity(_startloc.c_str());
+
+	if (entptr == nullptr) {
+		msg << "Object '" << getID() << "' startloc '" << _startloc << "' doesn't appear to exist.";
+      mudlog->writeLog(msg.str().c_str());
+		return;
+   } 
+	moveEntity(entptr, self);
+
+}
+
+/*********************************************************************************************
+ * getContained - given a name or altname, gets an entity contained within this static
+ *
+ *    Params:   
+ *             allow_abbrev - should matching allow for abbreviated versions?
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Entity> Static::getContained(const char *name_alias, bool allow_abbrev) {
+	std::string name = name_alias;
+
+	std::shared_ptr<Entity> results = Entity::getContained(name_alias, allow_abbrev);
+	if (results != nullptr)
+		return results;
+	
+	// Still not found, check abbreviations
+	auto eit = _contained.begin();
+	for ( ; eit != _contained.end(); eit++) {
+		if ((*eit)->hasAltName(name_alias, allow_abbrev))
+			return *eit;
+	}
+	return nullptr;
+}
 

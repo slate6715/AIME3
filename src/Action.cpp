@@ -8,7 +8,7 @@
 
 
 const char *ptype_list[] = {"undef", "single", "acttarg", "acttargoptcont", "look", "chat", "tell", NULL};
-const char *aflag_list[] = {"targetorg", "targetloc", "nolookup", "aliastarget", NULL};
+const char *aflag_list[] = {"targetorg", "targetmud", "nolookup", "aliastarget", NULL};
 
 hardcoded_actions cmd_array[] = {
 		{"infocom", infocom},
@@ -369,5 +369,54 @@ bool Action::isFlagSetInternal(const char *flagname, bool &results) {
 	results =_actflags[i];
    return true;
 
+}
+
+
+/*********************************************************************************************
+ * findTarget - Finds a target based on flags, location, etc--basic availability and populates
+ * errors in the errmsg string
+ *
+ *    Params:  name - the object name to look for
+ *             errmsg - populates an error message for the user
+ *
+ *    Returns: pointer if found/accessible, nullptr otherwise 
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Entity> Action::findTarget(std::string &name, std::string &errmsg, EntityDB &edb, 
+																			UserMgr &umgr) {
+
+	std::shared_ptr<Entity> target1;
+   std::shared_ptr<Organism> agent = getAgent();
+   std::shared_ptr<Entity> cur_loc = agent->getCurLoc();
+
+   // First, check the current location
+   if (((target1 = cur_loc->getContained(name.c_str())) == nullptr) &&
+                                                   (!isActFlagSet(Action::TargetMUD))) {
+		errmsg = "That does not appear to be here.";
+      return NULL;
+	}
+
+   // If this needs to target an organism
+    if (isActFlagSet(Action::TargetOrg)) {
+		if ((target1 != nullptr) && (std::dynamic_pointer_cast<Organism>(target1) == nullptr)) {
+			errmsg = "That is an inanimate object.";
+         return NULL;
+		}
+
+		// If we still haven't found it and we're looking for an organism, check the players
+		if (target1 == nullptr) {
+			target1 = umgr.getPlayer(name.c_str());
+		}
+   }
+   // If we still haven't found it, check mud-wide (must be in form zone@obj)
+   else if (target1 == nullptr) {
+		if ((target1 = edb.getEntity(name.c_str())) == nullptr) {
+			errmsg = "That object does not appear to exist.";
+         return NULL;
+      }
+   }
+	return target1;
+ 
 }
 

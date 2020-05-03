@@ -22,7 +22,9 @@ public:
 	virtual void sendPrompt() {};
 	virtual void sendCurLocation() {};
 	virtual void sendExits() {};
-//
+
+	virtual const char *getDesc() { return _desc.c_str(); };
+
 protected:
 	Organism(const char *id);	// Must be called from the child constructor
 	Organism(const Organism &copy_from);
@@ -34,6 +36,8 @@ protected:
    virtual bool isFlagSetInternal(const char *flagname, bool &results);
 
 private:
+	std::string _desc;
+
 };
 
 

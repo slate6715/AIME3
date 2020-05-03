@@ -51,6 +51,7 @@ int infocom(MUD &engine, Action &act_used) {
  *******************************************************************************************/
 int gocom(MUD &engine, Action &act_used) {
 	std::string dir;
+	(void) engine;
 
 	if (act_used.numTokens() >= 2)
 		dir = act_used.getToken(1);
@@ -88,8 +89,29 @@ int gocom(MUD &engine, Action &act_used) {
  *******************************************************************************************/
 int lookcom(MUD &engine, Action &act_used) {
 	std::shared_ptr<Organism> agent = act_used.getAgent();
+	(void) engine; // Eliminate compile warnings
 
-	agent->sendCurLocation();
+	// If they just typed look or examine
+	if (act_used.numTokens() == 1) {	
+		agent->sendCurLocation();
+		return 1;
+	}
+
+	// They seem to want to look in something?
+	std::string preposition = act_used.getToken(1);
+	lower(preposition);
+
+	// If they didn't type a preposition, we assume "at"
+	if ((preposition.compare("at")) != 0 && (preposition.compare("in") != 0))
+		preposition = "at";
+
+	// Examine something
+	if (preposition.compare("at") == 0) {
+		agent->sendMsg(act_used.getTarget1()->getDesc());
+		return 1;
+	}
+
+	// Look inside something (TBD)
 
 	return 1;
 }
@@ -99,6 +121,7 @@ int lookcom(MUD &engine, Action &act_used) {
  *******************************************************************************************/
 int exitscom(MUD &engine, Action &act_used) {
    std::shared_ptr<Organism> agent = act_used.getAgent();
+   (void) engine; // Eliminate compile warnings
 
 	agent->sendMsg("\n");
    agent->sendExits();

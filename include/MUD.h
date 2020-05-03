@@ -32,6 +32,9 @@ public:
 	void cleanup();
 
 	libconfig::Config *getConfig() { return &_mud_config; };
+	ActionMgr *getActionMgr() { return &_actions; };
+	UserMgr *getUserMgr() { return &_users; };
+	EntityDB *getEntityDB() { return &_entity_db; };
 
 private:
    // Publicly-accessible attributes

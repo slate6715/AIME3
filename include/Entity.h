@@ -22,6 +22,7 @@ public:
 	const char *getID() const { return _id.c_str(); };
 	const char *getNameID(std::string &buf) const;
 	const char *getZoneID(std::string &buf) const;
+	virtual const char *getDesc() const { return NULL; }
 
 	void setID(const char *new_id);	// Be careful setting this, must be unique ID
 
@@ -42,11 +43,15 @@ public:
 
    // Retrieved the shared pointer matching the entity pointer
    std::shared_ptr<Entity> getContained(Entity *eptr);
+	virtual std::shared_ptr<Entity> getContained(const char *name_alias, bool allow_abbrev=true);
 
 	std::shared_ptr<Entity> getCurLoc() { return _cur_loc; };
 
 	// Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
-	virtual void addLinks(EntityDB &edb) { (void) edb; };
+	virtual void addLinks(EntityDB &edb, std::shared_ptr<Entity> self) { (void) edb; (void) self; };
+
+   virtual bool hasAltName(const char *str, bool allow_abbrev) 
+													{ (void) str; (void) allow_abbrev; return false; };
 
 protected:
 	Entity(const char *id);	// Must be called from the child constructor
@@ -58,13 +63,13 @@ protected:
 	virtual bool setFlagInternal(const char *flagname, bool newval);
 	virtual bool isFlagSetInternal(const char *flagname, bool &results);
 
+   // All entities can possibly contain objects
+   std::list<std::shared_ptr<Entity>> _contained;
+
 private:
 	Entity();	// Should not be called
 
 	std::string _id;
-
-	// All entities can possibly contain objects
-	std::list<std::shared_ptr<Entity>> _contained;
 
 	std::shared_ptr<Entity> _cur_loc;
 };

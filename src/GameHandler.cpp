@@ -4,12 +4,14 @@
 #include "GameHandler.h"
 #include "misc.h"
 #include "Player.h"
+#include "MUD.h"
 #include "ActionMgr.h"
+#include "global.h"
 
 
-GameHandler::GameHandler(std::shared_ptr<Player> plr, ActionMgr &actions):
+GameHandler::GameHandler(std::shared_ptr<Player> plr):
                         Handler(plr),
-								_actions(actions)
+								_actions(*engine.getActionMgr())
 {
 }
 
@@ -40,15 +42,12 @@ int GameHandler::handleCommand(std::string &cmd) {
 	_plr->clearPrompt();
 
 	// Try to find the command to execute--if NULL, there was an error
-	if ((new_action = _actions.preAction(cmd.c_str(), errmsg)) == NULL) {
+	if ((new_action = _actions.preAction(cmd.c_str(), errmsg, _plr)) == NULL) {
 		errmsg += "\n";
 		_plr->sendMsg(errmsg);
 		_plr->sendPrompt();
 		return 0;
 	}
-
-	// Set up any necessary parameters 
-	new_action->setAgent(_plr);
 
 	// Now add it to the queue to be executed
 	_actions.execAction(new_action);

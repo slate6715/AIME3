@@ -22,6 +22,8 @@ void displayHelp(const char *execname) {
 	std::cout << "  -h, --help      Display this message\n";
 }
 
+// The main mud engine, accessible via extern global defines
+MUD engine;
 
 int main(int argc, char *argv[]) {
 
@@ -70,9 +72,6 @@ int main(int argc, char *argv[]) {
       }
 
    }
-
-	// Create the MUD object and start configuring it
-	MUD engine;
 
 	std::cout << "Bootstrapping AIME3 MUD\n";
 

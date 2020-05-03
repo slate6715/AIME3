@@ -280,3 +280,26 @@ bool Entity::isFlagSetInternal(const char *flagname, bool &results) {
 }
 
 
+/*********************************************************************************************
+ * getContained - returns a shared_ptr to the contained entity that matches name_alias. This
+ *					   version only checks id
+ *
+ *    Returns: shared_ptr if found, nullptr if not 
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Entity> Entity::getContained(const char *name_alias, bool allow_abbrev) {
+   std::string name = name_alias;
+
+   // First, look for the name
+   auto eit = _contained.begin();
+   for ( ; eit != _contained.end(); eit++) {
+      if ((!allow_abbrev) && name.compare((*eit)->getID()))
+         return *eit;
+      else if ((allow_abbrev) && name.compare(0, name.size(), (*eit)->getID()) == 0)
+         return *eit;
+   }
+	return nullptr;
+
+}
+

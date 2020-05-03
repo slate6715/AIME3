@@ -19,7 +19,7 @@
 class UserMgr 
 {
 public:
-	UserMgr(ActionMgr &actions);
+	UserMgr(MUD &engine);
    UserMgr(const UserMgr &copy_from);
    virtual ~UserMgr();
 
@@ -49,10 +49,12 @@ public:
 	bool saveUser(const char *username);
 	bool saveUser(const Player &plr);
 
+	std::shared_ptr<Player> getPlayer(const char *name, bool allow_abbrev = true);
+
 private:
 
 	// Used by the handlers to queue up commands/actions to be executed
-	ActionMgr &_actions;
+	MUD &_engine;
 
 	// List of active users
 	std::map<std::string, std::shared_ptr<Player>> _db;

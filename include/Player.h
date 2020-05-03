@@ -10,7 +10,7 @@
 #include "Handler.h"
 #include "TCPConn.h"
 
-class ActionMgr;
+class MUD;
 
 /***************************************************************************************
  * Player - a living entity that can usually be killed and sometimes moves around. Used
@@ -44,7 +44,7 @@ public:
 	virtual void sendExits();
 
 	// configures the connecting user for entering the MUD
-	void welcomeUser(libconfig::Config &mud_cfg, ActionMgr &actions, std::shared_ptr<Player> thisplr);
+	void welcomeUser(libconfig::Config &mud_cfg, std::shared_ptr<Player> thisplr);
 
 	// Loops through the player's connection, handling data
 	void handleConnection();

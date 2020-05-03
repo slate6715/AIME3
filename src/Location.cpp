@@ -280,8 +280,9 @@ std::shared_ptr<Location> Location::getExitAbbrev(const char *exitname) {
  *
  *********************************************************************************************/
 
-void Location::addLinks(EntityDB &edb) {
+void Location::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
 	std::stringstream msg;
+	(void) self;
 
 	// Go through the exits, creating links
 	auto exit_it = _exits.begin();
@@ -340,5 +341,29 @@ const char *Location::getExitsStr(std::string &buf) {
 	if (count == 0) 
 		buf += "   None\n";
 	return buf.c_str();
+}
+
+/*********************************************************************************************
+ * getContained - given a name or altname, gets an entity contained within this static
+ *
+ *    Params:
+ *             allow_abbrev - should matching allow for abbreviated versions?
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Entity> Location::getContained(const char *name_alias, bool allow_abbrev) {
+   std::string name = name_alias;
+
+   std::shared_ptr<Entity> results = Entity::getContained(name_alias, allow_abbrev);
+   if (results != nullptr)
+      return results;
+
+   // Still not found, check abbreviations
+   auto eit = _contained.begin();
+   for ( ; eit != _contained.end(); eit++) {
+      if ((*eit)->hasAltName(name_alias, allow_abbrev))
+         return *eit;
+   }
+   return nullptr;
 }
 

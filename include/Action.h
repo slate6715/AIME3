@@ -10,6 +10,7 @@
 #include "actions.h"
 
 class MUD;
+class UserMgr;
 
 
 /***************************************************************************************
@@ -36,8 +37,8 @@ public:
 	enum act_types { Hardcoded, Script, Trigger };
 
 	enum act_flags {
-			TargetOrg,	 // Target must be an organism (mobile or player)
-			TargetLoc,	 // Target must be in the current location
+			TargetOrg,	 // Target1 must be an organism (mobile or player)
+			TargetMUD,	 // Target1 does not need to be in the location 
 			NoLookup,	 // Action class will not lookup the target object but simply pass in the string
 			AliasTarget // Aliases can act as the target (such as with "go east" and "east")
 	};
@@ -53,6 +54,8 @@ public:
 	void setExecuteNow();
 	void setAgent(std::shared_ptr<Organism> agent);
 	void setFormat(const char *format);
+	void setTarget1(std::shared_ptr<Entity> target) { _target1 = target; };
+   void setTarget2(std::shared_ptr<Entity> target) { _target2 = target; };
 
 	int execute(MUD &mud);
 
@@ -69,6 +72,14 @@ public:
 
 	// Copies the alias list into a new vector
 	std::vector<std::string> getAliases() { return _alias; };
+
+	// Finds a target based on flags, location, etc--basic availability and populates
+	// errors in the errmsg string
+	std::shared_ptr<Entity> findTarget(std::string &name, std::string &errmsg, EntityDB &edb,
+																	UserMgr &umgr);
+
+	std::shared_ptr<Entity> getTarget1() { return _target1; };
+	std::shared_ptr<Entity> getTarget2() { return _target2; };
 
 protected:
 
@@ -100,6 +111,9 @@ private:
 
 	// Alias - alternate names for this command
 	std::vector<std::string> _alias;
+
+	std::shared_ptr<Entity> _target1;
+	std::shared_ptr<Entity> _target2;
 };
 
 struct hardcoded_actions {

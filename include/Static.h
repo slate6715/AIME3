@@ -20,14 +20,21 @@ public:
 
    virtual ~Static();
 
-	enum sflags { NoneYet };
+	enum sflags { Container };
 
 	void setDesc(const char *newdesc);
+	void setStartLoc(const char *newloc);
 	void addAltName(const char *names);
 
-	const char *getDesc() const { return _desc.c_str(); };
+	virtual const char *getDesc() const { return _desc.c_str(); };
+	const char *getStartLoc() const { return _startloc.c_str(); };
 
-	bool hasAltName(const char *str);
+	virtual bool hasAltName(const char *str, bool allow_abbrev);
+
+   // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
+   virtual void addLinks(EntityDB &edb, std::shared_ptr<Entity> self);
+
+	virtual std::shared_ptr<Entity> getContained(const char *name_alias, bool allow_abbrev=true);
 
 protected:
 
@@ -41,6 +48,7 @@ private:
 	
 	std::string _desc;
 	std::vector<std::string> _altnames;
+	std::string _startloc;
 
 	std::bitset<32> _staticflags;
 };
