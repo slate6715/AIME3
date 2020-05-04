@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<action id="action@drop" acttype="Hardcoded" parsetype="ActTarg" format="drop <object>" function="dropcom">
+<flag name="TargetInv" />
+</action> 

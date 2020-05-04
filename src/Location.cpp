@@ -2,6 +2,7 @@
 #include <sstream>
 #include <memory>
 #include "Location.h"
+#include "Getable.h"
 #include "MUD.h"
 #include "misc.h"
 #include "global.h"
@@ -365,5 +366,36 @@ std::shared_ptr<Entity> Location::getContained(const char *name_alias, bool allo
          return *eit;
    }
    return nullptr;
+}
+
+/*********************************************************************************************
+ * listContents - preps a string with a list of visible getables and organisms first
+ *
+ *
+ *********************************************************************************************/
+
+const char *Location::listContents(std::string &buf) {
+	auto cit = _contained.begin();
+
+	// Show getables first
+	for (cit = _contained.begin(); cit != _contained.end(); cit++) {
+      std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(*cit);
+
+      if (gptr == nullptr)
+         continue;
+	
+		buf += gptr->getRoomDesc();
+		buf += "\n";	
+	}
+
+   // Show organisms next
+   for ( ; cit != _contained.end(); cit++) {
+      std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(*cit);
+
+      if (optr == nullptr)
+         continue;
+
+   }
+	return buf.c_str();
 }
 

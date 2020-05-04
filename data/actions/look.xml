@@ -2,4 +2,6 @@
 <action id="action@look" acttype="Hardcoded" parsetype="Look" format="look [[<at|in>] <target>]" function="lookcom">
 <alias name="examine" />
 <alias name="l" />
+<flag name="TargetLoc" />
+<flag name="TargetInv" />
 </action> 

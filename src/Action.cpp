@@ -8,15 +8,20 @@
 
 
 const char *ptype_list[] = {"undef", "single", "acttarg", "acttargoptcont", "look", "chat", "tell", NULL};
-const char *aflag_list[] = {"targetorg", "targetmud", "nolookup", "aliastarget", NULL};
+const char *aflag_list[] = {"targetmud", "targetloc", "targetinv", "targetorg", "nolookup", "aliastarget", 
+									NULL};
 
 hardcoded_actions cmd_array[] = {
 		{"infocom", infocom},
 		{"gocom", gocom},
 		{"lookcom", lookcom},
 		{"exitscom", exitscom},
+		{"getcom", getcom},
+		{"dropcom", dropcom},
+		{"inventorycom", inventorycom},
 		{"",0}
 };
+
 
 /*********************************************************************************************
  * Action (constructor) - Called by a child class to initialize any Action elements. Used to
@@ -220,7 +225,6 @@ int Action::loadData(pugi::xml_node &entnode) {
  *********************************************************************************************/
 
 int Action::execute(MUD &engine) {
-	std::cout << "Executing: " << getID() << std::endl;
 
 	int results = 0;
 	if (_atype == Hardcoded) {
@@ -390,9 +394,18 @@ std::shared_ptr<Entity> Action::findTarget(std::string &name, std::string &errms
    std::shared_ptr<Organism> agent = getAgent();
    std::shared_ptr<Entity> cur_loc = agent->getCurLoc();
 
-   // First, check the current location
-   if (((target1 = cur_loc->getContained(name.c_str())) == nullptr) &&
-                                                   (!isActFlagSet(Action::TargetMUD))) {
+   // Check inventory first 
+	if (isActFlagSet(TargetInv)) {
+		target1 = agent->getContained(name.c_str());
+	}
+
+	// Now check location if applicable
+	if ((target1 == nullptr) && (isActFlagSet(TargetLoc))) {
+		target1 = cur_loc->getContained(name.c_str());
+	}
+
+	// Raise an error if we didn't find anything and we're not checking the entire MUD
+   if ((target1 == nullptr) && (!isActFlagSet(Action::TargetMUD))) {
 		errmsg = "That does not appear to be here.";
       return NULL;
 	}
@@ -410,11 +423,10 @@ std::shared_ptr<Entity> Action::findTarget(std::string &name, std::string &errms
 		}
    }
    // If we still haven't found it, check mud-wide (must be in form zone@obj)
-   else if (target1 == nullptr) {
-		if ((target1 = edb.getEntity(name.c_str())) == nullptr) {
-			errmsg = "That object does not appear to exist.";
-         return NULL;
-      }
+   else if ((target1 == nullptr) && 
+				((target1 = edb.getEntity(name.c_str())) == nullptr)) {
+		errmsg = "That object does not appear to exist.";
+      return NULL;
    }
 	return target1;
  

@@ -14,6 +14,7 @@
 #include "misc.h"
 #include "../external/pugixml.hpp"
 #include "global.h"
+#include "Getable.h"
 
 // Defines the password hash/salt bytelength
 const unsigned int hashlen = 16;
@@ -263,7 +264,7 @@ void Player::formatForTelnet(const std::string &unformatted, std::string &format
 		}
 
 		// Keep going while it's just a regular character
-		if (!keychars[(std::size_t) unformatted[i]]) {
+		if (!keychars[(std::size_t) (unsigned char) unformatted[i]]) {
 			_last_wrap++;
 			continue;
 		}
@@ -405,7 +406,7 @@ void Player::clearPrompt() {
 	clrprompt.assign(prompt.size(), ' ');
 	clrprompt.insert(0, "\r");
 	clrprompt += "\r";
-   sendMsg(clrprompt);
+   sendMsg(clrprompt); 
 }
 
 
@@ -427,6 +428,8 @@ void Player::sendCurLocation() {
 	sendMsg(locptr->getTitle());
 	sendMsg("\n\n");
 	sendMsg(locptr->getDesc());
+
+	sendLocContents();
 	sendMsg("\n");
 
 	sendExits();
@@ -451,6 +454,23 @@ void Player::sendExits() {
 	sendMsg(locptr->getExitsStr(buf));
 }
 
+/*********************************************************************************************
+ * sendLocContents - displays the getable and organism contents in the room
+ *
+ *
+ *********************************************************************************************/
+
+void Player::sendLocContents() {
+   std::shared_ptr<Location> locptr;
+
+   if ((locptr = std::dynamic_pointer_cast<Location>(getCurLoc())) == nullptr) {
+      sendMsg("You appear to be trapped inside a non-location entity. Speak to an Admin!\n");
+      return;
+   }
+
+	std::string buf;
+	sendMsg(locptr->listContents(buf));
+}
 
 /*********************************************************************************************
  * handleCommand - sends the command to the top message handler for it to execute for this
@@ -732,5 +752,33 @@ bool Player::isFlagSetInternal(const char *flagname, bool &results) {
 		return true;
 	
 	return false;
+}
+
+/*********************************************************************************************
+ * listContents - preps a string with a list of visible items in this static's container
+ *
+ *
+ *********************************************************************************************/
+
+const char *Player::listContents(std::string &buf) const {
+   auto cit = _contained.begin();
+
+	if (_contained.size() == 0) {
+		buf = "Nothing.\n";
+		return buf.c_str();
+	}
+
+   // Show getables first
+   for (cit = _contained.begin(); cit != _contained.end(); cit++) {
+      std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(*cit);
+
+      if (gptr == nullptr)
+         continue;
+
+      buf += gptr->getTitle();
+      buf += "\n";
+   }
+
+   return buf.c_str();
 }
 

@@ -46,16 +46,33 @@ To the east, there's appears to be slightly less darkness.
 <location id="start@alcove" title="Lonely Beach">
 <exit name="south" location="start@beach" />
 <flag name="Outdoors" />
-<flag name="Bright" />
-<desc>Desc TBD
+<desc>The beach ends at a chalk cliff. The rock walls of the cliff extend above you to the north and east while the beach continues to the south. The sea and cliff walls extend north but without safe passage. Attempting to swim it would result in a quick death as waves smash violently against jagged rocks at the cliff base. The beach is littered with chunks of chalk but, one again, no signs of life.
 </desc>
 </location>
 
 <location id="start@junglecoast" title="Jungle Coast">
 <exit name="north" location="start@beach" />
+<exit name="south" location="start@duskbeach" />
 <flag name="Outdoors" />
-<flag name="Bright" />
-<desc>Desc TBD
+<desc>Plant life abounds to the east as an impassible jungle arises out of the sandy soil. The waves wash up on the smooth sand, leaving behind the occasional kelp mass. The beach continues south, bordered by the jungle on the east and the sea on the west. To the north, the jungle fizzles and disaapears. While there's ample sign of plant life, the jungle and beach are strangey devoid of any signs of animal life. 
+</desc>
+</location>
+
+<getable id="start@kelp" startloc="start@junglecoast" title="Mass of Kelp" >
+<desc>Basic kelp. Consists of flat leaf-like structures connected to stems. This mass looks fairly fresh and must have recently washed up on shore. 
+</desc>
+<altname name="weed" />
+<altname name="seaweed" />
+<altname name="mass" />
+<roomdesc text="A mass of kelp has washed up on shore." />
+<roomdesc text="A pile of kelp has been discarded here." />
+</getable>
+
+<location id="start@duskbeach" title="The Beach at Sunset">
+<exit name="north" location="start@junglecoast" />
+<exit name="south" location="start@duskbeach" />
+<flag name="Outdoors" />
+<desc>TBD
 </desc>
 </location>
 

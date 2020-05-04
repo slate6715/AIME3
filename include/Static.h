@@ -36,6 +36,8 @@ public:
 
 	virtual std::shared_ptr<Entity> getContained(const char *name_alias, bool allow_abbrev=true);
 
+	virtual const char *listContents(std::string &buf) const;
+
 protected:
 
    virtual void saveData(pugi::xml_node &entnode) const;

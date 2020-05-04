@@ -40,6 +40,10 @@ public:
 	// Displays the current location to the user
 	virtual void sendCurLocation();
 
+	// Send location contents to the player
+	void sendLocContents();
+   virtual const char *listContents(std::string &buf) const;
+
 	// Displays the exits of the current location to the user
 	virtual void sendExits();
 

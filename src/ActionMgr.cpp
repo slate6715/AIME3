@@ -86,7 +86,6 @@ unsigned int ActionMgr::loadActions(const char *actiondir) {
 	unsigned int count = 0;
    pugi::xml_document actionfile;
    for (unsigned int i=0; i<files.size(); i++) {
-      std::cout << "Action file: " << files[i] << std::endl;
       std::string filepath(actiondir);
       filepath += "/";
       filepath += files[i].c_str();

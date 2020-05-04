@@ -5,6 +5,7 @@
 #include "MUD.h"
 #include "misc.h"
 #include "global.h"
+#include "Getable.h"
 
 const char *sflag_list[] = {"container", NULL};
 
@@ -265,5 +266,28 @@ std::shared_ptr<Entity> Static::getContained(const char *name_alias, bool allow_
 			return *eit;
 	}
 	return nullptr;
+}
+
+/*********************************************************************************************
+ * listContents - preps a string with a list of visible items in this static's container
+ *
+ *
+ *********************************************************************************************/
+
+const char *Static::listContents(std::string &buf) const {
+   auto cit = _contained.begin();
+
+   // Show getables first
+   for (cit = _contained.begin(); cit != _contained.end(); cit++) {
+      std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(*cit);
+
+      if (gptr == nullptr)
+         continue;
+
+      buf += gptr->getTitle();
+      buf += "\n";
+   }
+
+   return buf.c_str();
 }
 

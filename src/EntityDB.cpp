@@ -8,6 +8,7 @@
 #include "global.h"
 #include "Location.h"
 #include "Static.h"
+#include "Getable.h"
 
 
 /*********************************************************************************************
@@ -65,7 +66,6 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
 
    pugi::xml_document zonefile;
    for (unsigned int i=0; i<files.size(); i++) {
-      std::cout << "Zone file: " << files[i] << std::endl;
       std::string filepath(zonedir);
       filepath += "/";
       filepath += files[i].c_str();
@@ -96,9 +96,9 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
 			count++;
 		}
       // Get all locations
-      for (pugi::xml_node loc = zonefile.child("static"); loc; loc = loc.next_sibling("static")) {
+      for (pugi::xml_node stat = zonefile.child("static"); stat; stat = stat.next_sibling("static")) {
 			Static *new_ent = new Static("temp");
-         if (!new_ent->loadEntity(loc)) {
+         if (!new_ent->loadEntity(stat)) {
             std::stringstream msg;
             msg << "Bad format for static '" << new_ent->getID() << "', file '" << files[i] << "'";
             mudlog->writeLog(msg.str().c_str());
@@ -110,6 +110,22 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
          count++;
  			 
 		}
+      // Get all locations
+      for (pugi::xml_node get_x = zonefile.child("getable"); get_x; get_x = get_x.next_sibling("getable")) {
+         Getable *new_ent = new Getable("temp");
+         if (!new_ent->loadEntity(get_x)) {
+            std::stringstream msg;
+            msg << "Bad format for getable '" << new_ent->getID() << "', file '" << files[i] << "'";
+            mudlog->writeLog(msg.str().c_str());
+            delete new_ent;
+            continue;
+         }
+         _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(),
+                                                   std::shared_ptr<Entity>(new_ent)));
+         count++;
+
+      }
+
 	}
 
 

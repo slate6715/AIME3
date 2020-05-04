@@ -52,7 +52,7 @@ int GameHandler::handleCommand(std::string &cmd) {
 	// Now add it to the queue to be executed
 	_actions.execAction(new_action);
 
-	_plr->sendPrompt();
+// 	_plr->sendPrompt();
 
 	return 0;
 }

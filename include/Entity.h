@@ -22,7 +22,10 @@ public:
 	const char *getID() const { return _id.c_str(); };
 	const char *getNameID(std::string &buf) const;
 	const char *getZoneID(std::string &buf) const;
+
+	// Functions with representation in child classes
 	virtual const char *getDesc() const { return NULL; }
+	virtual const char *listContents(std::string &buf) const { (void) buf; return NULL; };
 
 	void setID(const char *new_id);	// Be careful setting this, must be unique ID
 

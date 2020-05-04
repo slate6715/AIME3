@@ -8,6 +8,7 @@
 #include "misc.h"
 #include "Location.h"
 #include "global.h"
+#include "Getable.h"
 
 
 /*******************************************************************************************
@@ -127,5 +128,65 @@ int exitscom(MUD &engine, Action &act_used) {
    agent->sendExits();
 	agent->sendMsg("\n");
    return 1;
+}
+
+/*******************************************************************************************
+ * getcom - get something from the ground or a container
+ *******************************************************************************************/
+int dropcom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> agent = act_used.getAgent();
+   (void) engine; // Eliminate compile warnings
+
+	std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(act_used.getTarget1());
+
+	if ((gptr == nullptr) || (gptr->isFlagSet("NoGet"))) {
+		agent->sendMsg("You can't get that.\n");
+		return 0;
+	}
+
+	gptr->moveEntity(agent, act_used.getTarget1());
+	std::string msg("You drop the ");
+	msg += gptr->getTitle();
+	msg += "\n";
+	agent->sendMsg(msg.c_str());
+
+   return 1;
+}
+
+/*******************************************************************************************
+ * drocom - drop something from the player's inventory
+ *******************************************************************************************/
+int getcom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> agent = act_used.getAgent();
+   (void) engine; // Eliminate compile warnings
+
+   std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(act_used.getTarget1());
+   std::shared_ptr<Entity> cur_loc = agent->getCurLoc();
+
+   gptr->moveEntity(cur_loc, act_used.getTarget1());
+   std::string msg("You pick up the ");
+   msg += gptr->getTitle();
+   msg += "\n";
+   agent->sendMsg(msg.c_str());
+
+   gptr->popRoomDesc();
+
+   return 1;
+}
+
+/*******************************************************************************************
+ * inventorycom - display the player's inventory
+ *******************************************************************************************/
+int inventorycom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> agent = act_used.getAgent();
+   (void) engine; // Eliminate compile warnings
+
+	agent->sendMsg("Inventory contains:\n");
+
+	std::string buf;
+
+	agent->sendMsg(agent->listContents(buf));
+	agent->sendMsg("\n");
+	return 1;
 }
 
