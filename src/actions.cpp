@@ -131,20 +131,26 @@ int exitscom(MUD &engine, Action &act_used) {
 }
 
 /*******************************************************************************************
- * getcom - get something from the ground or a container
+ * drocom - drop something from the player's inventory
  *******************************************************************************************/
+
 int dropcom(MUD &engine, Action &act_used) {
    std::shared_ptr<Organism> agent = act_used.getAgent();
    (void) engine; // Eliminate compile warnings
 
 	std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(act_used.getTarget1());
 
-	if ((gptr == nullptr) || (gptr->isFlagSet("NoGet"))) {
-		agent->sendMsg("You can't get that.\n");
+	if (gptr == nullptr) {
+		agent->sendMsg("You don't seem to have that.\n");
+		return 0;
+	} else if (gptr->isFlagSet("NoDrop")) {
+		agent->sendMsg("You are unable to drop the ");
+		agent->sendMsg(gptr->getTitle());
+		agent->sendMsg("\n");
 		return 0;
 	}
 
-	gptr->moveEntity(agent, act_used.getTarget1());
+	gptr->moveEntity(agent->getCurLoc(), act_used.getTarget1());
 	std::string msg("You drop the ");
 	msg += gptr->getTitle();
 	msg += "\n";
@@ -154,7 +160,7 @@ int dropcom(MUD &engine, Action &act_used) {
 }
 
 /*******************************************************************************************
- * drocom - drop something from the player's inventory
+ * getcom - get something from the ground or a container
  *******************************************************************************************/
 int getcom(MUD &engine, Action &act_used) {
    std::shared_ptr<Organism> agent = act_used.getAgent();
@@ -163,7 +169,7 @@ int getcom(MUD &engine, Action &act_used) {
    std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(act_used.getTarget1());
    std::shared_ptr<Entity> cur_loc = agent->getCurLoc();
 
-   gptr->moveEntity(cur_loc, act_used.getTarget1());
+   gptr->moveEntity(agent, act_used.getTarget1());
    std::string msg("You pick up the ");
    msg += gptr->getTitle();
    msg += "\n";

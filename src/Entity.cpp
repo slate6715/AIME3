@@ -198,10 +198,10 @@ bool Entity::moveEntity(std::shared_ptr<Entity> new_ent, std::shared_ptr<Entity>
 		if (self == nullptr){
 			throw std::runtime_error("Entity::moveEntity: Could not retrieve self shared_ptr");
 		}
-
-		if (_cur_loc != nullptr)
-			results &= _cur_loc->removeEntity(self);
 	}
+	if (_cur_loc != nullptr)
+		results &= _cur_loc->removeEntity(self);
+
 	_cur_loc = new_ent;
 
 	results &= new_ent->addEntity(self);
@@ -290,13 +290,14 @@ bool Entity::isFlagSetInternal(const char *flagname, bool &results) {
 
 std::shared_ptr<Entity> Entity::getContained(const char *name_alias, bool allow_abbrev) {
    std::string name = name_alias;
+	std::string buf;
 
    // First, look for the name
    auto eit = _contained.begin();
    for ( ; eit != _contained.end(); eit++) {
       if ((!allow_abbrev) && name.compare((*eit)->getID()))
          return *eit;
-      else if ((allow_abbrev) && name.compare(0, name.size(), (*eit)->getID()) == 0)
+      else if ((allow_abbrev) && name.compare(0, name.size(), (*eit)->getNameID(buf)) == 0)
          return *eit;
    }
 	return nullptr;

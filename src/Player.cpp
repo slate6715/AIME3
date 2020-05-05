@@ -242,6 +242,10 @@ void Player::formatForTelnet(const std::string &unformatted, std::string &format
 		// If we're at our word-wrap location, wrap it
 		if ((_wrap_width != 0) && (_last_wrap >= _wrap_width)) {
 
+			// First, if we find a \r without a \n, then we should restart the counter
+			if ((unformatted[i] == '\r') && (i < unformatted.size()) && (unformatted[i+1] != '\n'))
+				_last_wrap = 0;
+
 			// Step backwards to find a space
 			unsigned int j=i;
 			while ((j > 0) && (j > lastpos) && (j--)) {

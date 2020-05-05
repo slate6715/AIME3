@@ -211,7 +211,7 @@ bool Static::hasAltName(const char *str, bool allow_abbrev) {
 
 	for (unsigned int i=0; i<_altnames.size(); i++) {
 		if (allow_abbrev) {
-			if (buf.compare(0, buf.size(), str) == 0)
+			if (buf.compare(0, buf.size(), _altnames[i]) == 0)
 				return true;
 		}
 		else {

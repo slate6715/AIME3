@@ -20,7 +20,7 @@ public:
 
    virtual ~Getable();
 
-	enum gflags { NoGet };
+	enum gflags { NoGet, NoDrop };
 
 	// void setDesc(const char *newdesc);
 

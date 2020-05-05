@@ -213,6 +213,7 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 
 	// No space in this command, it's just a single word
 	if (pos == std::string::npos) {
+		pos = buf.size();
 		elements.push_back(buf);
 	} 
 	// Else grab the first word so we can look it up
