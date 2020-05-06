@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<action id="action:users" acttype="Hardcoded" parsetype="Single" format="users" function="userscom">
+<flag name="NoLookup" />
+</action> 

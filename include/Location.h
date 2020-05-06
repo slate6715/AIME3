@@ -51,6 +51,9 @@ public:
 
    virtual std::shared_ptr<Entity> getContained(const char *name_alias, bool allow_abbrev=true);
 
+   // Send a message to this entity or its contents - class-specific behavior
+   virtual void sendMsg(const char *msg, std::shared_ptr<Entity> exclude=nullptr); 
+   virtual void sendMsg(std::string &msg, std::shared_ptr<Entity> exclude=nullptr); 
 
 protected:
 

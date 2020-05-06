@@ -38,7 +38,10 @@ public:
 
 	// Checks for new users and, if authorized, adds them to the player list
 	void checkNewUsers(libconfig::Config &mud_cfg);
-	
+
+	// Displays the list of logged on users, populating the buffer
+	const char *showUsers(std::string &buf);
+
 	// Loop through all users, performing maintenance and executing their next
 	// command via their handler
 	void handleUsers(libconfig::Config &cfg_info, EntityDB &edb);
@@ -50,6 +53,10 @@ public:
 	bool saveUser(const Player &plr);
 
 	std::shared_ptr<Player> getPlayer(const char *name, bool allow_abbrev = true);
+
+	int sendMsg(const char *msg, std::vector<std::string> *exclude_flags,
+										  std::vector<std::string> *require_flags, 
+										  std::shared_ptr<Entity> exclude_ind);
 
 private:
 

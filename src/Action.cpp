@@ -19,6 +19,10 @@ hardcoded_actions cmd_array[] = {
 		{"getcom", getcom},
 		{"dropcom", dropcom},
 		{"inventorycom", inventorycom},
+		{"userscom", userscom},
+		{"saycom", saycom},
+		{"chatcom", chatcom},
+		{"tellcom", tellcom},
 		{"",0}
 };
 
@@ -422,7 +426,7 @@ std::shared_ptr<Entity> Action::findTarget(std::string &name, std::string &errms
 			target1 = umgr.getPlayer(name.c_str());
 		}
    }
-   // If we still haven't found it, check mud-wide (must be in form zone@obj)
+   // If we still haven't found it, check mud-wide (must be in form zone:obj)
    else if ((target1 == nullptr) && 
 				((target1 = edb.getEntity(name.c_str())) == nullptr)) {
 		errmsg = "That object does not appear to exist.";

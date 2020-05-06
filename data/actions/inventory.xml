@@ -1,4 +1,4 @@
 <?xml version="1.0"?>
-<action id="action@inventory" acttype="Hardcoded" parsetype="Single" format="inventory" function="inventorycom">
+<action id="action:inventory" acttype="Hardcoded" parsetype="Single" format="inventory" function="inventorycom">
 <alias name="i" />
 </action> 

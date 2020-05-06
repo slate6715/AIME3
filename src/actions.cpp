@@ -196,3 +196,91 @@ int inventorycom(MUD &engine, Action &act_used) {
 	return 1;
 }
 
+/*******************************************************************************************
+ * userscom - shows the users that are currently logged on
+ *******************************************************************************************/
+int userscom(MUD &engine, Action &act_used) {
+	UserMgr &umgr = *engine.getUserMgr();
+
+   std::shared_ptr<Organism> agent = act_used.getAgent();
+
+	std::string buf;
+	agent->sendMsg(umgr.showUsers(buf));	
+	return 1;
+}
+
+/*******************************************************************************************
+ * saycom - speak to people in the room
+ *******************************************************************************************/
+int saycom(MUD &engine, Action &act_used) {
+	(void) engine;
+   std::shared_ptr<Organism> agent = act_used.getAgent();
+
+	std::stringstream msg;
+	std::string name;
+	agent->getNameID(name);
+	name[0] = toupper(name[0]);
+	
+	msg << name << " says '" << act_used.getToken(1) << "'\n";
+	agent->getCurLoc()->sendMsg(msg.str().c_str(), agent);
+
+	msg.str("");
+	msg << "You say '" << act_used.getToken(1) << "'\n";
+	agent->sendMsg(msg.str().c_str());
+	return 1;
+}
+
+/*******************************************************************************************
+ * chatcom - speak to people in the mud who have joined the chat channel
+ *******************************************************************************************/
+int chatcom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> agent = act_used.getAgent();
+	UserMgr &umgr = *engine.getUserMgr();
+
+   std::stringstream msg;
+   std::string name;
+   agent->getNameID(name);
+   name[0] = toupper(name[0]);
+
+	std::vector<std::string> ex_flags;
+	ex_flags.push_back("nochat");
+
+   msg << name << " chats '" << act_used.getToken(1) << "'\n";
+
+	// Send this to everyone who does not have nochat set and is not the agent
+	umgr.sendMsg(msg.str().c_str(), &ex_flags, NULL, agent);
+
+   msg.str("");
+   msg << "You chat '" << act_used.getToken(1) << "'\n";
+   agent->sendMsg(msg.str().c_str());
+
+	return 1;
+}
+
+/*******************************************************************************************
+ * tellcom - tell something to a specific player
+ *******************************************************************************************/
+int tellcom(MUD &engine, Action &act_used) {
+	(void) engine;
+
+   std::shared_ptr<Organism> agent = act_used.getAgent();
+	std::string pname, tname;
+	std::stringstream msg;
+
+	agent->getNameID(pname);
+	act_used.getTarget1()->getNameID(tname);
+	pname[0] = toupper(pname[0]);
+	tname[0] = toupper(tname[0]);
+   msg << pname << " tells you '" << act_used.getToken(1) << "'\n";
+
+   // Send this to everyone who does not have nochat set and is not the agent
+   act_used.getTarget1()->sendMsg(msg.str().c_str());
+
+   msg.str("");
+   msg << "You tell " << tname << " '" << act_used.getToken(1) << "'\n";
+   agent->sendMsg(msg.str().c_str());
+
+
+	return 1;
+}
+

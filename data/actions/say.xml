@@ -1,0 +1,3 @@
+<?xml version="1.0"?>
+<action id="action:say" acttype="Hardcoded" parsetype="Chat" format="say <text>" function="saycom">
+</action> 

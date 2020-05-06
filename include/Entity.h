@@ -56,6 +56,12 @@ public:
    virtual bool hasAltName(const char *str, bool allow_abbrev) 
 													{ (void) str; (void) allow_abbrev; return false; };
 
+	// Send a message to this entity or its contents - class-specific behavior
+   virtual void sendMsg(const char *msg, std::shared_ptr<Entity> exclude=nullptr) 
+																				{ (void) msg; (void) exclude; };
+   virtual void sendMsg(std::string &msg, std::shared_ptr<Entity> exclude=nullptr) 
+																				{ (void) msg; (void) exclude; };
+
 protected:
 	Entity(const char *id);	// Must be called from the child constructor
 	Entity(const Entity &copy_from);

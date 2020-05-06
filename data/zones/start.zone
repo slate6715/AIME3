@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<location id="start@thevoid" title="The Void">
-<exit name="east" location="start@light"/>
+<location id="start:thevoid" title="The Void">
+<exit name="east" location="start:light"/>
 <flag name="Outdoors" />
 <desc>A void extends in all directions to infinity. While most voids are often just dark, foreboding places, this one is without any form whatsoever...just...empty. Nothing. Well, nothing, except the dark surface that you stand upon. Beneath that hard surface is a sense of further depth, stretching into the unknown. The surface seems to flex slightly under your weight, hinting at its fragility. Jumping too hard upon it may cause cracking and infinite plunging into the nothing that lies in the deep places of the void. 
 
@@ -8,57 +8,57 @@ To the east, there's appears to be slightly less darkness.
 </desc>
 </location> 
 
-<static id="surface" startloc="start@thevoid">
+<static id="surface" startloc="start:thevoid">
 <desc>The surface, while solid enough to hold your weight, flexes with each step. This is accompanied by hundreds of faint crinkling noises that almost sound like static.
 </desc>
 <altname name="ground" />
 <altname name="floor" />
 </static>
 
-<location id="start@light" title="The Light">
-<exit name="west" location="start@thevoid"/>
-<exit name="east" location="start@sea"/>
+<location id="start:light" title="The Light">
+<exit name="west" location="start:thevoid"/>
+<exit name="east" location="start:sea"/>
 <flag name="Outdoors" />
 <flag name="Bright" />
 <desc>The light above is blinding white, accented only by a dark surface beneath your feet. The horizon, split between light and dark, extends as far as the eye can see in all directions. To the west, the light appears to let up slightly. A salty smell drifts in from the east on a gentle breeze. 
 </desc>
 </location>
 
-<location id="start@sea" title="The Sea">
-<exit name="west" location="start@light"/>
-<exit name="east" location="start@beach"/>
+<location id="start:sea" title="The Sea">
+<exit name="west" location="start:light"/>
+<exit name="east" location="start:beach"/>
 <flag name="Outdoors" />
 <flag name="Bright" />
 <desc>You stand on a narrow transparent walkway that runs east to west over a raging sea. Large swells come within inches of the platform, glistening in the sunlight. A fine layer of white salt coats the pathway, creating a certain grit under your feet. The pathway extends to the west where the water appears to calm. To the east, a faint shadow can be seen on the horizon.
 </desc>
 </location>
 
-<location id="start@beach" title="Lifeless Beach">
-<exit name="north" location="start@alcove" />
-<exit name="west" location="start@sea"/>
-<exit name="south" location="start@junglecoast"/>
+<location id="start:beach" title="Lifeless Beach">
+<exit name="north" location="start:alcove" />
+<exit name="west" location="start:sea"/>
+<exit name="south" location="start:junglecoast"/>
 <flag name="Outdoors" />
 <flag name="Bright" />
 <desc>A beach stretches from north to south, creating a cooridor between a raging sea to the west and impassible chalk cliffs to the east. Large breakers crash a hundred meters off shore and wash onto fine white sand. The sand is devoid of any signs of life--no shells, dead fish or vegetation. A transparent walkway extends over the raging sea to the west and the beach extends both north and south. 
 </desc>
 </location>
 
-<location id="start@alcove" title="Lonely Beach">
-<exit name="south" location="start@beach" />
+<location id="start:alcove" title="Lonely Beach">
+<exit name="south" location="start:beach" />
 <flag name="Outdoors" />
 <desc>The beach ends at a chalk cliff. The rock walls of the cliff extend above you to the north and east while the beach continues to the south. The sea and cliff walls extend north but without safe passage. Attempting to swim it would result in a quick death as waves smash violently against jagged rocks at the cliff base. The beach is littered with chunks of chalk but, one again, no signs of life.
 </desc>
 </location>
 
-<location id="start@junglecoast" title="Jungle Coast">
-<exit name="north" location="start@beach" />
-<exit name="south" location="start@duskbeach" />
+<location id="start:junglecoast" title="Jungle Coast">
+<exit name="north" location="start:beach" />
+<exit name="south" location="start:duskbeach" />
 <flag name="Outdoors" />
 <desc>Plant life abounds to the east as an impassible jungle arises out of the sandy soil. The waves wash up on the smooth sand, leaving behind the occasional kelp mass. The beach continues south, bordered by the jungle on the east and the sea on the west. To the north, the jungle fizzles and disaapears. While there's ample sign of plant life, the jungle and beach are strangey devoid of any signs of animal life. 
 </desc>
 </location>
 
-<getable id="start@kelp" startloc="start@junglecoast" title="Mass of Kelp" >
+<getable id="start:kelp" startloc="start:junglecoast" title="Mass of Kelp" >
 <desc>Basic kelp. Consists of flat leaf-like structures connected to stems. This mass looks fairly fresh and must have recently washed up on shore. 
 </desc>
 <altname name="weed" />
@@ -68,9 +68,9 @@ To the east, there's appears to be slightly less darkness.
 <roomdesc text="A pile of kelp has been discarded here." />
 </getable>
 
-<location id="start@duskbeach" title="The Beach at Sunset">
-<exit name="north" location="start@junglecoast" />
-<exit name="south" location="start@duskbeach" />
+<location id="start:duskbeach" title="The Beach at Sunset">
+<exit name="north" location="start:junglecoast" />
+<exit name="south" location="start:duskbeach" />
 <flag name="Outdoors" />
 <desc>TBD
 </desc>

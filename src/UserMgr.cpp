@@ -184,7 +184,7 @@ void UserMgr::checkNewUsers(libconfig::Config &mud_cfg){
 	// While there's a new connection on the socket
 	while ((new_conn = _listen_sock.handleSocket()) != NULL) {
 		// Assign a rolling number for new users as userID
-		std::string userid("player@newuser" + boost::lexical_cast<std::string>(_newuser_idx++));
+		std::string userid("player:newuser" + boost::lexical_cast<std::string>(_newuser_idx++));
 	
 		// Create a new Player object with this connection and a temp userid
 		std::shared_ptr<Player> new_plr(new Player(userid.c_str(), std::unique_ptr<TCPConn>{new_conn}));
@@ -229,7 +229,7 @@ void UserMgr::handleUsers(libconfig::Config &cfg_info, EntityDB &edb){
 					// This was a LoginHandler and the user just successfully logged in
 					if (hresults[0] == "loggedin") {
 						// We need to remove the player from the user list, change their name, and re-add
-						std::string userkey("player@");
+						std::string userkey("player:");
 						userkey += hresults[1];
 
 						// Make sure this doesn't get destroyed
@@ -341,5 +341,78 @@ std::shared_ptr<Player> UserMgr::getPlayer(const char *name, bool allow_abbrev) 
          return plr_it->second;
    }
    return nullptr;
+}
+
+/*********************************************************************************************
+ * showUsers - displays the list of logged on users
+ *
+ *********************************************************************************************/
+
+const char *UserMgr::showUsers(std::string &buf) {
+
+	int count = 0;
+	std::string name;
+	std::stringstream str;
+	buf.clear();
+
+	str << "Users: \n-----------------------\n";
+
+	auto plr_it = _db.begin();
+	for ( ; plr_it != _db.end(); plr_it++) {
+		  plr_it->second->getNameID(name);
+		
+		name[0] = toupper(name[0]);
+		str << name << "\n";
+		count++;
+	}
+	str << "-----------------------\n" << count;
+	if (count == 1)
+		str << " user logged on\n\n"; 
+	else
+		str << " users logged on\n\n";
+	buf = str.str();
+	return buf.c_str();	
+}
+
+/*********************************************************************************************
+ * sendMsg - sends a message to the users who meet certain criteria
+ *
+ *********************************************************************************************/
+
+int UserMgr::sendMsg(const char *msg, std::vector<std::string> *exclude_flags,
+                                std::vector<std::string> *required_flags,
+                                std::shared_ptr<Entity> exclude_ind) {
+
+	int count = 0;
+
+	// Loop through all connected users
+	auto p_it = _db.begin();
+	for ( ; p_it != _db.end(); p_it++) {
+		// Exclude the person if they're exclude_ind
+		if (exclude_ind == (*p_it).second)
+			continue;
+
+		// Check exclude flags
+		if (exclude_flags != NULL) {
+			// Loop through our flags, checking the player's flags
+			for (unsigned int i=0; i<exclude_flags->size(); i++) {
+				if (p_it->second->isFlagSet((*exclude_flags)[i].c_str()))
+					continue;	// skip this player
+			}
+		}
+
+		// Check required flags
+		if (required_flags != NULL) {
+         // Loop through our flags, checking the player's flags
+         for (unsigned int i=0; i<required_flags->size(); i++) {
+            if (!p_it->second->isFlagSet((*required_flags)[i].c_str()))
+               continue;   // skip this player
+
+			}
+		}
+		p_it->second->sendMsg(msg);
+		count++;
+	}
+	return count;
 }
 

@@ -399,3 +399,24 @@ const char *Location::listContents(std::string &buf) {
 	return buf.c_str();
 }
 
+/*********************************************************************************************
+ * sendMsg - sends a message to all organisms in this room
+ *
+ *
+ *********************************************************************************************/
+
+void Location::sendMsg(const char *msg, std::shared_ptr<Entity> exclude) {
+   std::string unformatted = msg;
+   sendMsg(unformatted, exclude);
+}
+
+void Location::sendMsg(std::string &msg, std::shared_ptr<Entity> exclude) {
+	
+	auto cit = _contained.begin();
+	for ( ; cit != _contained.end(); cit++) {
+		// Compare against exclude - comparing shared pointers wasn't working
+		if (*cit != exclude)
+			(*cit)->sendMsg(msg);
+	}	
+}
+

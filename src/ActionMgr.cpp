@@ -119,7 +119,7 @@ unsigned int ActionMgr::loadActions(const char *actiondir) {
 			// Add alias entries for this action
 			std::vector<std::string> aliases = new_act->getAliases();
 			for (unsigned int j=0; j<aliases.size(); j++) {
-				std::string full_id("action@");
+				std::string full_id("action:");
 				full_id += aliases[j];
 				
 				_action_db.insert(std::pair<std::string, std::shared_ptr<Action>>(
@@ -138,9 +138,9 @@ unsigned int ActionMgr::loadActions(const char *actiondir) {
 	// Loop through all the actions
 	for (; action_it != _action_db.end(); action_it++) {
 		id = action_it->first;
-		size_t pos = id.find("@");
+		size_t pos = id.find(":");
 		if (pos == std::string::npos) {
-			throw std::runtime_error("ActionMgr::loadActions - action in DB without @ in index, "
+			throw std::runtime_error("ActionMgr::loadActions - action in DB without : in index, "
 																								"should not have happened.");
 		}
 		name = id.substr(pos+1, id.size() - pos);
@@ -398,7 +398,7 @@ void ActionMgr::execAction(Action *exec_act) {
 std::shared_ptr<Action> ActionMgr::findAction(const char *cmd) {
 	std::string cmdstr(cmd);
 
-   std::string fullname("action@");
+   std::string fullname("action:");
    fullname += cmdstr;
 
    // Look for it using a literal search
@@ -421,7 +421,7 @@ std::shared_ptr<Action> ActionMgr::findAction(const char *cmd) {
 	std::string fullid, name;
 	while (a_iter != _action_db.end()) {
 		fullid = a_iter->first;
-		size_t pos = fullid.find("@");
+		size_t pos = fullid.find(":");
 		name = fullid.substr(pos+1, fullid.size() - pos);
 
 		// If we moved into different letters

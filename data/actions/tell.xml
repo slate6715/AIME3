@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<action id="action:tell" acttype="Hardcoded" parsetype="Tell" format="tell <target> <text>" function="tellcom">
+<flag name="TargetOrg" />
+</action> 

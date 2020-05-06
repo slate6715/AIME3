@@ -17,8 +17,9 @@ public:
 
 	// Virtual functions that do nothing for NPCs
    virtual bool sendFile(const char *filename) { (void) filename; return true; };
-   virtual void sendMsg(const char *msg) { (void) msg; };
-   virtual void sendMsg(std::string &msg) { (void) msg; };
+   // Send a message to this entity or its contents - class-specific behavior
+   virtual void sendMsg(const char *msg, std::shared_ptr<Entity> exclude=nullptr)                                                                                      { (void) msg; (void) exclude; };
+   virtual void sendMsg(std::string &msg, std::shared_ptr<Entity> exclude=nullptr)                                                                                     { (void) msg; (void) exclude; };
 	virtual void sendPrompt() {};
 	virtual void sendCurLocation() {};
 	virtual void sendExits() {};

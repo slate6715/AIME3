@@ -20,10 +20,12 @@
 const unsigned int hashlen = 16;
 const unsigned int saltlen = 8;
 
+const char *pflag_list[] = {"nochat", NULL};
+
 /*********************************************************************************************
  * Player (constructor)
  *	
- *		Params:	id - unique id of this player (player@<username>)
+ *		Params:	id - unique id of this player (player:<username>)
  *					conn - A constructed pointer (sink) to a TCPConn object that will be destroyed
  *						    when this player object is destroyed
  *
@@ -100,12 +102,13 @@ bool Player::sendFile(const char *filename) {
  *
  *********************************************************************************************/
 
-void Player::sendMsg(const char *msg) {
+void Player::sendMsg(const char *msg, std::shared_ptr<Entity> exclude) {
 	std::string unformatted = msg;
-	sendMsg(unformatted);
+	sendMsg(unformatted, exclude);
 }
 
-void Player::sendMsg(std::string &msg) {
+void Player::sendMsg(std::string &msg, std::shared_ptr<Entity> exclude) {
+	(void) exclude;
 
 	std::string formatted;
 	formatForTelnet(msg, formatted);
@@ -736,8 +739,18 @@ bool Player::setFlagInternal(const char *flagname, bool newval) {
 		return true;
 
 	// Here we would look for player flags
+   std::string flagstr = flagname;
+   lower(flagstr);
 
-	return false;
+   size_t i=0;
+   while ((pflag_list[i] != NULL) && (flagstr.compare(pflag_list[i]) != 0))
+      i++;
+
+   if (pflag_list[i] == NULL)
+      return false;
+
+   _pflags[i] = true;
+   return true;
 }
 
 /*********************************************************************************************
@@ -754,8 +767,20 @@ bool Player::setFlagInternal(const char *flagname, bool newval) {
 bool Player::isFlagSetInternal(const char *flagname, bool &results) {
 	if (Organism::isFlagSetInternal(flagname, results))
 		return true;
+
+   std::string flagstr = flagname;
+   lower(flagstr);
+
+   size_t i=0;
+   while ((pflag_list[i] != NULL) && (flagstr.compare(pflag_list[i]) != 0))
+      i++;
+
+   if (pflag_list[i] == NULL)
+      return false;
+
+   results =_pflags[i];
+   return true;
 	
-	return false;
 }
 
 /*********************************************************************************************

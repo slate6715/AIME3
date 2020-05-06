@@ -6,6 +6,7 @@
 #include <memory>
 #include <mutex>
 #include <libconfig.h++>
+#include <bitset>
 #include "Organism.h"
 #include "Handler.h"
 #include "TCPConn.h"
@@ -25,11 +26,14 @@ public:
 	Player(const char *id, std::unique_ptr<TCPConn> conn);
 	Player(const Player &copy_from);
 
+	enum pflags { NoChat };
+
    virtual ~Player();
 
 	virtual bool sendFile(const char *filename);
-	virtual void sendMsg(const char *msg);
-	virtual void sendMsg(std::string &msg);
+   // Send a message to this entity or its contents - class-specific behavior
+   virtual void sendMsg(const char *msg, std::shared_ptr<Entity> exclude=nullptr); 
+   virtual void sendMsg(std::string &msg, std::shared_ptr<Entity> exclude=nullptr);
 
    // Sends the prompt of the top message handler to the player
    virtual void sendPrompt();
@@ -86,7 +90,8 @@ private:
 
 	void formatForTelnet(const std::string &unformatted, std::string &formatted);
 	void generatePasswdHash(const char *cleartext, std::vector<unsigned char> &buf,
-                                                                           std::vector<unsigned char> &salt);
+                                                                       std::vector<unsigned char> &salt);
+	std::bitset<32> _pflags;
 
 	std::unique_ptr<TCPConn> _conn;
 

@@ -11,6 +11,9 @@ int exitscom(MUD &engine, Action &act_used);
 int getcom(MUD &engine, Action &act_used);
 int dropcom(MUD &engine, Action &act_used);
 int inventorycom(MUD &engine, Action &act_used);
-
+int userscom(MUD &engine, Action &act_used);
+int saycom(MUD &engine, Action &act_used);
+int chatcom(MUD &engine, Action &act_used);
+int tellcom(MUD &engine, Action &act_used);
 
 #endif // ifndef ACTIONS

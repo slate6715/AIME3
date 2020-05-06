@@ -117,7 +117,7 @@ int LoginHandler::handleCommand(std::string &cmd) {
 			// Temporarily set the name so we can save the user data--can't permanently change it yet as
 			// this will be done when the handler is popped.
 			tempname = _plr->getID();
-			plrid = "player@" + _username;
+			plrid = "player:" + _username;
 			_plr->setID(plrid.c_str());
 
 			_mud_cfg.lookupValue("datadir.userdir", userdir);

@@ -40,18 +40,18 @@ Entity::~Entity() {
  *********************************************************************************************/
 
 const char *Entity::getNameID(std::string &buf) const {
-	size_t amppos = _id.find("@");
+	size_t amppos = _id.find(":");
 	if (amppos == std::string::npos)
-		throw std::runtime_error("EntityID was not in the correct format <zone>@<entityname>");
+		throw std::runtime_error("EntityID was not in the correct format <zone>:<entityname>");
 
 	buf = _id.substr(amppos+1, _id.size() - amppos);
 	return buf.c_str();
 }
 
 const char *Entity::getZoneID(std::string &buf) const {
-   size_t amppos = _id.find("@");
+   size_t amppos = _id.find(":");
    if (amppos == std::string::npos)
-      throw std::runtime_error("EntityID was not in the correct format <zone>@<entityname>");
+      throw std::runtime_error("EntityID was not in the correct format <zone>:<entityname>");
 
    buf = _id.substr(0, amppos);
    return buf.c_str();
@@ -59,15 +59,15 @@ const char *Entity::getZoneID(std::string &buf) const {
 }
 
 /*********************************************************************************************
- * setID - Changes the ID of this entity. Entity ID should be zone@name or something like
- *			  player@name. Changing this could cause duplicates or a mismatch with the key in
+ * setID - Changes the ID of this entity. Entity ID should be zone:name or something like
+ *			  player:name. Changing this could cause duplicates or a mismatch with the key in
  *			  a std::map key. 
  *
  *********************************************************************************************/
 
 void Entity::setID(const char *new_id) {
-	if ((new_id == NULL) || (strchr(new_id, '@') == NULL))
-		throw std::invalid_argument("Entity setID attempt to set to an invalid format. Must have an '@' in it");
+	if ((new_id == NULL) || (strchr(new_id, ':') == NULL))
+		throw std::invalid_argument("Entity setID attempt to set to an invalid format. Must have an ':' in it");
 
 	_id = new_id;
 }
