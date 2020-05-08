@@ -141,9 +141,9 @@ void Player::welcomeUser(libconfig::Config &mud_cfg, std::shared_ptr<Player> thi
  *
  *********************************************************************************************/
 
-void Player::handleConnection() {
+void Player::handleConnection(time_t timeout) {
 	// Send all data and receive data
-	_conn->handleConnection();
+	_conn->handleConnection(timeout);
 
 	// Extract received data into a command queue
 	std::string buf, left, right;
@@ -809,5 +809,63 @@ const char *Player::listContents(std::string &buf) const {
    }
 
    return buf.c_str();
+}
+
+/*********************************************************************************************
+ * clearNonSaved - removes items from the player's inventory that are not coded to be saved
+ *						 upon quit
+ *
+ *		Params: death - is this due to a death, which may cause more items to be lost
+ *
+ *********************************************************************************************/
+
+void Player::clearNonSaved(bool death) {
+	(void) death;
+
+	auto c_it = _contained.begin();
+	while (c_it != _contained.end()) {
+		// Remove items that are not saved and not to be dropped
+	
+
+		// Drop items that are not to be saved
+		if ((*c_it)->isFlagSet("NoSave")) {
+			(*c_it)->moveEntity(getCurLoc(), *c_it);
+		}
+
+		// trigger a special for any unique requirements to save or not save (TODO)
+
+	}
+	
+}
+
+/*********************************************************************************************
+ * quit - disconnects the player and prepares the object to be removed
+ *
+ *
+ *********************************************************************************************/
+
+void Player::quit() {
+	_conn->startDisconnect();
+
+	_quitting = true;
+}
+
+/*********************************************************************************************
+ * purgeEntity - Removes all references to the parameter from the Entities in the database so
+ *               it can be safely removed
+ *
+ *    Returns: number of references to this object cleared
+ *
+ *********************************************************************************************/
+
+size_t UserMgr::purgeEntity(std::shared_ptr<Entity> item) {
+   size_t count = 0;
+
+   // Loop through all items, purging the entity
+   auto plr_it = _db.begin();
+   for ( ; plr_it != _db.end(); plr_it++) {
+      count += plr_it->second->purgeEntity(item);
+   }
+   return count;
 }
 

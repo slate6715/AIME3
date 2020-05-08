@@ -45,6 +45,7 @@ public:
 	
 	std::shared_ptr<Action> findAction(const char *cmd);
 
+
 private:
 
 	// The database of available actions and aliases 

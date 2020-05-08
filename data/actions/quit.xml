@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<action id="action:quit" acttype="Hardcoded" parsetype="Single" format="quit" function="quitcom">
+<flag name="NoLookup" />
+</action> 

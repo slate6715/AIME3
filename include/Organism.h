@@ -39,6 +39,7 @@ protected:
 private:
 	std::string _desc;
 
+	
 };
 
 

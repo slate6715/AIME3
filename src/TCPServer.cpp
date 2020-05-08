@@ -101,7 +101,7 @@ TCPConn *TCPServer::handleSocket() {
 			if (!al.isAllowed(new_conn->getIPAddr()))
 			{
 				// Disconnect the user
-				new_conn->disconnect();
+				new_conn->startDisconnect();
 
 				// Log their attempted connection
 				std::string msg = "Connection by IP address '";

@@ -22,6 +22,8 @@ public:
 
 	std::shared_ptr<Entity> getEntity(const char *id);
 
+	// Removes all references to this item from the database objects`
+	size_t purgeEntity(std::shared_ptr<Entity> item);
  
 private:
 	std::map<std::string, std::shared_ptr<Entity>> _db;

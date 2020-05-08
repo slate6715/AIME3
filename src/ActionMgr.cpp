@@ -237,37 +237,53 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 	new_act->setAgent(actor);
 
 	size_t start = pos+1;
-	// We expect format <action> <subject> [<from> <container>]
+	// Get target 1
 	if ((new_act->getParseType() == Action::ActTargOptCont) || 
-												(new_act->getParseType() == Action::ActTarg)) {
-		while ((pos = buf.find(" ", start)) != std::string::npos) {
+		 (new_act->getParseType() == Action::ActTarg) ||
+		 (new_act->getParseType() == Action::Tell)) {
+		
+		bool is_alias = false;
+		if (pos == buf.size()) {
+			if (new_act->isActFlagSet(Action::AliasTarget)) {
+				elements.push_back(elements[0]);
+				is_alias = true;
+			} else {
+	         errmsg = "Missing target. Format: ";
+		      errmsg += new_act->getFormat();
+			   delete new_act;
+				return NULL;
+			}
+		}
+
+		if (!is_alias) {
+			pos = buf.find(" ", start);
+			if (pos == std::string::npos)
+				pos = buf.size();
 			elements.push_back(buf.substr(start, pos-start));
 			start = pos + 1;
 		}
 
-		// Get the last element
-		if (start < buf.size()) {
-			elements.push_back(buf.substr(start, buf.size() - start));
-		}
-
-		if (new_act->getParseType() == Action::ActTarg) {
-			if ((elements.size() == 1) && (!new_act->isActFlagSet(Action::AliasTarget))) {
-				errmsg = "Missing target. Format: ";
-				errmsg += new_act->getFormat();
-				delete new_act;
-				return NULL;
-			}
-		}
-
 		// Get target 1
 		if (!new_act->isActFlagSet(Action::NoLookup)) {
-			std::shared_ptr<Entity> target1 = new_act->findTarget(elements[1], errmsg, edb, umgr);
-			if (target1 == nullptr) {
+			new_act->setTarget1(new_act->findTarget(elements[1], errmsg, edb, umgr));
+
+			if (new_act->getTarget1() == nullptr) {
 				delete new_act;
 				return NULL;
 			}
-			new_act->setTarget1(target1);
 		}
+
+		if (is_alias)
+			elements.pop_back();
+	} 
+
+	// If we have more words to get, get them
+	if (new_act->getParseType() == Action::ActTargOptCont) {
+      while ((pos = buf.find(" ", start)) != std::string::npos) {
+         elements.push_back(buf.substr(start, pos-start));
+         start = pos + 1;
+      }
+
 	} else if (new_act->getParseType() == Action::Look) {
 		// First get the next token. If none exist, then we're done
 		if (start < buf.size()) {
@@ -306,18 +322,6 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 	}
 	else if ((new_act->getParseType() == Action::Tell) || (new_act->getParseType() == Action::Chat)) {
 	
-		// Get the target if it's a tell
-		if (new_act->getParseType() == Action::Tell) {
-			if ((pos = buf.find(" ", start)) == std::string::npos) {
-				errmsg = "Invalid format. Should be: ";
-				errmsg += new_act->getFormat();
-				delete new_act;
-				return NULL;
-			}
-			elements.push_back(buf.substr(start, pos - start));
-			start = pos + 1;
-		}
-
 		// Get the string
 		if (start >= buf.size()) {
          errmsg = "Invalid format. Should be: ";
@@ -329,7 +333,8 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 		elements.push_back(buf.substr(start, buf.size() - start));
 	}
 	// If it's not single, then we don't recognize this type 
-	else if (new_act->getParseType() != Action::Single) {
+	else if ((new_act->getParseType() != Action::Single) && 
+				(new_act->getParseType() != Action::ActTarg)) {
 		errmsg = "Unrecognized command type for command: ";
 		errmsg += new_act->getID();
 		throw std::runtime_error(errmsg.c_str()); 
@@ -440,3 +445,4 @@ std::shared_ptr<Action> ActionMgr::findAction(const char *cmd) {
 	}
 	return nullptr;
 }
+

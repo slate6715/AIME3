@@ -55,12 +55,15 @@ public:
 	void welcomeUser(libconfig::Config &mud_cfg, std::shared_ptr<Player> thisplr);
 
 	// Loops through the player's connection, handling data
-	void handleConnection();
+	void handleConnection(time_t timeout);
 
 	bool popCommand(std::string &cmd);
 
 	// Sends the command through the current message handler on top of the stack
 	int handleCommand(std::string &cmd);
+
+	// removes items from a player's inventory that are not coded to be saved
+	void clearNonSaved(bool death);
 
 	// Removes the top handler, calling a postPop function beforehand and returning
    // data from the handler as appropriate
@@ -78,6 +81,10 @@ public:
 
 	bool checkPassword(const char *cleartext);
 
+	void quit();
+	
+	TCPConn::conn_status getConnStatus() { return _conn->getConnStatus(); };
+
 protected:
 
 	// For any future player flags
@@ -94,6 +101,8 @@ private:
 	std::bitset<32> _pflags;
 
 	std::unique_ptr<TCPConn> _conn;
+
+	bool _quitting = false;
 
 	std::stack<std::unique_ptr<Handler>> _handler_stack;
 

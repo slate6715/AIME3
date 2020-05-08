@@ -271,16 +271,41 @@ int tellcom(MUD &engine, Action &act_used) {
 	act_used.getTarget1()->getNameID(tname);
 	pname[0] = toupper(pname[0]);
 	tname[0] = toupper(tname[0]);
-   msg << pname << " tells you '" << act_used.getToken(1) << "'\n";
+   msg << pname << " tells you '" << act_used.getToken(2) << "'\n";
 
    // Send this to everyone who does not have nochat set and is not the agent
    act_used.getTarget1()->sendMsg(msg.str().c_str());
 
    msg.str("");
-   msg << "You tell " << tname << " '" << act_used.getToken(1) << "'\n";
+   msg << "You tell " << tname << " '" << act_used.getToken(2) << "'\n";
    agent->sendMsg(msg.str().c_str());
 
 
 	return 1;
+}
+
+/*******************************************************************************************
+ * quitcom - player quits from the game
+ *******************************************************************************************/
+int quitcom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Player> agent = std::dynamic_pointer_cast<Player>(act_used.getAgent());
+
+	if (agent == nullptr) {
+		std::string msg("Attempt to call quitcom on non-player agent '");
+		msg += act_used.getAgent()->getID();
+		msg += "'";
+		mudlog->writeLog(msg.c_str());
+		return 0;
+	}
+
+	EntityDB &edb = *engine.getEntityDB();
+	edb.purgeEntity(agent);
+
+	agent->clearNonSaved(false);
+
+	agent->sendMsg("Quitting the game.\nGoodbye!\n");
+	agent->quit();
+	return 1;
+
 }
 

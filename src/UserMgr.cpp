@@ -69,6 +69,10 @@ void UserMgr::initialize(lc::Config &cfg_info) {
 	_motdfile += "/";
 	_motdfile += buf;
 
+	int timeval;
+	cfg_info.lookupValue("network.conn_timeout", timeval);
+	_conn_timeout = (time_t) timeval;
+
 }
 
 /*********************************************************************************************
@@ -143,7 +147,7 @@ void UserMgr::startListeningThread(lc::Config &cfg_info) {
 			// Loop through our players, handling their connection data	
 			auto user_it = _db.begin();
 			for (; user_it != _db.end(); user_it++) {
-				user_it->second->handleConnection();		
+				user_it->second->handleConnection(_conn_timeout);		
 			}
 			
 			// Sleep the appropriate interval
@@ -213,6 +217,11 @@ void UserMgr::handleUsers(libconfig::Config &cfg_info, EntityDB &edb){
 	while (plr_it != _db.end()) {
 		Player &plr = (*plr_it->second);
 
+		// If the connection is closed, remove the player
+		if (plr_it->second->getConnStatus() == TCPConn::Closed) {
+			plr_it = _db.erase(plr_it);
+		}
+
 		std::string cmd;
 		if (plr.popCommand(cmd)) {
 			int results;
@@ -253,7 +262,7 @@ void UserMgr::handleUsers(libconfig::Config &cfg_info, EntityDB &edb){
 							mudlog->writeLog(msg.c_str());
 							
 							// Add code to boot the player
-							plr.sendMsg("Unable to assign you to a start location. Login filed.\n");
+							plr.sendMsg("Unable to assign you to a start location. Login failed.\n");
 							continue;	
 						}
 			

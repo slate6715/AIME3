@@ -10,8 +10,7 @@
 TCPConn::TCPConn():
 					_connfd(),
 					_inputbuf(""),
-					_outputbuf(""),
-					_is_connected(false)
+					_outputbuf("")
 {
 
 }
@@ -19,8 +18,7 @@ TCPConn::TCPConn():
 TCPConn::TCPConn(const TCPConn &copy_from):
                _connfd(),
                _inputbuf(copy_from._inputbuf),
-               _outputbuf(copy_from._outputbuf),
-					_is_connected(false)
+               _outputbuf(copy_from._outputbuf)
 {
 }
 
@@ -39,7 +37,7 @@ TCPConn::~TCPConn() {
 bool TCPConn::accept(SocketFD &server) {
    if (_connfd.acceptFD(server))
 	{
-		_is_connected = true;
+		_status = Active;
 		return true;
 	}
 
@@ -78,20 +76,39 @@ void TCPConn::addOutput(const char *msg) {
  * handleConnection - performs a check of the connection, looking for data on the socket and
  *                    handling it based on the _status, or stage, of the connection
  *
+ *		Params:	timeout - seconds to wait after a connection loses link before it's disconnected
+ *
  *		Returns: bytes read if connected, -1 if lost connection
  *
  *    Throws: socket_error for unexpected network issues
  **********************************************************************************************/
 
-ssize_t TCPConn::handleConnection() {
+ssize_t TCPConn::handleConnection(time_t timeout) {
+
+	// If the connection is marked as closing, flush the buffers and mark as closed
+	if (_status == Closing) {
+		if (_outputbuf.size() > 0)
+			_connfd.writeFD(_outputbuf);
+		_connfd.closeFD();
+		_status = Closed;
+		return 0;
+	}
 
 	// If the client is not connected, then we're waiting for reconnect or timeout
-   if (!isConnected()) {
-		return -1;
+	if (_status == Closed)
+		return 0;
+
+	// If this connection has timed out, disconnect them
+	if ((_status == LostLink) && (time(NULL) > _lostlink_timeout)) {
+		_status = Closed;
+		return 0;
 	}
 
 	ssize_t count = 0;
 	std::string readbuf;
+
+	if (_status != Active)
+		return 0;
 
 	// Receive data from the socket first
 	while (_connfd.hasData()) {
@@ -99,7 +116,7 @@ ssize_t TCPConn::handleConnection() {
 		
 		// Having data but not reading any data is a sign we lost connection
 		if (readbuf.size() == 0) {
-			disconnect();	
+			lostLink(timeout);				
 			return -1;
 		}		
 
@@ -115,13 +132,12 @@ ssize_t TCPConn::handleConnection() {
 
 
 /**********************************************************************************************
- * disconnect - cleans up the socket as required and closes the FD
+ * startDisconnect - initiates the disconnect process 
  *
  *    Throws: runtime_error for unrecoverable issues
  **********************************************************************************************/
-void TCPConn::disconnect() {
-   _connfd.closeFD();
-	_is_connected = false;
+void TCPConn::startDisconnect() {
+	_status = Closing;
 }
 
 
@@ -131,7 +147,9 @@ void TCPConn::disconnect() {
  *    Throws: runtime_error for unrecoverable issues
  **********************************************************************************************/
 bool TCPConn::isConnected() {
-	return _is_connected;
+	if (_status == Active)
+		return true;
+	return false;
 }
 
 /**********************************************************************************************
@@ -157,4 +175,15 @@ bool TCPConn::getUserInput(std::string &buf) {
 	return true;
 }
 
+/**********************************************************************************************
+ * lostLink- mark this connection as having lost link 
+ *
+ *		Params:	timeout - the clock time when to disconnect this player
+ *
+ **********************************************************************************************/
+void TCPConn::lostLink(time_t timeout) {
+	_connfd.closeFD();
+	_status = LostLink;
+	_lostlink_timeout = time(NULL) + timeout;
+}
 

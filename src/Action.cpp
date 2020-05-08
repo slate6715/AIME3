@@ -23,6 +23,7 @@ hardcoded_actions cmd_array[] = {
 		{"saycom", saycom},
 		{"chatcom", chatcom},
 		{"tellcom", tellcom},
+		{"quitcom", quitcom},
 		{"",0}
 };
 
@@ -410,6 +411,7 @@ std::shared_ptr<Entity> Action::findTarget(std::string &name, std::string &errms
 
 	// Raise an error if we didn't find anything and we're not checking the entire MUD
    if ((target1 == nullptr) && (!isActFlagSet(Action::TargetMUD))) {
+		// If we don't see a ':', then we're probably targeting a user
 		errmsg = "That does not appear to be here.";
       return NULL;
 	}
@@ -423,7 +425,13 @@ std::shared_ptr<Entity> Action::findTarget(std::string &name, std::string &errms
 
 		// If we still haven't found it and we're looking for an organism, check the players
 		if (target1 == nullptr) {
-			target1 = umgr.getPlayer(name.c_str());
+			std::string plrid("player:");
+			plrid += name;
+			if ((target1 = umgr.getPlayer(plrid.c_str())) == nullptr) {
+				errmsg = "That player does not appear to be available.";
+				return NULL;
+			}
+			
 		}
    }
    // If we still haven't found it, check mud-wide (must be in form zone:obj)

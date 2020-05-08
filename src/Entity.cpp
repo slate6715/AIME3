@@ -304,3 +304,26 @@ std::shared_ptr<Entity> Entity::getContained(const char *name_alias, bool allow_
 
 }
 
+/*********************************************************************************************
+ * purgeEntity - Removes all references to the parameter from the Entities in the database so
+ *               it can be safely removed
+ *
+ *    Returns: number of references to this object cleared
+ *
+ *********************************************************************************************/
+
+size_t Entity::purgeEntity(std::shared_ptr<Entity> item) {
+	size_t count = 0;
+	auto c_it = _contained.begin();
+
+	// Look for contained items and remove it
+	while (c_it != _contained.end()) {
+		if ((*c_it) == item) {
+			c_it = _contained.erase(c_it);
+			count++;
+		} else
+			c_it++;
+	}
+	return count;
+}
+

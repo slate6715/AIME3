@@ -154,4 +154,22 @@ std::shared_ptr<Entity> EntityDB::getEntity(const char *id) {
 	return eptr->second;
 }
 
+/*********************************************************************************************
+ * purgeEntity - Removes all references to the parameter from the Entities in the database so
+ *					  it can be safely removed
+ *
+ *		Returns: number of references to this object cleared
+ *
+ *********************************************************************************************/
+
+size_t EntityDB::purgeEntity(std::shared_ptr<Entity> item) {
+	size_t count = 0;
+
+	// Loop through all items, purging the entity
+	auto ent_it = _db.begin();
+	for ( ; ent_it != _db.end(); ent_it++) {
+		count += ent_it->second->purgeEntity(item);
+	}
+	return count;
+}
 

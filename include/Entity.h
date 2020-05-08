@@ -62,6 +62,10 @@ public:
    virtual void sendMsg(std::string &msg, std::shared_ptr<Entity> exclude=nullptr) 
 																				{ (void) msg; (void) exclude; };
 
+	// Removes all references to the parameter from the Entities in the database so 
+	// it can be safely removed
+	virtual size_t purgeEntity(std::shared_ptr<Entity> item);
+
 protected:
 	Entity(const char *id);	// Must be called from the child constructor
 	Entity(const Entity &copy_from);

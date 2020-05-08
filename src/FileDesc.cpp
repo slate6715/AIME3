@@ -82,7 +82,9 @@ bool FileDesc::hasData(long ms_timeout) {
 
    int n;
    if ((n = select(_fd+1, &read_fds, NULL, NULL, &timeout)) == -1) {
-      throw socket_error("Select error on file descriptor.");
+		std::string msg ("Select error on file descriptor: ");
+		msg += strerror(errno);
+      throw socket_error(msg.c_str());
    }
 
    if (n == 0)

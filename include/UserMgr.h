@@ -39,6 +39,12 @@ public:
 	// Checks for new users and, if authorized, adds them to the player list
 	void checkNewUsers(libconfig::Config &mud_cfg);
 
+   // Removes all references to this item from the player objects
+   size_t purgeEntity(std::shared_ptr<Entity> item);
+
+	// Remove a player from the database - all shared pointer refs must be purged
+	void removePlayer(Player *plr);
+
 	// Displays the list of logged on users, populating the buffer
 	const char *showUsers(std::string &buf);
 
@@ -71,6 +77,8 @@ private:
 
 	// A rolling index to assign to new user IDs until they fully login
 	unsigned int _newuser_idx = 0;
+
+	time_t _conn_timeout = 30;
 
 	std::unique_ptr<std::thread> _listening_thread;
 	bool _exit_listening_thread = false;

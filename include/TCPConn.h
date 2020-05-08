@@ -16,9 +16,12 @@ public:
 
    ~TCPConn();
 
+	enum conn_status { Active, LostLink, Closing, Closed };
+	conn_status getConnStatus() const { return _status; };
+
    bool accept(SocketFD &server);
 
-	ssize_t handleConnection();
+	ssize_t handleConnection(time_t timeout);
 
 	// Adds a string to the output buffer for eventual transmission
 	void addOutput(const char *msg);
@@ -28,7 +31,9 @@ public:
 
    bool getUserInput(std::string &buf);
 
-   void disconnect();
+	void startDisconnect();
+	void lostLink(time_t timeout);
+
    bool isConnected();
 
    unsigned long getIPAddr() { return _connfd.getIPAddr(); };
@@ -41,7 +46,9 @@ private:
    std::string _inputbuf;
 	std::string _outputbuf;
 
-	bool _is_connected = false;
+	conn_status _status = Closed;
+
+	time_t _lostlink_timeout = 0;
 };
 
 
