@@ -2,6 +2,7 @@
 #include <sstream>
 #include <memory>
 #include "Location.h"
+#include "Player.h"
 #include "Getable.h"
 #include "MUD.h"
 #include "misc.h"
@@ -10,6 +11,11 @@
 const char *lflag_list[] = {"outdoors", "bright", "death", NULL};
 const char *eflag_list[] = {"hidden", "special", NULL};
 
+const char *exitlist[] = {"north", "south", "east", "west", "up", "down", "northeast", "northwest", 
+									"southeast", "southwest", NULL};
+Location::exitdirs opposite[] = {Location::South, Location::North, Location::West, Location::East, 
+											Location::Down, Location::Up, Location::Southwest, Location::Southeast, 
+											Location::Northwest, Location::Northeast, Location::Custom};
 
 /*********************************************************************************************
  * Location (constructor) - 
@@ -18,7 +24,7 @@ const char *eflag_list[] = {"hidden", "special", NULL};
 Location::Location(const char *id):
 								Entity(id)
 {
-
+	_typename = "Location";
 
 }
 
@@ -139,28 +145,20 @@ int Location::loadData(pugi::xml_node &entnode) {
 			}
 			new_exit.eflags[i] = true;
 		}
+
+		// Get the exit value
+		unsigned int i=0;
+		new_exit.exitval = Custom;
+		while (exitlist[i] != NULL) {
+			if (new_exit.dir.compare(exitlist[i]) == 0) {
+				new_exit.exitval = (exitdirs) i;
+				break;
+			}
+			i++;
+		}
 		_exits.push_back(new_exit);
    }
 
-   // Get the Location Flags (if any)
-   for (pugi::xml_node flag = entnode.child("flag"); flag; flag = flag.next_sibling("flag")) {
-      try {
-			pugi::xml_attribute attr = flag.attribute("name");
-			if (attr == nullptr) {
-				errmsg << "Location '" << getID() << "' flag node missing mandatory name field.";
-				mudlog->writeLog(errmsg.str().c_str());
-				return 0;				
-			}
-         setFlag(attr.value(), true);
-      }
-      catch (std::invalid_argument &e) {
-         errmsg << "Location '" << getID() << "' flag error: " << e.what();
-         mudlog->writeLog(errmsg.str().c_str());
-         return 0;
-      }
-   }
-
- 
 	return 1;
 }
 
@@ -237,6 +235,8 @@ bool Location::isFlagSetInternal(const char *flagname, bool &results) {
  *				 or nullptr if not found. exitname should be all lowercase.
  *	getExitAbbrev - Like getExit, but allows for abbreviated cardinal directions and custom
  *
+ *		Params: exitname - for the abbrev version, this gets populated with the full exit string
+ *					val - if not null, gets populated with the enum exit value
  *
  *********************************************************************************************/
 
@@ -251,7 +251,7 @@ std::shared_ptr<Location> Location::getExit(const char *exitname) {
    return nullptr;
 }
 
-std::shared_ptr<Location> Location::getExitAbbrev(const char *exitname) {
+std::shared_ptr<Location> Location::getExitAbbrev(std::string &exitname, exitdirs *val) {
 	std::string dir = exitname;
 	if (dir.size() == 0)
 		return nullptr;
@@ -268,9 +268,14 @@ std::shared_ptr<Location> Location::getExitAbbrev(const char *exitname) {
 			dir = "southeast";
 	}
 
+	// Loop through the existing exits, getting return values for the parameters
 	for (unsigned int i=0; i<_exits.size(); i++) {
-		if (_exits[i].dir.compare(0, dir.size(), dir) == 0)
+		if (_exits[i].dir.compare(0, dir.size(), dir) == 0) {
+			if (val != NULL)
+				*val = _exits[i].exitval;
+			exitname = _exits[i].dir;
 			return _exits[i].link_loc;
+		}
 	}
 	return nullptr;
 }
@@ -374,11 +379,11 @@ std::shared_ptr<Entity> Location::getContained(const char *name_alias, bool allo
  *
  *********************************************************************************************/
 
-const char *Location::listContents(std::string &buf) {
+const char *Location::listContents(std::string &buf, Player *exclude) {
 	auto cit = _contained.begin();
 
 	// Show getables first
-	for (cit = _contained.begin(); cit != _contained.end(); cit++) {
+	for ( ; cit != _contained.end(); cit++) {
       std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(*cit);
 
       if (gptr == nullptr)
@@ -389,12 +394,19 @@ const char *Location::listContents(std::string &buf) {
 	}
 
    // Show organisms next
-   for ( ; cit != _contained.end(); cit++) {
+   for (cit = _contained.begin(); cit != _contained.end(); cit++) {
       std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(*cit);
+		if (optr == nullptr)
+			continue;
 
-      if (optr == nullptr)
+		// Skip players on the exclude list
+		std::shared_ptr<Player> pptr = std::dynamic_pointer_cast<Player>(optr);
+      if ((pptr != nullptr) || (&(*pptr) == exclude))
          continue;
 
+		std::string reviewstr;
+		buf += optr->getReviewProcessed(Organism::Standing, reviewstr);
+		buf += "\n";
    }
 	return buf.c_str();
 }
@@ -418,5 +430,15 @@ void Location::sendMsg(std::string &msg, std::shared_ptr<Entity> exclude) {
 		if (*cit != exclude)
 			(*cit)->sendMsg(msg);
 	}	
+}
+
+
+/*********************************************************************************************
+ * getOppositeDir - Given an exit enum, returns the opposing direction
+ *
+ *********************************************************************************************/
+
+Location::exitdirs Location::getOppositeDir(Location::exitdirs dir) {
+	return opposite[dir];
 }
 

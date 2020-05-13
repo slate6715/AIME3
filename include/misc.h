@@ -27,6 +27,8 @@ void genRandString(std::string &buf, size_t n);
 // has a single string or a list of strings
 void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, const char *ifile_setting);
 
+unsigned int locateInTable(const char *name, const char **table);
+
 // Used for iterating files in a directory
 struct path_leaf_string 
 {

@@ -1,7 +1,9 @@
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include "Entity.h"
 #include "global.h"
+#include "Attribute.h"
 
 
 /*********************************************************************************************
@@ -106,6 +108,52 @@ int Entity::loadData(pugi::xml_node &entnode) {
 		return 0;
 	}
 	_id = attr.value();
+
+	std::stringstream errmsg;
+
+   // Get the Flags (if any)
+   for (pugi::xml_node flag = entnode.child("flag"); flag; flag = flag.next_sibling("flag")) {
+      try {
+         pugi::xml_attribute attr = flag.attribute("name");
+         if (attr == nullptr) {
+            errmsg << getTypeName() << " '" << getID() << "' flag node missing mandatory name field.";
+            mudlog->writeLog(errmsg.str().c_str());
+            return 0;
+         }
+         setFlag(attr.value(), true);
+      }
+      catch (std::invalid_argument &e) {
+         errmsg << getTypeName() << " '" << getID() << "' flag error: " << e.what();
+         mudlog->writeLog(errmsg.str().c_str());
+         return 0;
+      }
+   }
+
+   for (pugi::xml_node flag = entnode.child("attribute"); flag; flag = flag.next_sibling("attribute")) {
+      try {
+         pugi::xml_attribute attr = flag.attribute("name");
+         if (attr == nullptr) {
+            errmsg << getTypeName() << " '" << getID() << "' attribute node missing mandatory name field.";
+            mudlog->writeLog(errmsg.str().c_str());
+            return 0;
+         }
+			std::string name = attr.value();
+
+			attr = flag.attribute("value");
+         if (attr == nullptr) {
+            errmsg << getTypeName() << " '" << getID() << "' attribute node missing mandatory value field.";
+            mudlog->writeLog(errmsg.str().c_str());
+            return 0;
+         }
+			setAttribute(name.c_str(), attr.value());
+      }
+      catch (std::invalid_argument &e) {
+         errmsg << getTypeName() << " '" << getID() << "' attribute error: " << e.what();
+         mudlog->writeLog(errmsg.str().c_str());
+         return 0;
+      }
+   }
+
 	return 1;
 
 }
@@ -326,4 +374,98 @@ size_t Entity::purgeEntity(std::shared_ptr<Entity> item) {
 	}
 	return count;
 }
+
+/*********************************************************************************************
+ *	setAttribute, getAttribute - Setting and getting attribute values. These are less-efficient 
+ *						versions of the class versions that use enum index as they have to lookup 
+ *						string to enums
+ *
+ *
+ *    Returns: true if found and set, false otherwise
+ *
+ *********************************************************************************************/
+bool Entity::setAttribute(const char *attrib, int value) {
+	return setAttribInternal(attrib, value);	
+}
+
+bool Entity::setAttribute(const char *attrib, float value) {
+   return setAttribInternal(attrib, value);
+}
+
+// Special function also allows for string int and floats (converts internally)
+bool Entity::setAttribute(const char *attrib, const char *value) {
+   return setAttribInternal(attrib, value);
+}
+
+int Entity::getAttribInt(const char *attrib) {
+	int value;
+	if (!getAttribInternal(attrib, value)) {
+		std::stringstream msg;
+		msg << "Unknown attribute requested '" << attrib << "' in Entity '" << getID() << "'";
+		throw std::invalid_argument(msg.str().c_str());
+	}
+	return value;
+}
+
+float Entity::getAttribFloat(const char *attrib) {
+   float value;
+   if (!getAttribInternal(attrib, value)) {
+      std::stringstream msg;
+      msg << "Unknown attribute requested '" << attrib << "' in Entity '" << getID() << "'";
+      throw std::invalid_argument(msg.str().c_str());
+   }
+   return value;
+}
+
+
+const char *Entity::getAttribStr(const char *attrib, std::string &buf) {
+   if (!getAttribInternal(attrib, buf)) {
+      std::stringstream msg;
+      msg << "Unknown attribute requested '" << attrib << "' in Entity '" << getID() << "'";
+      throw std::invalid_argument(msg.str().c_str());
+   }
+   return buf.c_str();
+}
+
+/*********************************************************************************************          * set/getAttributeInternal - polymorphic version of the get/setAttribute function
+ *
+ *    Returns: true if found and set, false otherwise
+ *
+ *********************************************************************************************/        
+bool Entity::setAttribInternal(const char *attrib, int value) {
+	(void) attrib;
+	(void) value;
+	return false;
+}
+
+bool Entity::setAttribInternal(const char *attrib, float value) {
+   (void) attrib;
+   (void) value;
+   return false;
+}
+
+bool Entity::setAttribInternal(const char *attrib, const char *value) {
+   (void) attrib;
+   (void) value;
+   return false;
+}
+
+bool Entity::getAttribInternal(const char *attrib, int &value) {
+   (void) attrib;
+   (void) value;
+   return false;
+}
+
+bool Entity::getAttribInternal(const char *attrib, float &value) {
+   (void) attrib;
+   (void) value;
+   return false;
+}
+
+bool Entity::getAttribInternal(const char *attrib, std::string &value) {
+   (void) attrib;
+   (void) value;
+   return false;
+}
+
 

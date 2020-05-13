@@ -24,6 +24,17 @@ To the east, there's appears to be slightly less darkness.
 </desc>
 </location>
 
+<npc id="start:asmodeus" title="Asmodeus" startloc="start:light">
+<attribute name="strength" value="40" />
+<attribute name="aggression" value="0" />
+<attribute name="damage" value="45" />
+<attribute name="speed" value="0" />
+<reviewmsg type="standing">%n stands here wearing a white suit and a white brimmed hat.</reviewmsg>
+<desc>
+Admodeus is the picture of the true southern gentleman. He sports a completely white suit and carries a black cane. His hair is completely white, as is his oversized mustache. Completing the image is a small goatee under his chin.
+</desc>
+</npc>
+
 <location id="start:sea" title="The Sea">
 <exit name="west" location="start:light"/>
 <exit name="east" location="start:beach"/>

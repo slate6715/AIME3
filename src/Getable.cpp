@@ -16,7 +16,7 @@ const char *gflag_list[] = {"noget", "nodrop", NULL};
 Getable::Getable(const char *id):
 								Static(id)
 {
-
+	_typename = "Getable";
 
 }
 
@@ -99,25 +99,6 @@ int Getable::loadData(pugi::xml_node &entnode) {
    }
 	setTitle(attr.value());
 
-   // Get the Getable Flags (if any)
-   for (pugi::xml_node flag = entnode.child("flag"); flag; flag = flag.next_sibling("flag")) {
-      try {
-			pugi::xml_attribute attr = flag.attribute("name");
-			if (attr == nullptr) {
-				errmsg << "Getable '" << getID() << "' flag node missing mandatory name field.";
-				mudlog->writeLog(errmsg.str().c_str());
-				return 0;				
-			}
-         setFlag(attr.value(), true);
-      }
-      catch (std::invalid_argument &e) {
-         errmsg << "Getable '" << getID() << "' flag error: " << e.what();
-         mudlog->writeLog(errmsg.str().c_str());
-         return 0;
-      }
-   }
-
- 
 	return 1;
 }
 

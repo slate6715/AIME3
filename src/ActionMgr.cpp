@@ -3,6 +3,7 @@
 #include <chrono>
 #include <boost/filesystem.hpp>
 #include <memory>
+#include <regex>
 #include "ActionMgr.h"
 #include "misc.h"
 #include "global.h"
@@ -403,6 +404,13 @@ void ActionMgr::execAction(Action *exec_act) {
 std::shared_ptr<Action> ActionMgr::findAction(const char *cmd) {
 	std::string cmdstr(cmd);
 
+   std::regex cmdcheck("[a-z]+");
+   lower(cmdstr);
+
+   if (!std::regex_match(cmdstr, cmdcheck)) {
+      return nullptr;
+   }
+
    std::string fullname("action:");
    fullname += cmdstr;
 
@@ -414,6 +422,7 @@ std::shared_ptr<Action> ActionMgr::findAction(const char *cmd) {
 		return mapptr->second;
    }
 
+	
    // If not found using a literal search, use an abbreviated search
 	unsigned int idx = (unsigned int) cmdstr[0] - (unsigned int) 'a';
 

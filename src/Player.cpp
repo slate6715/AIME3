@@ -39,7 +39,7 @@ Player::Player(const char *id, std::unique_ptr<TCPConn> conn):
 																_use_color(true),
 																_passwd_hash()
 {
-
+	_typename = "Player";
 }
 
 // Called by child class
@@ -476,7 +476,7 @@ void Player::sendLocContents() {
    }
 
 	std::string buf;
-	sendMsg(locptr->listContents(buf));
+	sendMsg(locptr->listContents(buf, this));
 }
 
 /*********************************************************************************************
@@ -527,6 +527,7 @@ void Player::popHandler(std::vector<std::string> &results) {
 
 int Player::loadUser(const char *userdir, const char *username) {
    pugi::xml_document userfile;
+	std::stringstream errmsg;
 
    std::string filename = userdir;
    std::string user = username;
@@ -543,12 +544,18 @@ int Player::loadUser(const char *userdir, const char *username) {
 
 	pugi::xml_node pnode = userfile.child("player");
 	if (pnode == nullptr) {
-		std::string msg("Corrupted player file for player ");
-		msg += user;
-		mudlog->writeLog(msg);
-		return 0;
+		errmsg << "Corrupted player file for player " << user;
+		mudlog->writeLog(errmsg.str().c_str());
+		return -1;
 	}
-	loadData(pnode);
+	if (!loadData(pnode)) {
+		std::stringstream errmsg;
+		errmsg << "Player '" << user << "' save file not in the proper format.";
+		mudlog->writeLog(errmsg.str().c_str());
+
+		sendMsg("Your save file has been corrupted and cannot be loaded. Contact an admin.\n");
+		return -1; 
+	}
 	
    return 1;
 }

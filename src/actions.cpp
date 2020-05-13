@@ -72,14 +72,24 @@ int gocom(MUD &engine, Action &act_used) {
 		return 0;
 	}
 
-	std::shared_ptr<Location> exit_loc = cur_loc->getExitAbbrev(dir.c_str());
+	Location::exitdirs exitval;
+	std::shared_ptr<Location> exit_loc = cur_loc->getExitAbbrev(dir, &exitval);
 
 	if (exit_loc == nullptr) {
 		agent->sendMsg("There is no exit that direction.\n");
 		return 0;
 	}
 
+	std::string reviewstr;
+	agent->getReviewProcessed(Organism::Leaving, reviewstr, exitval, dir.c_str());
+
+	cur_loc->sendMsg(reviewstr, agent);
+	cur_loc->sendMsg("\n", agent);
 	agent->moveEntity(exit_loc);
+
+   agent->getReviewProcessed(Organism::Entering, reviewstr, Location::getOppositeDir(exitval), dir.c_str());
+	exit_loc->sendMsg(reviewstr, agent);
+	exit_loc->sendMsg("\n");
 	agent->sendCurLocation();
 
 	return 1;

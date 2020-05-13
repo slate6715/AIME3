@@ -7,6 +7,7 @@
 #include <functional>
 #include <chrono>
 #include <libconfig.h++>
+#include <climits>
 #include "misc.h"
 #include "Player.h"
 #include "global.h"
@@ -140,3 +141,18 @@ void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, const ch
    }
 
 }
+
+unsigned int locateInTable(const char *name, const char **table) {
+   std::string namestr = name;
+   lower(namestr);
+
+   size_t i=0;
+   while ((table[i] != NULL) && (namestr.compare(table[i]) != 0))
+      i++;
+
+   if (table[i] == NULL)
+      return UINT_MAX;
+	return i;
+}
+
+

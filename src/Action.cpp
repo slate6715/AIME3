@@ -44,7 +44,7 @@ Action::Action(const char *id):
 								_agent(),
 								_actflags()
 {
-
+	_typename = "Action";
 
 }
 
@@ -179,25 +179,6 @@ int Action::loadData(pugi::xml_node &entnode) {
    attr = entnode.attribute("format");
    if (attr != nullptr) {
 		setFormat(attr.value());
-	}
-
-	// Get the Action Flags (if any)
-	for (pugi::xml_node flag = entnode.child("flag"); flag; flag = flag.next_sibling("flag")) {
-		pugi::xml_attribute attr = flag.attribute("name");
-
-		if (attr == nullptr) {
-			errmsg << "Action '" << getID() << "' Flag node missing mandatory name attribute.";
-			mudlog->writeLog(errmsg.str().c_str());
-			return 0;
-		}
-		try {
-			setFlag(attr.value(), true);
-		} 
-		catch (std::invalid_argument &e) {
-			errmsg << "Action '" << getID() << "' Flag error: " << e.what();
-			mudlog->writeLog(errmsg.str().c_str());
-			return 0;
-		}
 	}
 
    // Get the Exits (if any)

@@ -59,6 +59,7 @@ bool LoginHandler::validateUsername(std::string &name) {
 int LoginHandler::handleCommand(std::string &cmd) {
 
 	std::string tempname, plrid, userdir;
+	int results = 0;
 
 	switch(_cur_state) {
 		// The user has entered a username?
@@ -71,10 +72,14 @@ int LoginHandler::handleCommand(std::string &cmd) {
 
 			plrid = _plr->getID();
 			_mud_cfg.lookupValue("datadir.userdir", userdir);	
-			if (!_plr->loadUser(userdir.c_str(), cmd.c_str())) {
+			if ((results = _plr->loadUser(userdir.c_str(), cmd.c_str())) == 0) {
 				_username = cmd;
 				_plr->sendMsg("That user does not exist.\n");
 				_cur_state = AskCreate;
+				break;
+			} else if (results == -1) {
+				_plr->sendMsg("Disconnecting.\n");
+				_plr->quit();
 				break;
 			} else {
 				_username = cmd;

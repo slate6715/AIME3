@@ -9,6 +9,7 @@
 #include "Location.h"
 #include "Static.h"
 #include "Getable.h"
+#include "NPC.h"
 
 
 /*********************************************************************************************
@@ -116,6 +117,21 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
          if (!new_ent->loadEntity(get_x)) {
             std::stringstream msg;
             msg << "Bad format for getable '" << new_ent->getID() << "', file '" << files[i] << "'";
+            mudlog->writeLog(msg.str().c_str());
+            delete new_ent;
+            continue;
+         }
+         _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(),
+                                                   std::shared_ptr<Entity>(new_ent)));
+         count++;
+
+      }
+		// GEt all NPCs
+      for (pugi::xml_node get_x = zonefile.child("npc"); get_x; get_x = get_x.next_sibling("npc")) {
+         NPC *new_ent = new NPC("temp");
+         if (!new_ent->loadEntity(get_x)) {
+            std::stringstream msg;
+            msg << "Bad format for NPC '" << new_ent->getID() << "', file '" << files[i] << "'";
             mudlog->writeLog(msg.str().c_str());
             delete new_ent;
             continue;
