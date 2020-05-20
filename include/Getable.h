@@ -34,6 +34,8 @@ public:
 	const char *getRoomDesc();
    const char *getTitle() const { return _title.c_str(); };
 
+   virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const;
+
 protected:
 
    virtual void saveData(pugi::xml_node &entnode) const;

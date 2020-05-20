@@ -36,7 +36,7 @@ public:
 
 	const char *getDesc() const { return _desc.c_str(); };
 	const char *getTitle() const { return _title.c_str(); };
-	virtual const char *listContents(std::string &buf, Player *exclude);
+   virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const;
 
 	std::shared_ptr<Location> getExit(const char *exitname);
    std::shared_ptr<Location> getExitAbbrev(std::string &exitname, exitdirs *val = NULL);

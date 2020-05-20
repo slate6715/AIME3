@@ -73,15 +73,7 @@ int Getable::loadData(pugi::xml_node &entnode) {
    // Get the Altnames (if any)
    for (pugi::xml_node anode = entnode.child("roomdesc");	anode; anode = 
 																					anode.next_sibling("roomdesc")) {
-
-		// Get the direction name such as "east"
-      pugi::xml_attribute attr = anode.attribute("text");
-      if (attr == nullptr) {
-         errmsg << "Getable '" << getID() << "' roomdesc missing mandatory name attribute.";
-         mudlog->writeLog(errmsg.str().c_str());
-         return 0;
-      }		
-		pushRoomDesc(attr.value());
+		pushRoomDesc(anode.child_value());
    }
 
 	if (_roomdesc.size() == 0) {
@@ -195,6 +187,29 @@ const char *Getable::getRoomDesc() {
 
 void Getable::setTitle(const char *newtitle) {
    _title = newtitle;
+}
+
+/*********************************************************************************************
+ * listContents - preps a string with a list of visible objects in a getable
+ *
+ *
+ *********************************************************************************************/
+
+const char *Getable::listContents(std::string &buf, const Entity *exclude) const {
+   auto cit = _contained.begin();
+
+   // Show getables first
+   for ( ; cit != _contained.end(); cit++) {
+      std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(*cit);
+
+      if ((gptr == nullptr) || (*gptr == exclude))
+         continue;
+
+      buf += gptr->getRoomDesc();
+      buf += "\n";
+   }
+
+   return buf.c_str();
 }
 
 

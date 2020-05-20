@@ -3,8 +3,19 @@
 
 #include <vector>
 #include <bitset>
+#include <map>
 #include "Entity.h"
+#include "Getable.h"
 #include "Location.h"
+
+class Equipment;
+
+enum bpart_flags { CanWield, Damaged, Missing };
+
+struct body_part {
+	std::bitset<32> bpflags;
+	std::vector<std::shared_ptr<Equipment>> worn;
+};
 
 /***************************************************************************************
  * Organism - a living entity that can usually be killed and sometimes moves around. Used
@@ -30,6 +41,7 @@ public:
 	virtual void sendCurLocation() {};
 	virtual void sendExits() {};
 
+	// Series of functions that retrieve class attribute data
 	virtual const char *getDesc() const { return _desc.c_str(); };
 	const char *getReview(review_type review);
    const char *getReview(const char *reviewstr);
@@ -39,6 +51,7 @@ public:
                                  Location::exitdirs dir=Location::Custom, const char *customdir=NULL);
 	void setReview(review_type review, const char *new_review);
 
+	// Set and get dynamic attributes
    void setAttribute(org_attrib attr, int val);
    void setAttribute(org_attrib attr, float val);
    void setAttribute(org_attrib attr, const char *val);
@@ -46,6 +59,16 @@ public:
    int getAttributeInt(org_attrib attr);
    float getAttributeFloat(org_attrib attr);
    const char *getAttributeStr(org_attrib attr);
+
+	// Manage body parts for wearing and wielding equipment
+	void addBodyPart(const char *group, const char *name);
+	void setBodyPartFlag(const char *group, const char *name, bpart_flags flag, bool value);
+	bool getBodyPartFlag(const char *group, const char *name, bpart_flags flag);
+
+	// Equip a piece of equipment (should already be in the organism's inventory
+	int equip(std::shared_ptr<Entity> equip_ptr);
+
+	virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const;	
 
 protected:
 	Organism(const char *id);	// Must be called from the child constructor
@@ -65,6 +88,8 @@ protected:
    virtual bool getAttribInternal(const char *attrib, float &value);
    virtual bool getAttribInternal(const char *attrib, std::string &value);
 
+	bool addBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
+
 private:
 	std::string _desc;
 
@@ -72,6 +97,8 @@ private:
 
 	std::vector<Attribute> _org_attrib;	
 	std::bitset<32> _orgflags;
+
+	std::map<std::pair<std::string, std::string>, body_part> _bodyparts;
 };
 
 

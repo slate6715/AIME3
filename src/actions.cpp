@@ -116,9 +116,26 @@ int lookcom(MUD &engine, Action &act_used) {
 	if ((preposition.compare("at")) != 0 && (preposition.compare("in") != 0))
 		preposition = "at";
 
+	std::shared_ptr<Entity> target1 = act_used.getTarget1();
 	// Examine something
 	if (preposition.compare("at") == 0) {
-		agent->sendMsg(act_used.getTarget1()->getDesc());
+		// Display the description of the entity
+		agent->sendMsg(target1->getDesc());
+
+		// If we're examining an organism, also display their visible objects
+		std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(target1);
+		if (optr != nullptr) {
+			std::string buf;
+			agent->sendMsg(target1->listContents(buf));
+		}
+		return 1;
+	} else if (preposition.compare("in") == 0) {
+		std::string msg("The "), name;
+		msg += act_used.getTarget1()->getNameID(name);
+		msg += " contains:\n";
+		agent->sendMsg(msg.c_str());
+
+		agent->sendMsg(act_used.getTarget1()->listContents(msg));
 		return 1;
 	}
 

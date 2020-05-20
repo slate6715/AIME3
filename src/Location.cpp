@@ -379,7 +379,7 @@ std::shared_ptr<Entity> Location::getContained(const char *name_alias, bool allo
  *
  *********************************************************************************************/
 
-const char *Location::listContents(std::string &buf, Player *exclude) {
+const char *Location::listContents(std::string &buf, const Entity *exclude) const {
 	auto cit = _contained.begin();
 
 	// Show getables first
@@ -401,7 +401,7 @@ const char *Location::listContents(std::string &buf, Player *exclude) {
 
 		// Skip players on the exclude list
 		std::shared_ptr<Player> pptr = std::dynamic_pointer_cast<Player>(optr);
-      if ((pptr != nullptr) || (&(*pptr) == exclude))
+      if ((pptr != nullptr) && (*pptr == exclude))
          continue;
 
 		std::string reviewstr;

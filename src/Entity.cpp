@@ -427,7 +427,8 @@ const char *Entity::getAttribStr(const char *attrib, std::string &buf) {
    return buf.c_str();
 }
 
-/*********************************************************************************************          * set/getAttributeInternal - polymorphic version of the get/setAttribute function
+/*********************************************************************************************          
+ * set/getAttributeInternal - polymorphic version of the get/setAttribute function
  *
  *    Returns: true if found and set, false otherwise
  *
@@ -466,6 +467,24 @@ bool Entity::getAttribInternal(const char *attrib, std::string &value) {
    (void) attrib;
    (void) value;
    return false;
+}
+
+/*********************************************************************************************
+ * test for equality operator - determines if the rhs is the same instantiation as lhs
+ *
+ *    Returns: true if the same, false otherwise
+ *
+ *********************************************************************************************/
+bool Entity::operator == (const Entity *rhs) {
+	return (this == rhs);
+}
+
+bool Entity::operator == (std::shared_ptr<Entity> rhs) {
+	return (this == &(*rhs));
+}
+
+bool Entity::operator == (const Entity &rhs) {
+	return (*this == &rhs);
 }
 
 

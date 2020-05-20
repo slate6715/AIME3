@@ -5,6 +5,7 @@
 #include "misc.h"
 #include "Location.h"
 #include "Attribute.h"
+#include "Equipment.h"
 
 const char *reviewlist[] = {"standing", "entering", "leaving", NULL};
 
@@ -29,6 +30,26 @@ Organism::Organism(const char *id):
 	_reviews.push_back("%n is standing here.");				// Standing
 	_reviews.push_back("%n enters the room from %d3");	// Entering
 	_reviews.push_back("%n departs the room %d1.");		// Leaving
+
+	// Hardcoded body parts for now, but later on, could customize for race/class
+	addBodyPart("head", "head");
+	addBodyPart("head", "face");
+	addBodyPart("head", "neck");
+	addBodyPart("torso", "chest");
+	addBodyPart("torso", "back");
+	addBodyPart("leftleg", "thigh");
+	addBodyPart("leftleg", "foot");
+	addBodyPart("rightleg", "thigh");
+	addBodyPart("rightleg", "foot");
+	addBodyPart("rightarm", "shoulder");
+	addBodyPart("leftarm", "shoulder");
+	addBodyPart("rightarm", "forearm");
+	addBodyPart("leftarm", "forearm");
+	addBodyPart("rightarm", "hand");
+	addBodyPart("leftarm", "hand");
+
+	setBodyPartFlag("rightarm", "hand", CanWield, true);
+	setBodyPartFlag("leftarm", "hand", CanWield, true);
 }
 
 // Called by child class
@@ -390,4 +411,130 @@ bool Organism::getAttribInternal(const char *attrib, std::string &value) {
 void Organism::setReview(review_type review, const char *new_review) {
 	_reviews[review] = new_review;
 }
+
+/*********************************************************************************************
+ * addBodyPart - when initializing a character, adds a body part to their self that can wear
+ *               clothing or wield an item
+ *
+ *		Params:	name - the body part name, like hand
+ *					group - the body part group, like arm
+ *	
+ *********************************************************************************************/
+
+void Organism::addBodyPart(const char *group, const char *name) {
+	_bodyparts.insert(std::pair<std::pair<std::string, std::string>, body_part>(
+								std::pair<std::string, std::string>(group, name),
+								body_part()));
+}
+
+/*********************************************************************************************
+ * set/getBodyPartFlag - retrieves a body part from the list and sets or gets the bpflag
+ *
+ *    Params:  name - the body part name, like hand
+ *             group - the body part group, like arm
+ *					flag - body part flag to be setting or getting
+ *					value - value to set the body part flag to
+ *
+ *		Throws: invalid_argument if the body part can't be found
+ *	
+ *********************************************************************************************/
+
+void Organism::setBodyPartFlag(const char *group, const char *name, bpart_flags flag, bool value) {
+	auto bpit = _bodyparts.find(std::pair<std::string, std::string>(group, name));
+	if (bpit == _bodyparts.end()) {
+		std::stringstream msg;
+		msg << "Attempt to set flag on invalid body part '" << group << "," << name << ", Organism: " 
+						 << getID();
+		throw std::invalid_argument(msg.str().c_str());
+	}
+	bpit->second.bpflags[flag] = value;
+}
+
+bool Organism::getBodyPartFlag(const char *group, const char *name, bpart_flags flag) {
+   auto bpit = _bodyparts.find(std::pair<std::string, std::string>(group, name));
+   if (bpit == _bodyparts.end()) {
+      std::stringstream msg;
+      msg << "Attempt to get flag on invalid body part '" << group << "," << name << ", Organism: "
+                   << getID();
+      throw std::invalid_argument(msg.str().c_str());
+   }
+	return bpit->second.bpflags[flag];
+}
+
+/*********************************************************************************************
+ * equip - wears or wields the entity passed in, assuming it's an equipment type 
+ *
+ *		Params:	equip_ptr - pointer to an entity object that should be an Equipment type
+ *
+ *		Returns: 1 for success
+ *					0 for can't be equipped due to no available hands for weapons or no room for
+ *						wearable objects
+ *					-1 if the entity is not an equipment type
+ *					-2 if the body part doesn't exist
+ *
+ *********************************************************************************************/
+int Organism::equip(std::shared_ptr<Entity> equip_ptr) {
+	std::shared_ptr<Equipment> eptr = std::dynamic_pointer_cast<Equipment>(equip_ptr);
+
+	if (eptr == nullptr)
+		return -1;
+
+	// First, verify there's room for this piece of equipment (todo)
+	for (unsigned int i=0; i<eptr->getEquipListSize(); i++) {
+		
+	}
+
+	// Now add the equipment
+   for (unsigned int i=0; i<eptr->getEquipListSize(); i++) {
+		if (!addBodyPartContained(eptr->getEquipListGroup(i), eptr->getEquipListName(i), eptr))
+			return -2;
+   }
+	return 1;
+}
+
+/*********************************************************************************************
+ * addBodyPartContained - adds the indicated equipment to the body part given it's name and group
+ *
+ *    Returns: true for success, false if the body part doesn't exist
+ *
+ *********************************************************************************************/
+
+bool Organism::addBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr) {
+	std::pair<std::string, std::string> epair(name, group);
+
+	auto bpptr = _bodyparts.find(epair);
+	if (bpptr == _bodyparts.end())
+		return false;
+
+	bpptr->second.worn.push_back(equip_ptr);
+	return true;
+}
+
+/*********************************************************************************************
+ * listContents - preps a string with a list of visible items, usually just the worn and
+ *						wielded objects
+ *
+ *		Params:	buf - the list info is stored here
+ *					exclude - a pointer to an entity that might be excluded from the list (NULL if none)
+ *
+ *********************************************************************************************/
+
+const char *Organism::listContents(std::string &buf, const Entity *exclude) const {
+   auto cit = _contained.begin();
+
+		
+   // Show worn equipment that is marked as visible
+   for ( ; cit != _contained.end(); cit++) {
+      std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Equipment>(*cit);
+
+      if ((gptr == nullptr) || (*gptr == exclude))
+         continue;
+
+      buf += gptr->getRoomDesc();
+      buf += "\n";
+   }
+
+   return buf.c_str();
+}
+
 

@@ -8,3 +8,4 @@
 - Created the NPC class
 - Added reviews to players and NPCs
 - Added attributes to Entity objects and put a few in NPCs and Organisms
+- NPCs appear in rooms and are examinable

@@ -21,6 +21,11 @@ class Entity
 public:
    virtual ~Entity();
 
+	// Checks if the other entity is pointing to the same instantiation
+	virtual bool operator == (const Entity *rhs);
+	virtual bool operator == (const Entity &rhs);
+	virtual bool operator == (std::shared_ptr<Entity> rhs);
+
 	const char *getID() const { return _id.c_str(); };
 	const char *getNameID(std::string &buf) const;
 	const char *getZoneID(std::string &buf) const;
@@ -28,7 +33,8 @@ public:
 
 	// Functions with representation in child classes
 	virtual const char *getDesc() const { return NULL; }
-	virtual const char *listContents(std::string &buf) const { (void) buf; return NULL; };
+	virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const 
+																			{ (void) buf; (void) exclude; return NULL; };
 
 	void setID(const char *new_id);	// Be careful setting this, must be unique ID
 

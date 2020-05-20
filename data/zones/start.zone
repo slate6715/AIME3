@@ -31,9 +31,34 @@ To the east, there's appears to be slightly less darkness.
 <attribute name="speed" value="0" />
 <reviewmsg type="standing">%n stands here wearing a white suit and a white brimmed hat.</reviewmsg>
 <desc>
-Admodeus is the picture of the true southern gentleman. He sports a completely white suit and carries a black cane. His hair is completely white, as is his oversized mustache. Completing the image is a small goatee under his chin.
+Admodeus is the picture of the true southern gentleman. He sports a completely white suit and carries a black cane. His hair is white, as is his oversized mustache. Completing the image is a small goatee under his chin.
 </desc>
 </npc>
+
+<equipment id="start:asmodeus_cane" title="Asmodeus' Cane" startloc="start:asmodeus" startequipped="true">
+<attribute name="weight" value="40" />
+<attribute name="size" value="40" />
+<attribute name="damage" value="45" />
+<equipped bpname="hand" bpgroup="rightarm" />
+<roomdesc>A long, black, elegant gentleman's staff lies here.</roomdesc>
+<roomdesc>Admodeus carries a long, black staff casually in his right hand.</roomdesc>
+<desc>
+The staff is made of a smooth, hard material that appears to absorb all light. It is a consistent width down it's length, terminated by a copper cap at the bottom. At the top, an impossibly-large large pearl has been fixed into the material, providing an easy handhold. 
+</desc>
+</equipment>
+
+<equipment id="start:asmodeus_hat" title="Asmodeus' Hat" startloc="start:asmodeus" startequipped="true">
+<attribute name="weight" value="20" />
+<attribute name="size" value="20" />
+<attribute name="damage" value="0" />
+<attribute name="armor" value="10" />
+<equipped bpname="head" bpgroup="head" />
+<roomdesc>A white straw hat lies on the ground.</roomdesc>
+<roomdesc>Admodeus wears a white straw hat on his head, tipped slightly to the side.</roomdesc>
+<desc>
+The straw hat sports a small brim and has a white cotton band wrapped around it. 
+</desc>
+</equipment>
 
 <location id="start:sea" title="The Sea">
 <exit name="west" location="start:light"/>
@@ -75,8 +100,8 @@ Admodeus is the picture of the true southern gentleman. He sports a completely w
 <altname name="weed" />
 <altname name="seaweed" />
 <altname name="mass" />
-<roomdesc text="A mass of kelp has washed up on shore." />
-<roomdesc text="A pile of kelp has been discarded here." />
+<roomdesc> A mass of kelp has washed up on shore. </roomdesc>
+<roomdesc> A pile of kelp has been discarded here. </roomdesc>
 </getable>
 
 <location id="start:duskbeach" title="The Beach at Sunset">
