@@ -1,0 +1,5 @@
+<?xml version="1.0"?>
+<action id="action:close" acttype="Hardcoded" parsetype="ActTarg" format="close <object>" function="closecom">
+<flag name="TargetLoc" />
+<flag name="TargetInv" />
+</action> 

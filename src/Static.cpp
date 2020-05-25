@@ -6,8 +6,9 @@
 #include "misc.h"
 #include "global.h"
 #include "Getable.h"
+#include "Door.h"
 
-const char *sflag_list[] = {"container", NULL};
+const char *sflag_list[] = {"container", "lockable", "closeable", NULL};
 
 
 /*********************************************************************************************
@@ -17,7 +18,7 @@ const char *sflag_list[] = {"container", NULL};
 Static::Static(const char *id):
 								Entity(id)
 {
-
+	_typename = "Static";
 
 }
 
@@ -121,6 +122,32 @@ int Static::loadData(pugi::xml_node &entnode) {
       }
    }
 
+   // Get the state (open, closed, etc) this container or door starts in
+   if ((attr = entnode.attribute("doorstate")) != nullptr) {
+		if (!setDoorState(attr.value())) {
+			errmsg << "Object '" << getID() << "' doorstate '" << attr.value() << "' not a valid state.";
+			mudlog->writeLog(errmsg.str().c_str());
+			return 0;
+		}
+
+   }
+
+   // Get the keys that unlock this container (assuming it is lockable) 
+   for (pugi::xml_node anode = entnode.child("key"); anode; anode =
+                                                               anode.next_sibling("key")) {
+
+      // Get the id of the key
+      pugi::xml_attribute attr = anode.attribute("id");
+      if (attr == nullptr) {
+         errmsg << "Object '" << getID() << "' key node missing mandatory id field.";
+         mudlog->writeLog(errmsg.str().c_str());
+         return 0;
+      }
+
+      _keys.push_back(attr.value());
+
+   }
+ 
  
 	return 1;
 }
@@ -240,6 +267,7 @@ void Static::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
       mudlog->writeLog(msg.str().c_str());
 		return;
    } 
+
 	moveEntity(entptr, self);
 
 }
@@ -289,5 +317,99 @@ const char *Static::listContents(std::string &buf) const {
    }
 
    return buf.c_str();
+}
+
+/*********************************************************************************************
+ * setDoorState - changes the door state given a string as the parameter
+ *
+ *    Params: new_state - a string of open, closed, locked, or special
+ *
+ *    Returns: true if successful, false if the string was not recognized
+ *
+ *********************************************************************************************/
+
+bool Static::setDoorState(const char *new_state) {
+   std::string state = new_state;
+   lower(state);
+
+   if (state.compare("open") == 0) {
+      setDoorState(Open);
+   } else if (state.compare("closed") == 0) {
+      setDoorState(Closed);
+   } else if (state.compare("locked") == 0) {
+      setDoorState(Locked);
+   } else if (state.compare("special") == 0) {
+      setDoorState(Special);
+   } else {
+      return false;
+   }
+   return true;
+
+}
+
+/*********************************************************************************************
+ * open - does some checks and, if allowed, opens the container so it can be viewed and items
+ *        exchanged
+ *
+ *    Params: errmsg - error text is stored here if the function fails its checks
+ *
+ *    Returns: true if successful, false if an error happened
+ *
+ *********************************************************************************************/
+
+bool Static::open(std::string &errmsg) {
+	
+	// First, it must be a container or a door
+	if (!isStaticFlagSet(Container) && (dynamic_cast<Door *>(this) == NULL)) {
+		errmsg = "You can't open that.\n";
+		return false;
+	}
+
+	// It must be unlocked
+	if (getDoorState() == Locked) {
+		errmsg = "It's locked.\n";
+		return false;
+	}
+
+	if (getDoorState() == Open) {
+		errmsg = "It is already open.\n";
+		return false;
+	}
+
+	setDoorState(Open);
+	return true;
+}
+
+/*********************************************************************************************
+ * close - does some checks and, if allowed, closes the container
+ *
+ *    Params: errmsg - error text is stored here if the function fails its checks
+ *
+ *    Returns: true if successful, false if an error happened
+ *
+ *********************************************************************************************/
+
+bool Static::close(std::string &errmsg) {
+
+   // First, it must be a container or a door
+   if (!isStaticFlagSet(Container) && (dynamic_cast<Door *>(this) == NULL)) {
+      errmsg = "You can't close that.\n";
+      return false;
+   }
+
+	// It must be closeable
+	if (!isStaticFlagSet(Closeable)) {
+		errmsg = "That can't be closed.\n";
+		return false;
+	}
+
+   // It must be open
+   if (getDoorState() != Open) {
+      errmsg = "It is already closed.\n";
+      return false;
+   }
+
+   setDoorState(Closed);
+   return true;
 }
 

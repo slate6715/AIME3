@@ -1,11 +1,24 @@
-5/8/2020
-- Added the quitcom command
-- Added linkloss code and timeouts to TCPConn and Player.cpp
-- Revamped the parsing in ActionMgr to fix a few bugs
-- Fixed tellcom crash bugs
+5/25/2020
+- Created the Door class as a child of Static
+- Added the open and close commands
+- Added the ability to open/close containers (not tested yet)
+- Made the ability to have hidden doors
+
+5/20/2020
+- Created the Equipment class
+- Added body parts to Organisms
+- Added the ability to equip Equipment
+- Made worn equipment appear when a player is examined
 
 5/12/2020
 - Created the NPC class
 - Added reviews to players and NPCs
 - Added attributes to Entity objects and put a few in NPCs and Organisms
 - NPCs appear in rooms and are examinable
+
+5/8/2020
+- Added the quitcom command
+- Added linkloss code and timeouts to TCPConn and Player.cpp
+- Revamped the parsing in ActionMgr to fix a few bugs
+- Fixed tellcom crash bugs
+

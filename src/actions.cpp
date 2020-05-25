@@ -9,6 +9,7 @@
 #include "Location.h"
 #include "global.h"
 #include "Getable.h"
+#include "Door.h"
 
 
 /*******************************************************************************************
@@ -73,11 +74,25 @@ int gocom(MUD &engine, Action &act_used) {
 	}
 
 	Location::exitdirs exitval;
-	std::shared_ptr<Location> exit_loc = cur_loc->getExitAbbrev(dir, &exitval);
+	std::shared_ptr<Entity> exit_loc = cur_loc->getExitAbbrev(dir, &exitval);
 
 	if (exit_loc == nullptr) {
 		agent->sendMsg("There is no exit that direction.\n");
 		return 0;
+	}
+
+	// If the exit is a door, we need to get the opposite side of the door if it's open
+	std::shared_ptr<Door> door_ptr = std::dynamic_pointer_cast<Door>(exit_loc);
+	if (door_ptr != nullptr) {
+		if ((door_ptr->getDoorState() == Door::Closed) || (door_ptr->getDoorState() == Door::Locked)) {
+			agent->sendMsg("That way is blocked.\n");
+			return 0;
+		}
+
+		// Special condition goes here
+
+
+		exit_loc = door_ptr->getOppositeLoc(agent->getCurLoc());
 	}
 
 	std::string reviewstr;
@@ -334,5 +349,57 @@ int quitcom(MUD &engine, Action &act_used) {
 	agent->quit();
 	return 1;
 
+}
+
+/*******************************************************************************************
+ * opencom - open something, such as a door or container
+ *******************************************************************************************/
+
+int opencom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> agent = act_used.getAgent();
+	std::stringstream msg;
+   (void) engine; // Eliminate compile warnings
+
+	std::shared_ptr<Entity> target = act_used.getTarget1();
+	std::string errmsg;
+	if (!target->open(errmsg)) {
+		agent->sendMsg(errmsg.c_str());
+		return 0;
+	}
+
+	msg << "You open the " << target->getTitle() << ".\n";
+	agent->sendMsg(msg.str().c_str());
+	msg.str("");
+	
+	msg << agent->getTitle() << " opens the " << target->getTitle() << ".\n";
+	agent->getCurLoc()->sendMsg(msg.str().c_str(), agent);
+
+   return 1;
+}
+
+/*******************************************************************************************
+ * closecom - close something, such as a door or container
+ *******************************************************************************************/
+
+int closecom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> agent = act_used.getAgent();
+   std::stringstream msg;
+   (void) engine; // Eliminate compile warnings
+
+   std::shared_ptr<Entity> target = act_used.getTarget1();
+   std::string errmsg;
+   if (!target->close(errmsg)) {
+      agent->sendMsg(errmsg.c_str());
+      return 0;
+   }
+
+   msg << "You close the " << target->getTitle() << ".\n";
+   agent->sendMsg(msg.str().c_str());
+
+	msg.str("");
+   msg << agent->getTitle() << " closes the " << target->getTitle() << ".\n";
+   agent->getCurLoc()->sendMsg(msg.str().c_str(), agent);
+
+   return 1;
 }
 

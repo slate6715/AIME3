@@ -11,6 +11,7 @@
 #include "Getable.h"
 #include "Equipment.h"
 #include "NPC.h"
+#include "Door.h"
 
 
 /*********************************************************************************************
@@ -97,7 +98,7 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
                                                    std::shared_ptr<Entity>(new_ent)));
 			count++;
 		}
-      // Get all locations
+      // Get all static (non-moveable) objects
       for (pugi::xml_node stat = zonefile.child("static"); stat; stat = stat.next_sibling("static")) {
 			Static *new_ent = new Static("temp");
          if (!new_ent->loadEntity(stat)) {
@@ -112,7 +113,7 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
          count++;
  			 
 		}
-      // Get all locations
+      // Get all getable objects
       for (pugi::xml_node get_x = zonefile.child("getable"); get_x; get_x = get_x.next_sibling("getable")) {
          Getable *new_ent = new Getable("temp");
          if (!new_ent->loadEntity(get_x)) {
@@ -127,6 +128,22 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
          count++;
 
       }
+      // Get all locations
+      for (pugi::xml_node get_x = zonefile.child("door"); get_x; get_x = get_x.next_sibling("door")) {
+         Door *new_ent = new Door("temp");
+         if (!new_ent->loadEntity(get_x)) {
+            std::stringstream msg;
+            msg << "Bad format for door '" << new_ent->getID() << "', file '" << files[i] << "'";
+            mudlog->writeLog(msg.str().c_str());
+            delete new_ent;
+            continue;
+         }
+         _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(),
+                                                   std::shared_ptr<Entity>(new_ent)));
+         count++;
+
+      }
+
       // Get all equipment 
       for (pugi::xml_node get_x = zonefile.child("equipment"); get_x; get_x = 
 																				get_x.next_sibling("equipment")) {

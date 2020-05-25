@@ -1,0 +1,16 @@
+*.o
+configure
+include/config.h*
+Makefile
+Makefile.in
+config.status
+**/data/users/
+src/aime3
+aclocal.m4
+*.cache
+*.log
+*.scan
+.deps
+.dirstamp
+stamp-h1
+*.swp

@@ -487,4 +487,19 @@ bool Entity::operator == (const Entity &rhs) {
 	return (*this == &rhs);
 }
 
+/*********************************************************************************************
+ * open, close - open or close a container or door - this is the default function for objects
+ *				     that cannot be opened or closed. 
+ *
+ *********************************************************************************************/
+
+bool Entity::open(std::string &errmsg) {
+	errmsg = "You can't open that.\n";
+	return false;
+}
+
+bool Entity::close(std::string &errmsg) {
+	errmsg = "You can't close that.\n";
+	return false;
+}
 

@@ -7,6 +7,7 @@
 #include "MUD.h"
 #include "misc.h"
 #include "global.h"
+#include "Door.h"
 
 const char *lflag_list[] = {"outdoors", "bright", "death", NULL};
 const char *eflag_list[] = {"hidden", "special", NULL};
@@ -240,7 +241,7 @@ bool Location::isFlagSetInternal(const char *flagname, bool &results) {
  *
  *********************************************************************************************/
 
-std::shared_ptr<Location> Location::getExit(const char *exitname) {
+std::shared_ptr<Entity> Location::getExit(const char *exitname) {
    if (exitname == NULL)
       return nullptr;
 
@@ -251,7 +252,7 @@ std::shared_ptr<Location> Location::getExit(const char *exitname) {
    return nullptr;
 }
 
-std::shared_ptr<Location> Location::getExitAbbrev(std::string &exitname, exitdirs *val) {
+std::shared_ptr<Entity> Location::getExitAbbrev(std::string &exitname, exitdirs *val) {
 	std::string dir = exitname;
 	if (dir.size() == 0)
 		return nullptr;
@@ -295,18 +296,26 @@ void Location::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
 	while (exit_it != _exits.end()) {
 		std::shared_ptr<Entity> entptr = edb.getEntity(exit_it->link_id.c_str());
 		std::shared_ptr<Location> locptr;
+		std::shared_ptr<Door> doorptr;
 
 		if (entptr == nullptr) {
-			msg << "Location '" << getID() << "' exit '" << exit_it->dir << "' doesn't appear to exist.";
+			msg << "Location '" << getID() << "' " << exit_it->dir << " exit '" << exit_it->link_id.c_str() << "' doesn't appear to exist.";
 			mudlog->writeLog(msg.str().c_str());
 			exit_it = _exits.erase(exit_it);
-		} else if ((locptr = std::dynamic_pointer_cast<Location>(entptr)) == nullptr) {
-         msg << "Location '" << getID() << "' exit '" << exit_it->dir << "' doesn't appear to be a Location class.";
+			continue;
+		} 
+
+		if ((locptr = std::dynamic_pointer_cast<Location>(entptr)) != nullptr) {
+         exit_it->link_loc = locptr;
+         exit_it++;
+		} else if ((doorptr = std::dynamic_pointer_cast<Door>(entptr)) != nullptr) {
+			exit_it->link_loc = doorptr;
+			exit_it++;
+		} else {
+         msg << "Location '" << getID() << "' exit '" << exit_it->dir << 
+																		"' doesn't appear to be a Location or Door class.";
          mudlog->writeLog(msg.str().c_str());
          exit_it = _exits.erase(exit_it);
-		} else {
-			exit_it->link_loc = locptr;
-			exit_it++;
 		}
 	}
 }
@@ -333,13 +342,36 @@ const char *Location::getExitsStr(std::string &buf) {
 		if (_exits[i].eflags[(size_t) Hidden])
 			continue;
 
+		// Get the exit's location--if it is a door, get the other side
+		std::shared_ptr<Entity> locptr = _exits[i].link_loc;
+		std::shared_ptr<Door> doorptr = std::dynamic_pointer_cast<Door>(locptr);
+
 		dir = _exits[i].dir;
 		dir[0] = toupper(dir[0]);
-		
+
+		// It's a door!
+		if (doorptr != nullptr) {
+			// The door is open, get the exit
+			if (doorptr->getDoorState() == Static::Open) {
+				locptr = doorptr->getOppositeLoc(this);
+
+			// The door is closed and not hidden, mark it blocked!
+			} else if (!doorptr->isDoorFlagSet(Door::HideClosedExit)) {
+				buf += "   ";
+				buf += dir;
+				buf += ": [Blocked]\n";
+				count++;
+				continue;
+
+			// The door is closed and hidden, skip it
+			} else
+				continue;
+		}
+
 		buf += "   ";
 		buf += dir;
 		buf += ": ";
-		buf += _exits[i].link_loc->getTitle();
+		buf += locptr->getTitle();
 		buf += "\n";
 		count++;
 	}

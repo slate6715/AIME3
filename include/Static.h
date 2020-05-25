@@ -20,7 +20,9 @@ public:
 
    virtual ~Static();
 
-	enum sflags { Container };
+	enum sflags { Container, Lockable, Closeable };
+
+   enum doorstate { Open, Closed, Locked, Special };
 
 	void setDesc(const char *newdesc);
 	void setStartLoc(const char *newloc);
@@ -38,6 +40,16 @@ public:
 
 	virtual const char *listContents(std::string &buf) const;
 
+   doorstate getDoorState() { return _state; };
+   void setDoorState(doorstate new_state) { _state = new_state; };
+   bool setDoorState(const char *new_state);
+	
+	bool isStaticFlagSet(sflags flag) { return _staticflags[flag]; };
+
+   // Opens containers - non-overloaded functions raise an error here
+   virtual bool open(std::string &errmsg);
+   virtual bool close(std::string &errmsg);
+
 protected:
 
    virtual void saveData(pugi::xml_node &entnode) const;
@@ -53,6 +65,12 @@ private:
 	std::string _startloc;
 
 	std::bitset<32> _staticflags;
+
+   doorstate _state = Open;
+
+   // List of key IDs that can unlock this door - no keys listed mean all keys work
+   std::vector<std::string> _keys;
+
 };
 
 #endif

@@ -34,12 +34,12 @@ public:
 	void setDesc(const char *newdesc);
    void setTitle(const char *newtitle);
 
-	const char *getDesc() const { return _desc.c_str(); };
-	const char *getTitle() const { return _title.c_str(); };
+	virtual const char *getDesc() const { return _desc.c_str(); };
+	virtual const char *getTitle() const { return _title.c_str(); };
    virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const;
 
-	std::shared_ptr<Location> getExit(const char *exitname);
-   std::shared_ptr<Location> getExitAbbrev(std::string &exitname, exitdirs *val = NULL);
+	std::shared_ptr<Entity> getExit(const char *exitname);
+   std::shared_ptr<Entity> getExitAbbrev(std::string &exitname, exitdirs *val = NULL);
 
    // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
    virtual void addLinks(EntityDB &edb, std::shared_ptr<Entity> self);
@@ -78,7 +78,7 @@ struct locexit {
    std::string dir;
    std::string link_id;
    Location::exitdirs exitval;
-   std::shared_ptr<Location>  link_loc;
+   std::shared_ptr<Entity>  link_loc;
    std::bitset<32> eflags;
 };
 

@@ -86,6 +86,27 @@ The straw hat sports a small brim and has a white cotton band wrapped around it.
 </desc>
 </location>
 
+<static id="start:wall" startloc="start:alcove">
+<altname name="cliff" />
+<altname name="chalk" />
+<altname name="rock" />
+<desc>The cliffs tower above you a good 15 meters. The sheer face, combined with crumbling hand-holds, make this an impossible climb, even for a seasoned mountaineer. You notice something slightly-off down near some large rocks at the base of a cliff. Upon closer examination, you find a wooden door covered in chalk dust. A simple metal handle and small keyhole are its only ornamentation.
+</desc>
+</static> 
+
+<door id="start:cliffdoor" startloc="start:alcove" startloc2="start:cave" doorstate="locked" title="Cliff Door">
+<flag name="HideClosedExit" />
+<flag name="Closeable" />
+<flag name="Lockable" />
+<altname name="door" />
+<roomdesc state="open"> A door fixed into the cliff wall is open, allowing passage into a tunnel. </roomdesc>
+<roomdesc state="closed" />
+<roomdesc state="locked" />
+<key id="start:brasskey" />
+<desc> The door is barely visible against the cliff wall, obscured by medium-sized rocks and covered in chalk dust. A simple, metal doorknob juts out from the weathered wood with a small keyhole immediately below. 
+</desc>
+</door>
+
 <location id="start:junglecoast" title="Jungle Coast">
 <exit name="north" location="start:beach" />
 <exit name="south" location="start:duskbeach" />
@@ -106,9 +127,69 @@ The straw hat sports a small brim and has a white cotton band wrapped around it.
 
 <location id="start:duskbeach" title="The Beach at Sunset">
 <exit name="north" location="start:junglecoast" />
-<exit name="south" location="start:duskbeach" />
+<exit name="south" location="start:nightbeach" />
 <flag name="Outdoors" />
-<desc>TBD
+<desc>The sun is dipping below the horizon to the west, creating orange, red and yellow tints that dance along the waves of the sea. To the east, stars are beginning to appear, surrounding a full moon that is peeking through the jungle branches. The jungle creates an impassible barrier east and the sea west. The beach continues to the north and south.
 </desc>
 </location>
+
+<location id="start:nightbeach" title="The Living Beach">
+<exit name="north" location="start:duskbeach" />
+<exit name="south" location="start:darkbeach1" />
+<exit name="east" location="start:jungletrail" />
+<flag name="Outdoors" />
+<desc>The smell of organic matter mixes with the scent of saltwater. Shells line the beach and birds circle overhead, adding a mixture of sounds to the crashing surf. Out at sea, whales can be seen in the dimishing sunlight, their tales reflecting as they dive under the surface. The beach continues into the darkness to the south and towards the north. A dirt trail cuts through the jungle to the west, quickly disappearing into the thick vegetation.  
+</desc>
+</location>
+
+<location id="start:darkbeach1" title="Dark Beach">
+<exit name="north" location="start:nightbeach" />
+<exit name="south" location="start:darkbeach2" />
+<flag name="Outdoors" />
+<desc>The beach is almost completely dark, lit by moonlight. Shapes of jungle can be seen to the west and the crashing surf can be heard to the east. 
+</desc>
+</location>
+
+<location id="start:darkbeach2" title="Dark Beach">
+<exit name="north" location="start:darkbeach1" />
+<exit name="south" location="start:darkbeach2" />
+<flag name="Outdoors" />
+<desc>The beach is almost completely dark, lit by moonlight. Shapes of jungle can be seen to the west and the crashing surf can be heard to the east.
+</desc>
+</location>
+
+<location id="start:jungletrail" title="Jungle Trail">
+<exit name="east" location="start:intersection" />
+<exit name="west" location="start:nightbeach" />
+<flag name="Outdoors" />
+<desc> A dirt path gently winds deeper through the jungle to the east. To the west, a crashing surf can be heard through the growth. The soft dirt of the trail is filled with prints of a variety of animals and includes at least one set of bare human feet. The jungle, jammed full of vegetation, echoes with the sound of insects and birds, along with the occasional call of a mammal. 
+</desc>
+</location>
+
+<location id="start:intersection" title="Jungle Trail Intersection">
+<exit name="east" location="start:windingtrail" />
+<exit name="west" location="start:jungletrail" />
+<exit name="north" location="start:gate" />
+<flag name="Outdoors" />
+<desc> The trail continues through the jungle to the east and west. To the north, an ornamental iron gate is attached to stone pillars. A heavily-worn path passes through the gate to the north, disappearing into the jungle. Worked across the iron bars of the gate is a flowing script  made of a thick wire, written in a language that's foreign to you. 
+</desc>
+</location>
+
+<location id="start:path" title="Jungle Path">
+<exit name="north" location="start:smallhut" />
+<exit name="south" location="start:gate" />
+<flag name="Outdoors" />
+<desc> The worn path heads north, where you can see a thatch roof peeking through the jungle vegetation. To the south, the trail passes through an ornamental iron gate. The jungle shows evidence of significant activity in this area, with much of the vegetation trampled or cut.  
+</desc>
+</location>
+
+<door id="start:gate" startloc="start:intersection" startloc2="start:path" doorstate="closed" title="iron gate">
+<flag name="Closeable" />
+<altname name="door" />
+<roomdesc state="open"> The iron gate is open. </roomdesc>
+<roomdesc state="closed"> The iron gate is closed, blocking the trail. </roomdesc>
+<roomdesc state="locked" />
+<desc> The gate is made of iron painted black and includes two sides that swing from stone pillars on each side of the trail. The top of the gate gently curves to peak at the middle where gate opens. Twisted iron bars create slats that are too small for most humans to get through. The gate is held in place by a simple latch lacking a visible lock. Across the front, thick wire has been bent and welded to the iron bars, creating a flowing script. The words are centered across the entirety of the gate so when it is shut, it can be read completely. 
+</desc>
+</door>
 

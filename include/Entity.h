@@ -32,9 +32,15 @@ public:
 	const char *getTypeName() const { return _typename.c_str(); };
 
 	// Functions with representation in child classes
-	virtual const char *getDesc() const { return NULL; }
+	virtual const char *getDesc() const { return NULL; };
+	virtual const char *getTitle() const { return NULL; };
+
 	virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const 
 																			{ (void) buf; (void) exclude; return NULL; };
+
+	// Opens containers - non-overloaded functions raise an error here
+	virtual bool open(std::string &errmsg);
+	virtual bool close(std::string &errmsg);
 
 	void setID(const char *new_id);	// Be careful setting this, must be unique ID
 
