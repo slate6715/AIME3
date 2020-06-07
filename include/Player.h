@@ -75,6 +75,7 @@ public:
    virtual void saveData(pugi::xml_node &entnode) const;
    virtual int loadData(pugi::xml_node &entnode);
 
+	void setWrapWidth(unsigned int new_width) { _wrap_width = new_width; };
 
 	// Create a password for a new user or to change an existing user's password
 	void createPassword(const char *cleartext);
@@ -113,7 +114,7 @@ private:
 
 	// User-specific formatting variables
 	bool _use_color = true;
-	unsigned int _wrap_width = 80;
+	unsigned int _wrap_width = 90;
 	unsigned int _last_wrap = 0;
 
 	// **************** Player-specific variables ************************

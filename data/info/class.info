@@ -1,0 +1,6 @@
+Your class fine-tunes your starting attributes in the game. It also defines how some NPCs will interact with you, as well as limits the spells and skills you can learn.
+
+&+MWarrior&* - Favors strength, constitution and skills--cannot learn magic
+&+CMage&* - Favors the use of magic and some skills - weak constitution and strength
+&+GRanger&* - Favors skills and dexterity with moderate strength and constitution - limited magic
+

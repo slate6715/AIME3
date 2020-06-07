@@ -155,4 +155,28 @@ unsigned int locateInTable(const char *name, const char **table) {
 	return i;
 }
 
+/*******************************************************************************************
+ * equalAbbrev - compares the size of buf against compare_str and returns true if identical.
+ *					  allows for abbreviations when matching
+ *
+ *    Params:  buf - the string (of size n) compared against compare_str (any size)
+ *             compare_str - 
+ *
+ *		Returns: true if equal up to size(buf) characters
+ *
+ *******************************************************************************************/
+
+bool equalAbbrev(std::string &buf, const char *compare_str) {
+	for (unsigned int i=0; i<buf.size(); i++) {
+		if (*compare_str == '\0')
+			return false;
+
+		if (buf[i] != *compare_str)
+			return false;
+
+		compare_str++;
+	}
+	return true;
+}
+
 

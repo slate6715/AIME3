@@ -109,6 +109,8 @@ protected:
 	virtual bool getAttribInternal(const char *attrib, int &value);
 	virtual bool getAttribInternal(const char *attrib, float &value);
 	virtual bool getAttribInternal(const char *attrib, std::string &value);
+
+   virtual void fillAttrXMLNode(pugi::xml_node &anode) const;
 	
    // All entities can possibly contain objects
    std::list<std::shared_ptr<Entity>> _contained;

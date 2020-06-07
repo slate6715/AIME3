@@ -1,6 +1,21 @@
 #include <stdexcept>
 #include <climits>
+#include <regex>
 #include "Attribute.h"
+
+// analyzes the string and generates an appropriate Attribute type based on what it sees
+Attribute *genAttrFromStr(const char *str) {
+	std::string val(str);
+	std::regex intcheck("[-+]?[0-9]+");				// Int has only numbers (optional sign)
+	std::regex floatcheck("[-+]?[0-9]*\\.[0-9]+"); // Float has a period followed by at least one number
+
+	if (std::regex_match(val, intcheck))
+		return new IntAttribute(str);
+	else if (std::regex_match(val, floatcheck))
+		return new FloatAttribute(str);
+	else
+		return new StrAttribute(str);
+}
 
 Attribute::Attribute() {
 
@@ -68,6 +83,25 @@ IntAttribute::IntAttribute():
 
 }
 
+IntAttribute::IntAttribute(int setval):
+						Attribute(),
+						_val(setval)
+{
+}
+
+/*********************************************************************************************
+ * IntAttribute (constructor) - special version of the constructor that converts a string to an integer
+ *
+ *    Throws: std::invalid_argument or std::out_of_range on a bad integer
+ *
+ *********************************************************************************************/
+
+IntAttribute::IntAttribute(const char *setval):
+                  Attribute()
+{
+	operator = (setval);
+}
+
 IntAttribute::IntAttribute(const IntAttribute &copy_from):
 											Attribute(copy_from)
 {
@@ -91,13 +125,30 @@ IntAttribute &IntAttribute::operator = (int intval) {
 	return *this;
 }
 
-// Special version, converts a string to an integer
+/*********************************************************************************************
+ * fillXMLNode = populates an XML node with type and value information
+ *
+ *
+ *********************************************************************************************/
+
+void IntAttribute::fillXMLNode(pugi::xml_node &anode) const {
+   pugi::xml_attribute aattr = anode.append_attribute("type");
+   aattr.set_value("int");
+
+   aattr = anode.append_attribute("value");
+   aattr.set_value(_val);
+
+}
+
+/*********************************************************************************************
+ * operator = - special version of the overloaded operator that converts a string to an integer
+ *
+ *		Throws: std::invalid_argument or std::out_of_range on a bad integer
+ *
+ *********************************************************************************************/
+
 IntAttribute &IntAttribute::operator = (const char *strval) {
-	long val = strtol(strval, NULL, 10);
-	if ((val > INT_MAX) || (val < INT_MIN)) {
-		throw std::invalid_argument(
-				"IntAttribute assigned string that converts to a number out of bounds for a signed integer");
-	}
+	_val = std::stoi(strval);
 	return *this;
 }
 
@@ -106,6 +157,25 @@ FloatAttribute::FloatAttribute():
                   _val(0.0)
 {
 
+}
+
+FloatAttribute::FloatAttribute(float setval):
+                  Attribute(),
+                  _val(setval)
+{
+}
+
+/*********************************************************************************************
+ * IntAttribute (constructor) - special version of the constructor that converts a string to a float
+ *
+ *    Throws: std::invalid_argument or std::out_of_range on a bad integer
+ *
+ *********************************************************************************************/
+
+FloatAttribute::FloatAttribute(const char *setval):
+                  Attribute()
+{
+   operator = (setval);
 }
 
 FloatAttribute::FloatAttribute(const FloatAttribute &copy_from):
@@ -131,17 +201,46 @@ FloatAttribute &FloatAttribute::operator = (float floatval) {
 	return *this;
 }
 
-// Special version, converts a string to an integer
-FloatAttribute &FloatAttribute::operator = (const char *strval) {
-   _val = strtof(strval, NULL);
-	return *this;
+/*********************************************************************************************
+ * fillXMLNode = populates an XML node with type and value information
+ *
+ *
+ *********************************************************************************************/
+
+void FloatAttribute::fillXMLNode(pugi::xml_node &anode) const {
+   pugi::xml_attribute aattr = anode.append_attribute("type");
+   aattr.set_value("float");
+
+   aattr = anode.append_attribute("value");
+   aattr.set_value(_val);
+
 }
+
+
+/*********************************************************************************************
+ * operator = - special version of the overloaded operator that converts a string to a float
+ *
+ *    Throws: std::invalid_argument or std::out_of_range on a bad integer
+ *
+ *********************************************************************************************/
+
+FloatAttribute &FloatAttribute::operator = (const char *strval) {
+   _val = std::stof(strval);
+   return *this;
+}
+
 
 StrAttribute::StrAttribute():
                   Attribute(),
                   _val(0)
 {
 
+}
+
+StrAttribute::StrAttribute(const char *setval):
+                  Attribute(),
+                  _val(setval)
+{
 }
 
 StrAttribute::StrAttribute(const StrAttribute &copy_from):
@@ -171,4 +270,20 @@ StrAttribute &StrAttribute::operator = (std::string &strval) {
    _val = strval;
 	return *this;
 }
+
+/*********************************************************************************************
+ * fillXMLNode = populates an XML node with type and value information
+ *
+ *
+ *********************************************************************************************/
+
+void StrAttribute::fillXMLNode(pugi::xml_node &anode) const {
+   pugi::xml_attribute aattr = anode.append_attribute("type");
+   aattr.set_value("str");
+
+   aattr = anode.append_attribute("value");
+   aattr.set_value(_val.c_str());
+
+}
+
 

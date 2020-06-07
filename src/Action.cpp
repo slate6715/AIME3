@@ -26,6 +26,7 @@ hardcoded_actions cmd_array[] = {
 		{"quitcom", quitcom},
       {"opencom", opencom},
       {"closecom", closecom},
+      {"statscom", statscom},
 		{"",0}
 };
 

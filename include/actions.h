@@ -18,6 +18,7 @@ int tellcom(MUD &engine, Action &act_used);
 int quitcom(MUD &engine, Action &act_used);
 int opencom(MUD &engine, Action &act_used);
 int closecom(MUD &engine, Action &act_used);
+int statscom(MUD &engine, Action &act_used);
 
 
 #endif // ifndef ACTIONS

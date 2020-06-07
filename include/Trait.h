@@ -9,7 +9,7 @@
 
 class MUD;
 class UserMgr;
-class TraitComponent;  // Defined afterwards
+class Player;
 
 /***************************************************************************************
  * Trait - A trait is something that can be assigned to an organism and is mutally-exclusive
@@ -40,13 +40,13 @@ protected:
    virtual void saveData(pugi::xml_node &entnode) const;
    virtual int loadData(pugi::xml_node &entnode);
 
-   virtual bool setFlagInternal(const char *flagname, bool newval);
-   virtual bool isFlagSetInternal(const char *flagname, bool &results);
+   // virtual bool setFlagInternal(const char *flagname, bool newval);
+   // virtual bool isFlagSetInternal(const char *flagname, bool &results);
 
 private:
 
 	// Used to define starting attributes of this trait to simplify character creation
-	std::vector<std::pair<mask_action, Attribute>> _init_list;
+	std::vector<std::pair<mask_action, std::unique_ptr<Attribute>>> _init_list;
 
 	
 };

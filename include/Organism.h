@@ -5,10 +5,11 @@
 #include <bitset>
 #include <map>
 #include "Entity.h"
-#include "Getable.h"
 #include "Location.h"
 
 class Equipment;
+class Trait;
+class Getable;
 
 enum bpart_flags { CanWield, Damaged, Missing };
 
@@ -30,7 +31,7 @@ public:
    virtual ~Organism();
 
 	enum review_type { Standing, Entering, Leaving };
-	enum org_attrib { Strength, Damage };
+	enum org_attrib { Strength, Damage, Last };
 
 	// Virtual functions that do nothing for NPCs
    virtual bool sendFile(const char *filename) { (void) filename; return true; };
@@ -40,6 +41,7 @@ public:
 	virtual void sendPrompt() {};
 	virtual void sendCurLocation() {};
 	virtual void sendExits() {};
+	virtual void sendTraits();
 
 	// Series of functions that retrieve class attribute data
 	virtual const char *getDesc() const { return _desc.c_str(); };
@@ -65,6 +67,11 @@ public:
 	void setBodyPartFlag(const char *group, const char *name, bpart_flags flag, bool value);
 	bool getBodyPartFlag(const char *group, const char *name, bpart_flags flag);
 
+	// Manage traits
+	void addTrait(std::shared_ptr<Trait> new_trait);
+	bool hasTrait(const char *trait_id);
+	bool removeTrait(const char *trait_id);
+
 	// Equip a piece of equipment (should already be in the organism's inventory
 	int equip(std::shared_ptr<Entity> equip_ptr);
 
@@ -88,6 +95,8 @@ protected:
    virtual bool getAttribInternal(const char *attrib, float &value);
    virtual bool getAttribInternal(const char *attrib, std::string &value);
 
+	virtual void fillAttrXMLNode(pugi::xml_node &anode) const;
+
 	bool addBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
 
 private:
@@ -95,10 +104,12 @@ private:
 
 	std::vector<std::string> _reviews;
 
-	std::vector<Attribute> _org_attrib;	
+	std::vector<std::unique_ptr<Attribute>> _org_attrib;	
 	std::bitset<32> _orgflags;
 
 	std::map<std::pair<std::string, std::string>, body_part> _bodyparts;
+
+	std::vector<std::shared_ptr<Trait>> _traits;
 };
 
 

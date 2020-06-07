@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<trait id="gender:male">
+</trait>
+
+<trait id="gender:female">
+</trait>
+
+<trait id="gender:neuter">
+</trait>

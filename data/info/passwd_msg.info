@@ -1,0 +1,4 @@
+This is where your password policy would be explained. Right now it simply expects a minimum of 8 characters.
+
+Regex functionality is pending to allow a password policy enforcement.
+

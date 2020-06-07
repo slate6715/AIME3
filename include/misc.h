@@ -29,6 +29,8 @@ void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, const ch
 
 unsigned int locateInTable(const char *name, const char **table);
 
+bool equalAbbrev(std::string &buf, const char *compare_str);
+
 // Used for iterating files in a directory
 struct path_leaf_string 
 {

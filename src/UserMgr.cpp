@@ -123,12 +123,6 @@ void UserMgr::startListeningThread(lc::Config &cfg_info) {
 		listening_loop = 8;
 	}
 
-	// Grab the welcome file location
-	std::string welcome_file(_infodir), buf;
-	welcome_file += "/";
-	cfg_info.lookupValue("infofiles.welcome", buf);
-	welcome_file += buf;	
-
 	_exit_listening_thread = false;
 
 	// ******* Lambda function for launching the thread ********

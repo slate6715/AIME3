@@ -12,6 +12,7 @@
 #include "Equipment.h"
 #include "NPC.h"
 #include "Door.h"
+#include "Trait.h"
 
 
 /*********************************************************************************************
@@ -190,6 +191,69 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
 }
 
 /*********************************************************************************************
+ * loadTraits - reads the traits directory and loads all files in that directory.
+ *
+ *    Params: mud_cfg - holds config information
+ *
+ *    Returns: number of entities read in
+ *
+ *********************************************************************************************/
+
+int EntityDB::loadTraits(libconfig::Config &mud_cfg) {
+
+   int count = 0;
+
+   // Load the traits from the Actions directory
+   std::string traitsdir;
+   mud_cfg.lookupValue("datadir.traitsdir", traitsdir);
+
+   std::vector<std::string> files;
+   boost::filesystem::path p(traitsdir);
+
+   if (!boost::filesystem::exists(traitsdir)) {
+      std::string msg("traitsdir defined in config file doesn't appear to exist at: ");
+      msg += traitsdir;
+      throw std::runtime_error(msg.c_str());
+   }
+   boost::filesystem::directory_iterator start(p), end;
+   std::transform(start, end, std::back_inserter(files), path_leaf_string());
+
+   pugi::xml_document traitsfile;
+   for (unsigned int i=0; i<files.size(); i++) {
+      std::string filepath(traitsdir);
+      filepath += "/";
+      filepath += files[i].c_str();
+
+      pugi::xml_parse_result result = traitsfile.load_file(filepath.c_str());
+
+      if (!result) {
+         std::string msg("Unable to open/parse traits file: ");
+         msg += filepath;
+         msg += ", error: ";
+         msg += result.description();
+         mudlog->writeLog(msg.c_str());
+         continue;
+      }
+
+      // Get all traits
+      for (pugi::xml_node loc = traitsfile.child("trait"); loc; loc = loc.next_sibling("trait")) {
+         Trait *new_ent = new Trait("temp");
+         if (!new_ent->loadEntity(loc)) {
+            std::stringstream msg;
+            msg << "Bad format for trait '" << new_ent->getID() << "', file '" << files[i] << "'";
+            mudlog->writeLog(msg.str().c_str());
+            delete new_ent;
+            continue;
+         }
+         _traits.insert(std::pair<std::string, std::shared_ptr<Trait>>(new_ent->getID(),
+                                                   std::shared_ptr<Trait>(new_ent)));
+         count++;
+      }
+	}
+	return count;
+}
+
+/*********************************************************************************************
  * getEntity - retrieves the entity with the given id
  *
  *		Returns: shared_ptr to the entity, or set to null if not found
@@ -202,6 +266,21 @@ std::shared_ptr<Entity> EntityDB::getEntity(const char *id) {
 	if (eptr == _db.end())
 		return std::shared_ptr<Entity>(nullptr);
 	return eptr->second;
+}
+
+/*********************************************************************************************
+ * getTrait - retrieves the trait with the given id
+ *
+ *    Returns: shared_ptr to the trait, or set to null if not found
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Trait> EntityDB::getTrait(const char *id) {
+   auto eptr = _traits.find(id);
+
+   if (eptr == _traits.end())
+      return std::shared_ptr<Trait>(nullptr);
+   return eptr->second;
 }
 
 /*********************************************************************************************

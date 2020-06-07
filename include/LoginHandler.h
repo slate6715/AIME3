@@ -14,7 +14,7 @@ public:
 
 	virtual ~LoginHandler();
 
-	enum login_state {AskUser, AskCreate, CreatePasswd1, CreatePasswd2, AskPasswd};
+	enum login_state {AskUser, AskPasswd, AskCreate, CreatePasswd1, CreatePasswd2, GetGender, GetRace, GetClass};
 
 	virtual int handleCommand(std::string &cmd);
 	virtual void getPrompt(std::string &buf);
@@ -24,6 +24,8 @@ public:
 	bool validateUsername(std::string &name);
 
 private:
+
+	void addTrait(std::shared_ptr<Player> plr, const char *trait);
 
 	libconfig::Config &_mud_cfg;
 	

@@ -403,3 +403,26 @@ int closecom(MUD &engine, Action &act_used) {
    return 1;
 }
 
+/*******************************************************************************************
+ * statscom - shows the user their stats
+ *******************************************************************************************/
+int statscom(MUD &engine, Action &act_used) {
+	(void) engine;
+	std::stringstream msg;
+
+   std::shared_ptr<Organism> agent = act_used.getAgent();
+
+	msg << "\n&+cPlayer stats:\n---------------------------------------------\n&*";
+	msg << "&+yStrength:&* " << agent->getAttribInt("strength") << "\n";
+	msg << "&+yDamage:&* " << agent->getAttribInt("damage") << "\n";
+
+	msg << "\n&+MTraits:&*\n";
+	agent->sendMsg(msg.str().c_str());
+
+	agent->sendTraits();
+
+	agent->sendMsg("&+c---------------------------------------------\n\n&*");
+
+   return 1;
+}
+

@@ -1,3 +1,11 @@
+6/07/2020
+- Created the Trait entity and had them loaded in EntityDB
+- Added traits to Organisms with load capability for NPCs
+- Made initial wrap_width for screen text a config setting
+- Made player save record reviewmsg, attributes, traits and wrap_width
+- Added the stats/score command so attributes and traits could be viewed
+- Added player creation demo menus for traits: gender, race, class
+
 5/25/2020
 - Created the Door class as a child of Static
 - Added the open and close commands

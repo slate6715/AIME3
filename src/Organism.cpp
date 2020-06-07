@@ -6,6 +6,8 @@
 #include "Location.h"
 #include "Attribute.h"
 #include "Equipment.h"
+#include "Getable.h"
+#include "Trait.h"
 
 const char *reviewlist[] = {"standing", "entering", "leaving", NULL};
 
@@ -15,7 +17,7 @@ const char *dir2_list[] = {"the north", "the south", "the east", "the west", "up
 								  "the northwest", "the southeast", "the southwest", "custom", NULL}; 
 const char *dir3_list[] = {"the north", "the south", "the east", "the west", "above", "below", "the northeast",
                           "the northwest", "the southeast", "the southwest", "custom", NULL};
-const char *org_attriblist[] = {"Strength", "Damage", NULL};
+const char *org_attriblist[] = {"strength", "damage", NULL};
 
 const char *oflag_list[] = {NULL};
 
@@ -50,6 +52,12 @@ Organism::Organism(const char *id):
 
 	setBodyPartFlag("rightarm", "hand", CanWield, true);
 	setBodyPartFlag("leftarm", "hand", CanWield, true);
+
+	// Strength
+	_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
+
+	// Damage
+	_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
 }
 
 // Called by child class
@@ -78,9 +86,31 @@ void Organism::saveData(pugi::xml_node &entnode) const {
 	// First, call the parent version
 	Entity::saveData(entnode);
 
-   // Add organism data (none yet)
-   // pugi::xml_attribute idnode = entnode.append_attribute("id");
-   // idnode.set_value(_id.c_str());
+   pugi::xml_node xnode;
+   pugi::xml_attribute xattr;
+
+	// Save the desc
+	xnode = entnode.append_child("desc");
+	xnode.append_child(pugi::node_pcdata).set_value(_desc.c_str());
+
+	// Save the reviews
+	const char *reviewtype[] = {"standing", "entering", "leaving", NULL};
+
+	unsigned int i;
+	for (i = 0; i<_reviews.size(); i++) {
+		xnode = entnode.append_child("reviewmsg");
+		xnode.append_child(pugi::node_pcdata).set_value(_reviews[i].c_str());
+
+		xattr = xnode.append_attribute("type");
+		xattr.set_value(reviewtype[i]);
+	}
+
+   // Save the traits 
+   for (i=0; i<_traits.size(); i++) {
+      xnode = entnode.append_child("trait");
+      xattr = xnode.append_attribute("id");
+      xattr.set_value(_traits[i]->getID());
+   }
 
 }
 
@@ -138,6 +168,37 @@ int Organism::loadData(pugi::xml_node &entnode) {
          return 0;
       }
 	}
+
+   for (pugi::xml_node trait = entnode.child("trait"); trait; trait =
+                                                               trait.next_sibling("trait")) {
+      try {
+         pugi::xml_attribute attr = trait.attribute("id");
+         if (attr == nullptr) {
+            errmsg << getTypeName() << "Organism '" << getID() << "' trait node missing mandatory id field.";
+            mudlog->writeLog(errmsg.str().c_str());
+            return 0;
+         }
+
+			EntityDB *edb = engine.getEntityDB();
+
+			std::shared_ptr<Trait> trait = edb->getTrait(attr.value());
+			if (trait == nullptr) {
+            errmsg << getTypeName() << " '" << getID() << "' trait '" << attr.value() << 
+																					"' does not appear to be a valid trait.";
+            mudlog->writeLog(errmsg.str().c_str());
+            return 0;
+			}
+
+			addTrait(trait);
+			
+      }
+      catch (std::invalid_argument &e) {
+         errmsg << getTypeName() << " '" << getID() << "' reviewmsg error: " << e.what();
+         mudlog->writeLog(errmsg.str().c_str());
+         return 0;
+      }
+   }
+
 	return 1;
 }
 
@@ -307,27 +368,27 @@ const char *Organism::getReviewProcessed(const char *reviewstr, std::string &buf
  *********************************************************************************************/
 
 void Organism::setAttribute(org_attrib attr, int val) {
-	_org_attrib[attr] = val;	
+	*(_org_attrib[attr]) = val;	
 }
 
 void Organism::setAttribute(org_attrib attr, float val) {
-   _org_attrib[attr] = val;
+   *(_org_attrib[attr]) = val;
 }
 
 void Organism::setAttribute(org_attrib attr, const char *val) {
-   _org_attrib[attr] = val;
+   *(_org_attrib[attr]) = val;
 }
 
 int Organism::getAttributeInt(org_attrib attr) {
-	return _org_attrib[attr].getInt();
+	return _org_attrib[attr]->getInt();
 }
 
 float Organism::getAttributeFloat(org_attrib attr) {
-	return _org_attrib[attr].getFloat();
+	return _org_attrib[attr]->getFloat();
 }
 
 const char *Organism::getAttributeStr(org_attrib attr) {
-	return _org_attrib[attr].getStr();
+	return _org_attrib[attr]->getStr();
 }
 
 bool Organism::setAttribInternal(const char *attrib, int value) {
@@ -338,7 +399,7 @@ bool Organism::setAttribInternal(const char *attrib, int value) {
    if (i == UINT_MAX)
       return false;
 	
-	_org_attrib[i] = value;
+	(*_org_attrib[i]) = value;
 	return true;
 }
 
@@ -350,7 +411,7 @@ bool Organism::setAttribInternal(const char *attrib, float value) {
    if (i == UINT_MAX)
       return false;
 
-   _org_attrib[i] = value;
+   *(_org_attrib[i]) = value;
    return true;
 }
 
@@ -362,7 +423,7 @@ bool Organism::setAttribInternal(const char *attrib, const char *value) {
    if (i == UINT_MAX)
       return false;
 
-   _org_attrib[i] = value;
+   *(_org_attrib[i]) = value;
    return true;
 }
 
@@ -374,7 +435,7 @@ bool Organism::getAttribInternal(const char *attrib, int &value) {
    if (i == UINT_MAX)
       return false;
 
-   value = _org_attrib[i].getInt();
+   value = _org_attrib[i]->getInt();
    return true;
 
 }
@@ -387,7 +448,7 @@ bool Organism::getAttribInternal(const char *attrib, float &value) {
    if (i == UINT_MAX)
       return false;
 
-   value = _org_attrib[i].getFloat();
+   value = _org_attrib[i]->getFloat();
    return true;
 }
 
@@ -399,8 +460,34 @@ bool Organism::getAttribInternal(const char *attrib, std::string &value) {
    if (i == UINT_MAX)
       return false;
 
-   value = _org_attrib[i].getStr();
+   value = _org_attrib[i]->getStr();
    return true;
+}
+
+/*********************************************************************************************
+ * fillAttrXMLNode - populates the parameter XML node with data from this entity's attributes.
+ *                   polymorphic
+ *
+ *    Returns: true if the same, false otherwise
+ *
+ *********************************************************************************************/
+
+void Organism::fillAttrXMLNode(pugi::xml_node &anode) const {
+	// First call the parent
+	Entity::fillAttrXMLNode(anode);
+
+	// Populate with all the attributes
+	pugi::xml_node nextnode;
+	pugi::xml_attribute nextattr;
+
+	for (unsigned int i=0; i < (int) Last; i++) {
+		nextnode = anode.append_child("attribute");
+		nextattr = nextnode.append_attribute("name");
+		nextattr.set_value(org_attriblist[i]);
+		_org_attrib[i]->fillXMLNode(nextnode);
+	}
+
+	
 }
 
 /*********************************************************************************************
@@ -537,4 +624,67 @@ const char *Organism::listContents(std::string &buf, const Entity *exclude) cons
    return buf.c_str();
 }
 
+/*********************************************************************************************
+ * addTrait - assigns a trait to this organism via the parameter
+ *
+ *********************************************************************************************/
+
+void Organism::addTrait(std::shared_ptr<Trait> new_trait) {
+	_traits.push_back(new_trait);
+}
+
+/*********************************************************************************************
+ * hasTrait - returns true if the indicated trait is found in the organism
+ *
+ *********************************************************************************************/
+bool Organism::hasTrait(const char *trait_id) {
+	std::string find_id(trait_id);
+
+	for (unsigned int i=0; i<_traits.size(); i++) {
+		if (find_id.compare(_traits[i]->getID()) == 0)
+			return true;
+	}
+	return false;
+}
+
+/*********************************************************************************************
+ * removeTrait - removes the indicated trait - returns false if not found, true otherwise
+ *
+ *********************************************************************************************/
+
+bool Organism::removeTrait(const char *trait_id) {
+   std::string find_id(trait_id);
+
+   for (unsigned int i=0; i<_traits.size(); i++) {
+      if (find_id.compare(_traits[i]->getID()) == 0)
+			_traits.erase(_traits.begin() + i);
+         return true;
+   }
+   return false;
+}
+
+/*********************************************************************************************
+ * sendTraits - displays all the visible exits to the user for their location
+ *
+ *
+ *********************************************************************************************/
+
+void Organism::sendTraits() {
+
+	std::stringstream msg;
+   for (unsigned int i=0; i<_traits.size(); i++) {
+		std::string name, category;
+
+		_traits[i]->getNameID(name);
+		_traits[i]->getZoneID(category);
+
+		name[0] = toupper(name[0]);
+		category[0] = toupper(category[0]);
+
+		msg.str("");
+		msg << "&+y" << category << "&*: " << name << "\n";
+		sendMsg(msg.str().c_str());
+   }
+
+}
 

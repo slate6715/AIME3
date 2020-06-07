@@ -461,6 +461,7 @@ void Player::sendExits() {
 	sendMsg(locptr->getExitsStr(buf));
 }
 
+
 /*********************************************************************************************
  * sendLocContents - displays the getable and organism contents in the room
  *
@@ -702,6 +703,8 @@ void Player::saveData(pugi::xml_node &entnode) const {
    pugi::xml_attribute idnode = entnode.append_attribute("passwd");
    idnode.set_value(hexstr.c_str());
 
+	idnode = entnode.append_attribute("wrap_width");
+	idnode.set_value(_wrap_width);
 }
 
 /*********************************************************************************************
@@ -716,12 +719,15 @@ void Player::saveData(pugi::xml_node &entnode) const {
 
 int Player::loadData(pugi::xml_node &entnode) {
 
+	std::stringstream errmsg;
+
    // First, call the parent function
    int results = 0;
    if ((results = Organism::loadData(entnode)) != 1)
       return results;
 	
-		
+
+	// Read in the password hash		
    pugi::xml_attribute attr = entnode.attribute("passwd");
    if (attr == nullptr) {
       mudlog->writeLog("Player save file missing mandatory 'passwd' field.", 2);
@@ -731,6 +737,18 @@ int Player::loadData(pugi::xml_node &entnode) {
 	_passwd_hash.assign(hashlen+saltlen, 0);
 	boost::algorithm::unhex(pwdhash.begin(), pwdhash.end(), _passwd_hash.begin());
 
+	// Read in the wrap_width for their terminal (optional)
+	attr = entnode.attribute("wrap_width");
+	if (attr != nullptr) {
+		try {
+			setWrapWidth((unsigned int) std::atoi(attr.value()));
+		} catch (std::exception &e) {
+			errmsg << "Unexpected error reading in wrap_width for player '" << getID() << "': " << e.what();
+			mudlog->writeLog(errmsg.str().c_str());
+		}
+	}
+
+	
 	return 1;
 }
 

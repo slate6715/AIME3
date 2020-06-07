@@ -134,6 +134,9 @@ void MUD::initialize() {
 	// Init out actions manager
 	_actions.initialize(_mud_config);
 
+	// Load al traits
+	_entity_db.loadTraits(_mud_config);
+
 	// Load all entities
 	_entity_db.loadEntities(_mud_config);
 }

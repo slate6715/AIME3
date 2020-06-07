@@ -6,12 +6,11 @@
 #include <bitset>
 #include <vector>
 #include "Entity.h"
-#include "Organism.h"
 #include "actions.h"
 
 class MUD;
 class UserMgr;
-
+class Organism;
 
 /***************************************************************************************
  * Action - contains all the necessary components to execute a command in the game.

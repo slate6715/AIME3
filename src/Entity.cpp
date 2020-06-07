@@ -88,6 +88,8 @@ void Entity::saveData(pugi::xml_node &entnode) const {
 	pugi::xml_attribute idnode = entnode.append_attribute("id");
 	idnode.set_value(_id.c_str());
 
+	// Save attributes (polymorphic)
+	fillAttrXMLNode(entnode);
 }
 
 /*********************************************************************************************
@@ -468,6 +470,21 @@ bool Entity::getAttribInternal(const char *attrib, std::string &value) {
    (void) value;
    return false;
 }
+
+
+/*********************************************************************************************
+ * fillAttrXMLNode - populates the parameter XML node with data from this entity's attributes. 
+ *                   polymorphic
+ *
+ *    Returns: true if the same, false otherwise
+ *
+ *********************************************************************************************/
+
+void Entity::fillAttrXMLNode(pugi::xml_node &anode) const {
+	// Currently nothing in the Entity parent class but might add cur_loc and contained
+	(void) anode;	
+}
+
 
 /*********************************************************************************************
  * test for equality operator - determines if the rhs is the same instantiation as lhs

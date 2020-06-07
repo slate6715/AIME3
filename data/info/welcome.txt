@@ -1,12 +1,13 @@
-Welcome to AIME3!
+&+C  ________   ______    ___        ________  ___________  __     ______    _______  
+ /"       ) /    " \  |"  |      /"       )("     _   ")|" \   /" _  "\  /"     "| 
+(:   \___/ // ____  \ ||  |     (:   \___/  )__/  \\__/ ||  | (: ( \___)(: ______) 
+ \___  \  /  /    ) :)|:  |      \___  \       \\_ /    |:  |  \/ \      \/    |   
+  __/  \\(: (____/ //  \  |___    __/  \\      |.  |    |.  |  //  \ _   // ___)_  
+ /" \   :)\        /  ( \_|:  \  /" \   :)     \:  |    /\  |\(:   _) \ (:      "| 
+(_______/  \"_____/    \_______)(_______/       \__|   (__\_|_)\_______) \_______) &*
+                                                                                   
+&+YWelcome to &+CSolstice&+Y, a demo of the AIME3 MUD codebase.&*
 
-This is a welcome file that can be modified to welcome users to your MUD.
+This is the Welcome info file and is the first thing new users see.
 
-Supports &+RC&+YO&+BL&+CO&+MR&* &-RBackground!&* &=RBBoth!&*
-Supports &@Blinking!&*
-Supports &_Underline!&*
-Supports &^Bold!&*
-Supports &~Italics!&*
-
-Your terminal may not support all of these.
 
