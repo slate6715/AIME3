@@ -6,7 +6,7 @@
 #include "misc.h"
 #include "global.h"
 
-const char *gflag_list[] = {"noget", "nodrop", NULL};
+const char *gflag_list[] = {"noget", "nodrop", "food", NULL};
 
 
 /*********************************************************************************************

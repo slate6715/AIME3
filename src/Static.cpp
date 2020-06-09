@@ -8,7 +8,7 @@
 #include "Getable.h"
 #include "Door.h"
 
-const char *sflag_list[] = {"container", "lockable", "closeable", NULL};
+const char *sflag_list[] = {"container", "lockable", "closeable", "lightable", "magiclit", NULL};
 
 
 /*********************************************************************************************

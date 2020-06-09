@@ -5,6 +5,7 @@
 #include "misc.h"
 #include "Player.h"
 #include "global.h"
+#include "Trait.h"
 
 
 LoginHandler::LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_cfg):
@@ -153,16 +154,17 @@ int LoginHandler::handleCommand(std::string &cmd) {
 				break;	
 
 			if (equalAbbrev(cmd, "male"))
-				addTrait(_plr, "gender:male");
+				addTrait(_plr, "gender:male", true);
 			else if (equalAbbrev(cmd, "female"))
-				addTrait(_plr, "gender:female");
+				addTrait(_plr, "gender:female", true);
 			else if (equalAbbrev(cmd, "neuter"))
-				addTrait(_plr, "gender:neuter");
+				addTrait(_plr, "gender:neuter", true);
 			else {
 				_plr->sendMsg("I don't recognize that gender.\n");
 				break;
 			}
 
+			
          // Display the gender instructions
          infodir += "race.info";
          _plr->sendFile(infodir.c_str());
@@ -177,11 +179,11 @@ int LoginHandler::handleCommand(std::string &cmd) {
             break; 
 
 			if (equalAbbrev(cmd, "human"))
-            addTrait(_plr, "race:human");
+            addTrait(_plr, "race:human", true);
 			else if (equalAbbrev(cmd, "elf"))
-            addTrait(_plr, "race:elf");
+            addTrait(_plr, "race:elf", true);
 			else if (equalAbbrev(cmd, "dwarf"))
-            addTrait(_plr, "race:dwarf");
+            addTrait(_plr, "race:dwarf", true);
          else {
             _plr->sendMsg("I don't recognize that race.\n");
             break;
@@ -201,11 +203,11 @@ int LoginHandler::handleCommand(std::string &cmd) {
             break;
 
 			if (equalAbbrev(cmd, "warrior"))
-            addTrait(_plr, "class:warrior");
+            addTrait(_plr, "class:warrior", true);
 			else if (equalAbbrev(cmd, "mage"))
-            addTrait(_plr, "class:mage");
+            addTrait(_plr, "class:mage", true);
 			else if (equalAbbrev(cmd, "ranger"))
-            addTrait(_plr, "class:ranger");
+            addTrait(_plr, "class:ranger", true);
          else {
             _plr->sendMsg("I don't recognize that race.\n");
             break;
@@ -340,7 +342,7 @@ void LoginHandler::postPush() {
  *
  *********************************************************************************************/
 
-void LoginHandler::addTrait(std::shared_ptr<Player> plr, const char *trait) {
+void LoginHandler::addTrait(std::shared_ptr<Player> plr, const char *trait, bool mask) {
 	EntityDB &edb = *(engine.getEntityDB());
 
 	std::shared_ptr<Trait> tptr = edb.getTrait(trait);
@@ -353,6 +355,10 @@ void LoginHandler::addTrait(std::shared_ptr<Player> plr, const char *trait) {
 
 	plr->addTrait(tptr);
 
+	// If we should change the player's stats per this trait's mask
+	if (mask) {
+		tptr->maskPlayer(plr);
+	}
 }
 
 

@@ -25,7 +25,7 @@ public:
 
 private:
 
-	void addTrait(std::shared_ptr<Player> plr, const char *trait);
+	void addTrait(std::shared_ptr<Player> plr, const char *trait, bool mask = false);
 
 	libconfig::Config &_mud_cfg;
 	

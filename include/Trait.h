@@ -20,6 +20,7 @@ class Player;
 
 class TraitComponent;  // Defined afterwards
 
+
 class Trait : public Entity 
 {
 public:
@@ -31,6 +32,16 @@ public:
    virtual ~Trait();
 
    enum mask_action { Set, Add, Multiply };
+
+	struct attr_mask {
+		std::string name;
+		mask_action action;
+		std::unique_ptr<Attribute> attr;
+
+		attr_mask(std::string &iname, mask_action iaction, Attribute *newattr) {
+			name = iname; action = iaction; attr = std::unique_ptr<Attribute>(newattr);
+		};
+	};
 
    void maskPlayer(std::shared_ptr<Player> plr);
 
@@ -46,7 +57,7 @@ protected:
 private:
 
 	// Used to define starting attributes of this trait to simplify character creation
-	std::vector<std::pair<mask_action, std::unique_ptr<Attribute>>> _init_list;
+	std::vector<attr_mask> _init_list;
 
 	
 };

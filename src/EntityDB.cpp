@@ -51,6 +51,7 @@ EntityDB::~EntityDB() {
 
 int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
 
+	std::stringstream errmsg;
 	int count = 0;
 
    // Load the zones from the Actions directory
@@ -77,11 +78,10 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
       pugi::xml_parse_result result = zonefile.load_file(filepath.c_str());
 
       if (!result) {
-         std::string msg("Unable to open/parse zone file: ");
-         msg += filepath;
-			msg += ", error: ";
-			msg += result.description();
-         mudlog->writeLog(msg.c_str());
+			// If a parsing error, get the line number
+			unsigned int linenum = getLineNumber(filepath.c_str(), result.offset);		
+			errmsg << "Unable to open/parse zone file '" << filepath << "', (line: " << linenum << ") error: " << result.description();
+         mudlog->writeLog(errmsg.str().c_str());
          continue;
       }
 

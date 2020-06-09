@@ -146,12 +146,80 @@ int Trait::loadData(pugi::xml_node &entnode) {
          return 0;
 		}
 
-		_init_list.push_back(std::pair<mask_action, std::unique_ptr<Attribute>>(action, std::unique_ptr<Attribute>(new_attr)));
+		_init_list.emplace_back(attr_mask(name, action, new_attr));
    }
 
  
 	return 1;
 }
+
+/*********************************************************************************************
+ * maskPlayer - modifies the player's stats based on the "mask" of this trait
+ *
+ *
+ *********************************************************************************************/
+
+void Trait::maskPlayer(std::shared_ptr<Player> plr) {
+	std::stringstream errmsg;
+
+	// Loop through our initialization list
+	for (unsigned int i=0; i<_init_list.size(); i++) {
+		Attribute::attr_type atype = plr->getAttribType(_init_list[i].name.c_str());
+
+		// We did not find the specified attribute to mask, error
+		if (atype == Attribute::Undefined) {
+			errmsg << "Trait '" << getID() << "' player attribute '" << _init_list[i].name << 
+													"' doesn't seem to exist and can't be masked.";
+			mudlog->writeLog(errmsg.str().c_str());
+			continue;
+		}
+
+		// If the field is a string, we can only set, not add or multiply
+		if (atype == Attribute::String) {
+			if ((_init_list[i].action == Add) || (_init_list[i].action == Multiply) || (_init_list[i].attr->getType() != Attribute::String)) {
+				errmsg << "Trait '" << getID() << "' attribute '" << _init_list[i].name << 
+										"' is a string. The only mask action allowed is to Set by another String type.";
+				mudlog->writeLog(errmsg.str().c_str());
+				continue;
+			}
+
+			// Set the attribute
+			plr->Entity::setAttribute(_init_list[i].name.c_str(), _init_list[i].attr->getStr());
+			continue;
+		}
+
+		// Else it's either a float or an int--if the action is to Set, just do it
+		if (_init_list[i].action == Set) {
+			if (_init_list[i].attr->getType() != atype) {
+            errmsg << "Trait '" << getID() << "' attribute '" << _init_list[i].name <<
+                              "' type mismatch for Set action. Mask and attribute type must be the same.";
+            mudlog->writeLog(errmsg.str().c_str());
+            continue;
+			}
+			
+			plr->Entity::setAttribute(_init_list[i].name.c_str(), *(_init_list[i].attr));
+			continue;
+		}
+		
+		// Finally, the action is either add or multiply
+		if (atype == Attribute::Int) {
+			IntAttribute newval, value = plr->getAttribInt(_init_list[i].name.c_str());
+			if (_init_list[i].action == Add)
+				newval = value + *(_init_list[i].attr);
+			else
+				newval = value * *(_init_list[i].attr);
+			plr->Entity::setAttribute(_init_list[i].name.c_str(), newval);
+		} else {
+			FloatAttribute newval, value = plr->getAttribFloat(_init_list[i].name.c_str());
+         if (_init_list[i].action == Add)
+            newval = value + *(_init_list[i].attr);
+         else
+            newval = value * *(_init_list[i].attr);
+         plr->Entity::setAttribute(_init_list[i].name.c_str(), newval);
+		}
+	}
+}
+
 
 /*********************************************************************************************
  * **** functions to set trait attributes

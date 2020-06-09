@@ -17,7 +17,7 @@ const char *dir2_list[] = {"the north", "the south", "the east", "the west", "up
 								  "the northwest", "the southeast", "the southwest", "custom", NULL}; 
 const char *dir3_list[] = {"the north", "the south", "the east", "the west", "above", "below", "the northeast",
                           "the northwest", "the southeast", "the southwest", "custom", NULL};
-const char *org_attriblist[] = {"strength", "damage", NULL};
+const char *org_attriblist[] = {"strength", "constitution", "dexterity", "intelligence", "wisdom", "charisma", "experience", "damage", NULL};
 
 const char *oflag_list[] = {NULL};
 
@@ -53,11 +53,18 @@ Organism::Organism(const char *id):
 	setBodyPartFlag("rightarm", "hand", CanWield, true);
 	setBodyPartFlag("leftarm", "hand", CanWield, true);
 
+	// Set up our attribute list (Strength, Constitution, Dexterity, Intelligence, Wisdom, Charisma, Experience, Damage)
+	for (unsigned int i=0; i<Last; i++) {
+		_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
+	}
+
 	// Strength
-	_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
+	//_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
 
 	// Damage
-	_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
+	//_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
+	
+
 }
 
 // Called by child class
@@ -379,6 +386,10 @@ void Organism::setAttribute(org_attrib attr, const char *val) {
    *(_org_attrib[attr]) = val;
 }
 
+void Organism::setAttribute(org_attrib attr, Attribute &val) {
+   *(_org_attrib[attr]) = val;
+}
+
 int Organism::getAttributeInt(org_attrib attr) {
 	return _org_attrib[attr]->getInt();
 }
@@ -427,6 +438,18 @@ bool Organism::setAttribInternal(const char *attrib, const char *value) {
    return true;
 }
 
+bool Organism::setAttribInternal(const char *attrib, Attribute &value) {
+   if (Entity::setAttribInternal(attrib, value))
+      return true;
+
+   unsigned int i = locateInTable(attrib, org_attriblist);
+   if (i == UINT_MAX)
+      return false;
+
+   *(_org_attrib[i]) = value;
+   return true;
+}
+
 bool Organism::getAttribInternal(const char *attrib, int &value) {
    if (Entity::getAttribInternal(attrib, value))
       return true;
@@ -462,6 +485,29 @@ bool Organism::getAttribInternal(const char *attrib, std::string &value) {
 
    value = _org_attrib[i]->getStr();
    return true;
+}
+
+/*********************************************************************************************
+ * getAttribTypeInternal - polymorphic function locates the attribute by its string and returns the type.
+ *
+ *    Returns: attr_type of Int, Float, Str, or Undefined if not found
+ *
+ *********************************************************************************************/
+
+Attribute::attr_type Organism::getAttribTypeInternal(const char *attrib) const {
+
+	// First, check the parent
+	Attribute::attr_type atype = Entity::getAttribTypeInternal(attrib);
+
+	if (atype != Attribute::Undefined)
+		return atype;
+
+	// Now check Organism attributes
+	unsigned int i = locateInTable(attrib, org_attriblist);
+	if (i == UINT_MAX)
+		return Attribute::Undefined;
+
+	return _org_attrib[i]->getType();
 }
 
 /*********************************************************************************************

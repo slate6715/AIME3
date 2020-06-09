@@ -179,4 +179,22 @@ bool equalAbbrev(std::string &buf, const char *compare_str) {
 	return true;
 }
 
+unsigned int getLineNumber(const char *filename, unsigned int offset) {
+	unsigned int count = 0;
+	FILE *fptr = fopen(filename, "r");
+	if (fptr == NULL)
+		return 0;
+
+	for (unsigned int i=0; i<offset; i++) {
+		int results = fgetc(fptr);
+		if (results == EOF)
+			return count;
+		if (results == '\n')
+			count++;
+	}
+
+	fclose(fptr);
+	return count;
+}
+
 

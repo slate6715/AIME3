@@ -31,7 +31,7 @@ public:
    virtual ~Organism();
 
 	enum review_type { Standing, Entering, Leaving };
-	enum org_attrib { Strength, Damage, Last };
+	enum org_attrib { Strength, Constitution, Dexterity, Intelligence, Wisdom, Charisma, Experience, Damage, Last };
 
 	// Virtual functions that do nothing for NPCs
    virtual bool sendFile(const char *filename) { (void) filename; return true; };
@@ -57,6 +57,7 @@ public:
    void setAttribute(org_attrib attr, int val);
    void setAttribute(org_attrib attr, float val);
    void setAttribute(org_attrib attr, const char *val);
+	void setAttribute(org_attrib attr, Attribute &value);
 
    int getAttributeInt(org_attrib attr);
    float getAttributeFloat(org_attrib attr);
@@ -90,12 +91,15 @@ protected:
    virtual bool setAttribInternal(const char *attrib, int value);
    virtual bool setAttribInternal(const char *attrib, float value);
    virtual bool setAttribInternal(const char *attrib, const char *value);
+	virtual bool setAttribInternal(const char *attrib, Attribute &value);
 
    virtual bool getAttribInternal(const char *attrib, int &value);
    virtual bool getAttribInternal(const char *attrib, float &value);
    virtual bool getAttribInternal(const char *attrib, std::string &value);
 
 	virtual void fillAttrXMLNode(pugi::xml_node &anode) const;
+
+	Attribute::attr_type getAttribTypeInternal(const char *attrib) const;
 
 	bool addBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
 

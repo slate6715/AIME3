@@ -6,9 +6,9 @@
 #include <memory>
 #include <vector>
 #include "../external/pugixml.hpp"
+#include "Attribute.h"
 
 class EntityDB;
-class Attribute;
 
 /***************************************************************************************
  * Entity - the most abstract class of interactable MUD objects. This is a generic class
@@ -54,10 +54,13 @@ public:
 	bool setAttribute(const char *attrib, int value);
 	bool setAttribute(const char *attrib, float value);
 	bool setAttribute(const char *attrib, const char *value);
+   bool setAttribute(const char *attrib, Attribute &value);
 
 	int getAttribInt(const char *attrib);
 	float getAttribFloat(const char *attrib);
 	const char *getAttribStr(const char *attrib, std::string &buf);
+
+	Attribute::attr_type getAttribType(const char *attrib) const;
 
    // Move an entity to a new container (removes from the old)
    bool moveEntity(std::shared_ptr<Entity> new_loc, std::shared_ptr<Entity> self = nullptr);
@@ -105,10 +108,13 @@ protected:
 	virtual bool setAttribInternal(const char *attrib, int value);
 	virtual bool setAttribInternal(const char *attrib, float value);
 	virtual bool setAttribInternal(const char *attrib, const char *value);
+   virtual bool setAttribInternal(const char *attrib, Attribute &value);
 
 	virtual bool getAttribInternal(const char *attrib, int &value);
 	virtual bool getAttribInternal(const char *attrib, float &value);
 	virtual bool getAttribInternal(const char *attrib, std::string &value);
+
+	virtual Attribute::attr_type getAttribTypeInternal(const char *attrib) const;
 
    virtual void fillAttrXMLNode(pugi::xml_node &anode) const;
 	

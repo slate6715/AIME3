@@ -8,7 +8,7 @@ public:
 
 	virtual ~Attribute();
 
-	enum attr_type { Int, Float, String };
+	enum attr_type { Int, Float, String, Undefined };
 
 	virtual int getInt() const;
 	virtual float getFloat() const;
@@ -19,6 +19,8 @@ public:
 	virtual explicit operator int() const;
 	virtual explicit operator float() const;
 	virtual explicit operator const char *() const;
+
+	virtual attr_type getType() { return Undefined; };
 
 	virtual Attribute &operator = (int intval);
    virtual Attribute &operator = (float floatval);
@@ -32,6 +34,7 @@ protected:
 private:
 		
 };
+
 
 // analyzes the string and generates an appropriate Attribute type based on what it sees
 Attribute *genAttrFromStr(const char *str);
@@ -48,12 +51,27 @@ public:
 
    virtual int getInt() const;
 
+   virtual attr_type getType() { return Int; };
+
    virtual void fillXMLNode(pugi::xml_node &anode) const;
 
    virtual explicit operator int() const;
 
 	virtual IntAttribute &operator = (int intval);
    virtual IntAttribute &operator = (const char *strval);
+
+   IntAttribute operator + (int intval);
+   IntAttribute operator + (float floatval);
+   IntAttribute operator + (Attribute &attval);
+   IntAttribute operator - (int intval);
+   IntAttribute operator - (float floatval);
+   IntAttribute operator - (Attribute &attval);
+   IntAttribute operator * (int intval);
+   IntAttribute operator * (float floatval);
+   IntAttribute operator * (Attribute &attval);
+   IntAttribute operator / (int intval);
+   IntAttribute operator / (float floatval);
+   IntAttribute operator / (Attribute &attval);
 
 private:
 	int _val;	
@@ -69,12 +87,28 @@ public:
 
    virtual float getFloat() const;
 
+   virtual attr_type getType() { return Float; };
+
    virtual void fillXMLNode(pugi::xml_node &anode) const;
 
    virtual explicit operator float() const;
 
    virtual FloatAttribute &operator = (float floatval);
    virtual FloatAttribute &operator = (const char *strval);
+
+   FloatAttribute operator + (int intval);
+   FloatAttribute operator + (float floatval);
+   FloatAttribute operator + (Attribute &attval);
+   FloatAttribute operator - (int intval);
+   FloatAttribute operator - (float floatval);
+   FloatAttribute operator - (Attribute &attval);
+   FloatAttribute operator * (int intval);
+   FloatAttribute operator * (float floatval);
+   FloatAttribute operator * (Attribute &attval);
+   FloatAttribute operator / (int intval);
+   FloatAttribute operator / (float floatval);
+   FloatAttribute operator / (Attribute &attval);
+
 
 private:
    float _val;
@@ -89,12 +123,15 @@ public:
 
    virtual const char *getStr() const;
 
+   virtual attr_type getType() { return String; };
+
    virtual void fillXMLNode(pugi::xml_node &anode) const;
 
    virtual explicit operator const char *() const;
 
    virtual StrAttribute &operator = (const char *strval);
    virtual StrAttribute &operator = (std::string &strval);
+
 
 private:
    std::string _val;

@@ -285,11 +285,10 @@ std::shared_ptr<Entity> Entity::getContained(Entity *eptr) {
  *********************************************************************************************/
 
 void Entity::setFlag(const char *flagname, bool newval) {
+	std::stringstream msg;
 	if (!setFlagInternal(flagname, newval)) {
-		std::string msg("Unrecognized flag for entity class '");
-		msg += flagname;
-		msg += "'";
-		throw std::invalid_argument(msg.c_str());
+		msg << "Unrecognized flag '" << flagname << "' for entity class.";
+		throw std::invalid_argument(msg.str().c_str());
 	}
 }
 
@@ -312,12 +311,11 @@ bool Entity::setFlagInternal(const char *flagname, bool newval) {
 
 bool Entity::isFlagSet(const char *flagname) {
 	bool results;
+	std::stringstream msg;
 
 	if (!isFlagSetInternal(flagname, results)) {
-      std::string msg("Unrecognized flag for entity class '");
-      msg += flagname;
-      msg += "'";
-      throw std::invalid_argument(msg.c_str());
+		msg << "Unrecognized flag '" << flagname << "' for entity class.";
+      throw std::invalid_argument(msg.str().c_str());
 	}
 	return results;
 }
@@ -399,6 +397,11 @@ bool Entity::setAttribute(const char *attrib, const char *value) {
    return setAttribInternal(attrib, value);
 }
 
+// Special function also allows for string int and floats (converts internally)
+bool Entity::setAttribute(const char *attrib, Attribute &value) {
+   return setAttribInternal(attrib, value);
+}
+
 int Entity::getAttribInt(const char *attrib) {
 	int value;
 	if (!getAttribInternal(attrib, value)) {
@@ -453,6 +456,12 @@ bool Entity::setAttribInternal(const char *attrib, const char *value) {
    return false;
 }
 
+bool Entity::setAttribInternal(const char *attrib, Attribute &value) {
+   (void) attrib;
+   (void) value;
+   return false;
+}
+
 bool Entity::getAttribInternal(const char *attrib, int &value) {
    (void) attrib;
    (void) value;
@@ -469,6 +478,25 @@ bool Entity::getAttribInternal(const char *attrib, std::string &value) {
    (void) attrib;
    (void) value;
    return false;
+}
+
+/*********************************************************************************************
+ * getAttribType - locates the attribute by its string and returns the type.
+ *                   calls a polymorphic version getAttribTypeInternal
+ *
+ *    Returns: attr_type of Int, Float, Str, or Undefined if not found
+ *
+ *********************************************************************************************/
+
+Attribute::attr_type Entity::getAttribType(const char *attrib) const {
+   return getAttribTypeInternal(attrib);
+}
+
+Attribute::attr_type Entity::getAttribTypeInternal(const char *attrib) const {
+	(void) attrib;
+
+   // No Entity-level attributes yet
+   return Attribute::Undefined;
 }
 
 

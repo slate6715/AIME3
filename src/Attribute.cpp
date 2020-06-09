@@ -286,4 +286,106 @@ void StrAttribute::fillXMLNode(pugi::xml_node &anode) const {
 
 }
 
+/*********************************************************************************************
+ * ******* operator overloading for each possible conversion *******
+ *
+ *
+ *********************************************************************************************/
+
+IntAttribute IntAttribute::operator + (int intval) { return IntAttribute(_val + intval); }
+IntAttribute IntAttribute::operator + (float floatval) { return IntAttribute(_val + (int) floatval); }
+IntAttribute IntAttribute::operator + (Attribute &attval) {
+	if (attval.getType() == Int)
+		return IntAttribute(_val + attval.getInt());
+	else if (attval.getType() == Float) {
+		return IntAttribute(_val + (int) (attval.getFloat()));
+	} else {
+		throw std::invalid_argument("Operator + not allowed between int and string Attribute");
+	}
+}
+
+IntAttribute IntAttribute::operator - (int intval) { return IntAttribute(_val - intval); }
+IntAttribute IntAttribute::operator - (float floatval) { return IntAttribute(_val - (int) floatval); }
+IntAttribute IntAttribute::operator - (Attribute &attval) {
+   if (attval.getType() == Int)
+      return IntAttribute(_val - attval.getInt());
+   else if (attval.getType() == Float) {
+      return IntAttribute(_val - (int) (attval.getFloat()));
+   } else {
+      throw std::invalid_argument("Operator - not allowed between int and string Attribute");
+   }
+}
+
+IntAttribute IntAttribute::operator * (int intval) { return IntAttribute(_val * intval); }
+IntAttribute IntAttribute::operator * (float floatval) { return IntAttribute((int) (_val * floatval)); }
+IntAttribute IntAttribute::operator * (Attribute &attval) {
+   if (attval.getType() == Int)
+      return IntAttribute(_val * attval.getInt());
+   else if (attval.getType() == Float) {
+      return IntAttribute((int) (_val * (attval.getFloat())));
+   } else {
+      throw std::invalid_argument("Operator * not allowed between int and string Attribute");
+   }
+}
+
+IntAttribute IntAttribute::operator / (int intval) { return IntAttribute(_val / intval); }
+IntAttribute IntAttribute::operator / (float floatval) { return IntAttribute((int) (_val / floatval)); }
+IntAttribute IntAttribute::operator / (Attribute &attval) {
+   if (attval.getType() == Int)
+      return IntAttribute(_val / attval.getInt());
+   else if (attval.getType() == Float) {
+      return IntAttribute((int) (_val / (attval.getFloat())));
+   } else {
+      throw std::invalid_argument("Operator / not allowed between int and string Attribute");
+   }
+}
+
+FloatAttribute FloatAttribute::operator + (int intval) { return FloatAttribute(_val + (float) intval); }
+FloatAttribute FloatAttribute::operator + (float floatval) { return FloatAttribute(_val + floatval); }
+FloatAttribute FloatAttribute::operator + (Attribute &attval) {
+   if (attval.getType() == Int)
+      return FloatAttribute(_val + (float) attval.getInt());
+   else if (attval.getType() == Float) {
+      return FloatAttribute(_val + attval.getFloat());
+   } else {
+      throw std::invalid_argument("Operator + not allowed between int and string Attribute");
+   }
+}
+
+FloatAttribute FloatAttribute::operator - (int intval) { return FloatAttribute(_val - (float) intval); }
+FloatAttribute FloatAttribute::operator - (float floatval) { return FloatAttribute(_val - floatval); }
+FloatAttribute FloatAttribute::operator - (Attribute &attval) {
+   if (attval.getType() == Int)
+      return FloatAttribute(_val - (float) attval.getInt());
+   else if (attval.getType() == Float) {
+      return FloatAttribute(_val - attval.getFloat());
+   } else {
+      throw std::invalid_argument("Operator - not allowed between int and string Attribute");
+   }
+}
+
+FloatAttribute FloatAttribute::operator * (int intval) { return FloatAttribute(_val * (float) intval); }
+FloatAttribute FloatAttribute::operator * (float floatval) { return FloatAttribute(_val * floatval); }
+FloatAttribute FloatAttribute::operator * (Attribute &attval) {
+   if (attval.getType() == Int)
+      return FloatAttribute(_val * (float) attval.getInt());
+   else if (attval.getType() == Float) {
+      return FloatAttribute(_val * attval.getFloat());
+   } else {
+      throw std::invalid_argument("Operator * not allowed between int and string Attribute");
+   }
+}
+
+FloatAttribute FloatAttribute::operator / (int intval) { return FloatAttribute(_val / (float) intval); }
+FloatAttribute FloatAttribute::operator / (float floatval) { return FloatAttribute(_val / floatval); }
+FloatAttribute FloatAttribute::operator / (Attribute &attval) {
+   if (attval.getType() == Int)
+      return FloatAttribute(_val / attval.getInt());
+   else if (attval.getType() == Float) {
+      return FloatAttribute(_val / (attval.getFloat()));
+   } else {
+      throw std::invalid_argument("Operator / not allowed between int and string Attribute");
+   }
+}
+
 

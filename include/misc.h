@@ -39,3 +39,5 @@ struct path_leaf_string
 		return entry.path().leaf().string();
 	}
 };
+
+unsigned int getLineNumber(const char *filename, unsigned int offset);
