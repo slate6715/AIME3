@@ -212,4 +212,14 @@ const char *Getable::listContents(std::string &buf, const Entity *exclude) const
    return buf.c_str();
 }
 
+/*********************************************************************************************
+ * getGameName - fills the buffer with the primary name that the game refers to this entity.
+ *
+ *
+ *********************************************************************************************/
+
+const char *Getable::getGameName(std::string &buf) {
+	buf = _title;
+	return buf.c_str();
+}
 

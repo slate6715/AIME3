@@ -237,14 +237,10 @@ bool Static::hasAltName(const char *str, bool allow_abbrev) {
 	std::string buf = str;
 
 	for (unsigned int i=0; i<_altnames.size(); i++) {
-		if (allow_abbrev) {
-			if (buf.compare(0, buf.size(), _altnames[i]) == 0)
-				return true;
-		}
-		else {
-			if (buf.compare(str) == 0)
-				return true;
-		}
+		if ((!allow_abbrev) && (buf.compare(_altnames[i]) == 0))
+			return true;
+		else if ((allow_abbrev) && equalAbbrev(buf, _altnames[i].c_str()))
+			return true;
 	}
 	return false;
 
@@ -259,6 +255,11 @@ bool Static::hasAltName(const char *str, bool allow_abbrev) {
 void Static::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
    std::stringstream msg;
 
+	// If startloc == "none", then it starts in limbo
+	if (_startloc.compare("none") == 0) {
+		return;
+	}
+
 	// Place this at its start location
    std::shared_ptr<Entity> entptr = edb.getEntity(_startloc.c_str());
 
@@ -272,28 +273,36 @@ void Static::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
 
 }
 
+
 /*********************************************************************************************
- * getContained - given a name or altname, gets an entity contained within this static
+ * getContainedByName - returns a shared_ptr to the contained entity that matches the name.
+ *             Polymorphic. For this class version, only matches the name field
  *
- *    Params:   
- *             allow_abbrev - should matching allow for abbreviated versions?
+ *    Params:  name - string to search the NameID for
+ *             allow_abbrev - if true, entity only needs to match up to sizeof(name)
+ *
+ *    Returns: shared_ptr if found, nullptr if not
  *
  *********************************************************************************************/
 
-std::shared_ptr<Entity> Static::getContained(const char *name_alias, bool allow_abbrev) {
-	std::string name = name_alias;
+std::shared_ptr<Entity> Static::getContainedByName(const char *name, bool allow_abbrev) {
+   std::string namebuf = name;
+   std::string ebuf;
 
-	std::shared_ptr<Entity> results = Entity::getContained(name_alias, allow_abbrev);
-	if (results != nullptr)
-		return results;
-	
-	// Still not found, check abbreviations
-	auto eit = _contained.begin();
-	for ( ; eit != _contained.end(); eit++) {
-		if ((*eit)->hasAltName(name_alias, allow_abbrev))
-			return *eit;
-	}
-	return nullptr;
+	// Check by title or nameID
+   std::shared_ptr<Entity> results = Entity::getContainedByName(name, allow_abbrev);
+   if (results != nullptr)
+      return results;
+
+   // Search by altnames next
+   auto eit = _contained.begin();
+   for ( ; eit != _contained.end(); eit++) {
+      if (eit->get()->hasAltName(name, allow_abbrev))
+         return *eit;
+   }
+
+   return nullptr;
+
 }
 
 /*********************************************************************************************
@@ -302,7 +311,8 @@ std::shared_ptr<Entity> Static::getContained(const char *name_alias, bool allow_
  *
  *********************************************************************************************/
 
-const char *Static::listContents(std::string &buf) const {
+const char *Static::listContents(std::string &buf, const Entity *exclude) const {
+	(void) exclude; // Not used in this version
    auto cit = _contained.begin();
 
    // Show getables first
@@ -411,5 +421,15 @@ bool Static::close(std::string &errmsg) {
 
    setDoorState(Closed);
    return true;
+}
+
+/*********************************************************************************************
+ * getGameName - fills the buffer with the primary name that the game refers to this entity.
+ *
+ *
+ *********************************************************************************************/
+
+const char *Static::getGameName(std::string &buf) {
+	return getNameID(buf);
 }
 

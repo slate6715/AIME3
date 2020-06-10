@@ -1,6 +1,8 @@
-6/09/2020
+6/10/2020
 - Added additional flags to Static, Getable and Equipment to support a MUD test zone - no functionality yet
 - Added masks to traits so they can set up a character when applied - not tested yet
+- Fixed an issue with listContained that was breaking polymorphism and not showing items in inventory
+- Modifed functions getContained to getContainedByPtr, getContainedByID, getContainedByName for clarity of function
 
 6/07/2020
 - Created the Trait entity and had them loaded in EntityDB

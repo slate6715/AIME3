@@ -33,6 +33,9 @@ public:
 	enum review_type { Standing, Entering, Leaving };
 	enum org_attrib { Strength, Constitution, Dexterity, Intelligence, Wisdom, Charisma, Experience, Damage, Last };
 
+	// Gets the primary reference name the game refers to this organism by
+   virtual const char *getGameName(std::string &buf);
+
 	// Virtual functions that do nothing for NPCs
    virtual bool sendFile(const char *filename) { (void) filename; return true; };
    // Send a message to this entity or its contents - class-specific behavior

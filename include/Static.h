@@ -27,6 +27,9 @@ public:
 	void setDesc(const char *newdesc);
 	void setStartLoc(const char *newloc);
 	void addAltName(const char *names);
+	
+   // Gets the primary reference name the game refers to this entity by
+	virtual const char *getGameName(std::string &buf);
 
 	virtual const char *getDesc() const { return _desc.c_str(); };
 	const char *getStartLoc() const { return _startloc.c_str(); };
@@ -36,9 +39,9 @@ public:
    // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
    virtual void addLinks(EntityDB &edb, std::shared_ptr<Entity> self);
 
-	virtual std::shared_ptr<Entity> getContained(const char *name_alias, bool allow_abbrev=true);
+   virtual std::shared_ptr<Entity> getContainedByName(const char *name, bool allow_abbrev = true);
 
-	virtual const char *listContents(std::string &buf) const;
+	virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const;
 
    doorstate getDoorState() { return _state; };
    void setDoorState(doorstate new_state) { _state = new_state; };

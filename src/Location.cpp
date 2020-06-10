@@ -382,27 +382,34 @@ const char *Location::getExitsStr(std::string &buf) {
 }
 
 /*********************************************************************************************
- * getContained - given a name or altname, gets an entity contained within this static
+ * getContainedByName - returns a shared_ptr to the contained entity that matches the name.
+ *             Polymorphic. For this class version, only matches the name field
  *
- *    Params:
- *             allow_abbrev - should matching allow for abbreviated versions?
+ *    Params:  name - string to search the NameID for
+ *             allow_abbrev - if true, entity only needs to match up to sizeof(name)
+ *
+ *    Returns: shared_ptr if found, nullptr if not
  *
  *********************************************************************************************/
 
-std::shared_ptr<Entity> Location::getContained(const char *name_alias, bool allow_abbrev) {
-   std::string name = name_alias;
+std::shared_ptr<Entity> Location::getContainedByName(const char *name, bool allow_abbrev) {
+   std::string namebuf = name;
+   std::string ebuf;
 
-   std::shared_ptr<Entity> results = Entity::getContained(name_alias, allow_abbrev);
+   // Check by title or nameID
+   std::shared_ptr<Entity> results = Entity::getContainedByName(name, allow_abbrev);
    if (results != nullptr)
       return results;
 
-   // Still not found, check abbreviations
+   // Search by altnames next
    auto eit = _contained.begin();
    for ( ; eit != _contained.end(); eit++) {
-      if ((*eit)->hasAltName(name_alias, allow_abbrev))
+      if (eit->get()->hasAltName(name, allow_abbrev))
          return *eit;
    }
+
    return nullptr;
+
 }
 
 /*********************************************************************************************

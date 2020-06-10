@@ -22,6 +22,9 @@ public:
 
 	enum gflags { NoGet, NoDrop, Food };
 
+   // Gets the primary reference name the game refers to this entity by
+   virtual const char *getGameName(std::string &buf);
+
 	// void setDesc(const char *newdesc);
 
 	// virtual const char *getDesc() const { return _desc.c_str(); };

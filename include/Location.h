@@ -47,7 +47,7 @@ public:
 	// Assembles a formatted list of the visible exits
 	const char *getExitsStr(std::string &buf);
 
-   virtual std::shared_ptr<Entity> getContained(const char *name_alias, bool allow_abbrev=true);
+   virtual std::shared_ptr<Entity> getContainedByName(const char *name, bool allow_abbrev = true);
 
    // Send a message to this entity or its contents - class-specific behavior
    virtual void sendMsg(const char *msg, std::shared_ptr<Entity> exclude=nullptr); 

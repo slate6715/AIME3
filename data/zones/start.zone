@@ -8,7 +8,7 @@ To the east, there's appears to be slightly less darkness.
 </desc>
 </location> 
 
-<static id="surface" startloc="start:thevoid">
+<static id="start:surface" startloc="start:thevoid">
 <desc>The surface, while solid enough to hold your weight, flexes with each step. This is accompanied by hundreds of faint crinkling noises that almost sound like static.
 </desc>
 <altname name="ground" />

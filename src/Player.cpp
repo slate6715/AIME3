@@ -814,7 +814,8 @@ bool Player::isFlagSetInternal(const char *flagname, bool &results) {
  *
  *********************************************************************************************/
 
-const char *Player::listContents(std::string &buf) const {
+const char *Player::listContents(std::string &buf, const Entity *exclude) const {
+	(void) exclude;
    auto cit = _contained.begin();
 
 	if (_contained.size() == 0) {

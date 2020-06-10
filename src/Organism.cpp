@@ -658,12 +658,12 @@ const char *Organism::listContents(std::string &buf, const Entity *exclude) cons
 		
    // Show worn equipment that is marked as visible
    for ( ; cit != _contained.end(); cit++) {
-      std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Equipment>(*cit);
+      std::shared_ptr<Equipment> eptr = std::dynamic_pointer_cast<Equipment>(*cit);
 
-      if ((gptr == nullptr) || (*gptr == exclude))
+      if ((eptr == nullptr) || (*eptr == exclude))
          continue;
 
-      buf += gptr->getRoomDesc();
+      buf += eptr->getRoomDesc();
       buf += "\n";
    }
 
@@ -733,4 +733,15 @@ void Organism::sendTraits() {
    }
 
 }
+
+/*********************************************************************************************
+ * getGameName - fills the buffer with the primary name that the game refers to this entity. 
+ *               
+ *
+ *********************************************************************************************/
+
+const char *Organism::getGameName(std::string &buf) {
+	return getNameID(buf);
+}
+
 

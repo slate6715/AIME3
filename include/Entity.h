@@ -31,6 +31,8 @@ public:
 	const char *getZoneID(std::string &buf) const;
 	const char *getTypeName() const { return _typename.c_str(); };
 
+	virtual const char *getGameName(std::string &buf) { (void) buf; return NULL; }; 
+
 	// Functions with representation in child classes
 	virtual const char *getDesc() const { return NULL; };
 	virtual const char *getTitle() const { return NULL; };
@@ -72,9 +74,10 @@ public:
    // Checks if this entity contains the parameter entity
    bool containsEntity(std::shared_ptr<Entity> ent_ptr);
 
-   // Retrieved the shared pointer matching the entity pointer
-   std::shared_ptr<Entity> getContained(Entity *eptr);
-	virtual std::shared_ptr<Entity> getContained(const char *name_alias, bool allow_abbrev=true);
+   // Retrieved the shared pointer matching the parameter information
+   std::shared_ptr<Entity> getContainedByPtr(Entity *eptr);
+	std::shared_ptr<Entity> getContainedByID(const char *id);
+	virtual std::shared_ptr<Entity> getContainedByName(const char *name, bool allow_abbrev = true);
 
 	std::shared_ptr<Entity> getCurLoc() { return _cur_loc; };
 

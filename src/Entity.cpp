@@ -1,9 +1,11 @@
 #include <cstring>
 #include <iostream>
 #include <sstream>
+#include <regex>
 #include "Entity.h"
 #include "global.h"
 #include "Attribute.h"
+#include "misc.h"
 
 
 /*********************************************************************************************
@@ -112,6 +114,12 @@ int Entity::loadData(pugi::xml_node &entnode) {
 	_id = attr.value();
 
 	std::stringstream errmsg;
+	std::regex idcheck("\\w+:\\w+");
+	if (!std::regex_match(_id, idcheck)) {
+		errmsg << "ID '" << _id << "' invalid format. Should be <zone>:<id> where zone and ID are alphanumeric or _";
+		mudlog->writeLog(errmsg.str().c_str());
+		return 0;
+	}
 
    // Get the Flags (if any)
    for (pugi::xml_node flag = entnode.child("flag"); flag; flag = flag.next_sibling("flag")) {
@@ -218,6 +226,7 @@ bool Entity::removeEntity(std::shared_ptr<Entity> ent_ptr) {
    for ( ; cptr != _contained.end(); cptr++) {
       if (ent_ptr == *cptr){
          _contained.erase(cptr);
+			_cur_loc = nullptr;
 			return true;
 		}
    }
@@ -244,7 +253,7 @@ bool Entity::moveEntity(std::shared_ptr<Entity> new_ent, std::shared_ptr<Entity>
 	}
 
 	if (self == nullptr) {
-		self = _cur_loc->getContained(this);
+		self = _cur_loc->getContainedByPtr(this);
 		if (self == nullptr){
 			throw std::runtime_error("Entity::moveEntity: Could not retrieve self shared_ptr");
 		}
@@ -259,13 +268,13 @@ bool Entity::moveEntity(std::shared_ptr<Entity> new_ent, std::shared_ptr<Entity>
 }
 
 /*********************************************************************************************
- * getContained - retrieves the shared pointer of the contained entity based on a regular pointer
+ * getContainedByPtr - retrieves the shared pointer of the contained entity based on a regular pointer
  *
  *    Returns: applicable shared pointer (which points to null if failed) 
  *
  *********************************************************************************************/
 
-std::shared_ptr<Entity> Entity::getContained(Entity *eptr) {
+std::shared_ptr<Entity> Entity::getContainedByPtr(Entity *eptr) {
    auto cptr = _contained.begin();
 
    for ( ; cptr != _contained.end(); cptr++) {
@@ -274,6 +283,59 @@ std::shared_ptr<Entity> Entity::getContained(Entity *eptr) {
       }
    }
    return std::shared_ptr<Entity>(nullptr);
+}
+
+/*********************************************************************************************
+ * getContainedByID - returns a shared_ptr to the contained entity that matches name_alias. This
+ *                   version only checks id
+ *
+ *    Returns: shared_ptr if found, nullptr if not
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Entity> Entity::getContainedByID(const char *name_alias) {
+   std::string name = name_alias;
+
+   // Search through the contained for the object
+   auto eit = _contained.begin();
+   for ( ; eit != _contained.end(); eit++) {
+
+      if (name.compare(eit->get()->getID()) == 0)
+         return *eit;
+   }
+   return nullptr;
+
+}
+
+/*********************************************************************************************
+ * getContainedByName - returns a shared_ptr to the contained entity that matches the name.
+ *					Polymorphic. For this class version, only matches the game name field which varies
+ *             depending on the entity class
+ *
+ *		Params:	name - string to search the NameID for
+ *					allow_abbrev - if true, entity only needs to match up to sizeof(name)
+ *
+ *    Returns: shared_ptr if found, nullptr if not
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Entity> Entity::getContainedByName(const char *name, bool allow_abbrev) {
+   std::string namebuf = name;
+	std::string ebuf;
+
+   // Search through the contained for the object
+   auto eit = _contained.begin();
+   for ( ; eit != _contained.end(); eit++) {
+
+		// Get the Game name which might be Title or NameID
+		eit->get()->getGameName(ebuf);
+      if ((!allow_abbrev) && (namebuf.compare(ebuf) == 0))
+         return *eit;
+		else if ((allow_abbrev) && equalAbbrev(namebuf, ebuf.c_str()))
+			return *eit;
+   }
+   return nullptr;
+
 }
 
 /*********************************************************************************************
@@ -327,30 +389,6 @@ bool Entity::isFlagSetInternal(const char *flagname, bool &results) {
 	return false;
 }
 
-
-/*********************************************************************************************
- * getContained - returns a shared_ptr to the contained entity that matches name_alias. This
- *					   version only checks id
- *
- *    Returns: shared_ptr if found, nullptr if not 
- *
- *********************************************************************************************/
-
-std::shared_ptr<Entity> Entity::getContained(const char *name_alias, bool allow_abbrev) {
-   std::string name = name_alias;
-	std::string buf;
-
-   // First, look for the name
-   auto eit = _contained.begin();
-   for ( ; eit != _contained.end(); eit++) {
-      if ((!allow_abbrev) && name.compare((*eit)->getID()))
-         return *eit;
-      else if ((allow_abbrev) && name.compare(0, name.size(), (*eit)->getNameID(buf)) == 0)
-         return *eit;
-   }
-	return nullptr;
-
-}
 
 /*********************************************************************************************
  * purgeEntity - Removes all references to the parameter from the Entities in the database so

@@ -46,7 +46,7 @@ public:
 
 	// Send location contents to the player
 	void sendLocContents();
-   virtual const char *listContents(std::string &buf) const;
+   virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const;
 
 	// Displays the exits of the current location to the user
 	virtual void sendExits();

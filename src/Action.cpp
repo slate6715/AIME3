@@ -385,12 +385,12 @@ std::shared_ptr<Entity> Action::findTarget(std::string &name, std::string &errms
 
    // Check inventory first 
 	if (isActFlagSet(TargetInv)) {
-		target1 = agent->getContained(name.c_str());
+		target1 = agent->getContainedByName(name.c_str());
 	}
 
 	// Now check location if applicable
 	if ((target1 == nullptr) && (isActFlagSet(TargetLoc))) {
-		target1 = cur_loc->getContained(name.c_str());
+		target1 = cur_loc->getContainedByName(name.c_str());
 	}
 
 	// Raise an error if we didn't find anything and we're not checking the entire MUD
