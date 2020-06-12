@@ -1,5 +1,8 @@
 6/12/2020
-- Added the ScriptEngine class to manage scripting
+- Added the ScriptEngine class to manage scripting/specials
+- Integrated Python script embedding to the MUD engine
+- Added the IEntity and IMUD classes to interface with the broader mud and Entity objects from scripts
+- Implemented the preaction and postaction triggers for specials
 
 6/10/2020
 - Added additional flags to Static, Getable and Equipment to support a MUD test zone - no functionality yet

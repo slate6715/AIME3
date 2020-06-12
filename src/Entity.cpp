@@ -245,7 +245,7 @@ bool Entity::removeEntity(std::shared_ptr<Entity> ent_ptr) {
    for ( ; cptr != _contained.end(); cptr++) {
       if (ent_ptr == *cptr){
          _contained.erase(cptr);
-			_cur_loc = nullptr;
+			ent_ptr->_cur_loc = nullptr;
 			return true;
 		}
    }
