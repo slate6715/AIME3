@@ -1,3 +1,6 @@
+6/12/2020
+- Added the ScriptEngine class to manage scripting
+
 6/10/2020
 - Added additional flags to Static, Getable and Equipment to support a MUD test zone - no functionality yet
 - Added masks to traits so they can set up a character when applied - not tested yet

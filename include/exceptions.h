@@ -24,4 +24,10 @@ public:
    logfile_error(const char *what_arg):runtime_error(what_arg) {}   
 };
 
+class script_error : public std::runtime_error {
+public:
+   script_error(const std::string &what_arg):runtime_error(what_arg) {}
+   script_error(const char *what_arg):runtime_error(what_arg) {}
+};
+
 #endif

@@ -44,7 +44,7 @@ Action::Action(const char *id):
 								_exec_time(),
 								_tokens(),
 								_act_ptr(NULL),
-								_agent(),
+								_actor(),
 								_actflags()
 {
 	_typename = "Action";
@@ -60,8 +60,11 @@ Action::Action(const Action &copy_from):
 								_exec_time(copy_from._exec_time),
 								_tokens(copy_from._tokens),
 								_act_ptr(copy_from._act_ptr),
-								_agent(copy_from._agent),
-								_actflags(copy_from._actflags)
+								_actor(copy_from._actor),
+								_actflags(copy_from._actflags),
+								_alias(copy_from._alias),
+								_pretrig(copy_from._pretrig),
+								_posttrig(copy_from._posttrig)
 {
 
 }
@@ -184,7 +187,7 @@ int Action::loadData(pugi::xml_node &entnode) {
 		setFormat(attr.value());
 	}
 
-   // Get the Exits (if any)
+   // Get the command aliases
    for (pugi::xml_node alias = entnode.child("alias"); alias; alias = alias.next_sibling("alias")) {
 
       // Get the alternate alias this command can be called with
@@ -200,6 +203,14 @@ int Action::loadData(pugi::xml_node &entnode) {
       _alias.push_back(aliasstr.c_str());
 
 	}	
+
+	attr = entnode.attribute("pretrig");
+	if (attr != nullptr)
+		_pretrig = attr.value();
+
+   attr = entnode.attribute("posttrig");
+   if (attr != nullptr)
+      _posttrig = attr.value();
 
 	return 1;
 }
@@ -226,8 +237,6 @@ int Action::execute(MUD &engine) {
 		throw std::runtime_error("Unsupported action type found.");
 	}
 
-	_agent->sendPrompt();
-
 	return results;
 }
 
@@ -242,15 +251,15 @@ void Action::setExecuteNow()
 }
 
 /*********************************************************************************************
- * setAgent - sets the organism that is taking this action
+ * setActor - sets the organism that is taking this action
  *
- *    Params:  agent - a shared_ptr that has been dynamically-cast to an Organism pointer (using
+ *    Params:  actor - a shared_ptr that has been dynamically-cast to an Organism pointer (using
  *							  dynamic_pointer_cast to maintain pointer tracking)
  *
  *********************************************************************************************/
 
-void Action::setAgent(std::shared_ptr<Organism> agent) {
-	_agent = agent;
+void Action::setActor(std::shared_ptr<Organism> actor) {
+	_actor = actor;
 }
 
 /*********************************************************************************************
@@ -380,12 +389,12 @@ std::shared_ptr<Entity> Action::findTarget(std::string &name, std::string &errms
 																			UserMgr &umgr) {
 
 	std::shared_ptr<Entity> target1;
-   std::shared_ptr<Organism> agent = getAgent();
-   std::shared_ptr<Entity> cur_loc = agent->getCurLoc();
+   std::shared_ptr<Organism> actor = getActor();
+   std::shared_ptr<Entity> cur_loc = actor->getCurLoc();
 
    // Check inventory first 
 	if (isActFlagSet(TargetInv)) {
-		target1 = agent->getContainedByName(name.c_str());
+		target1 = actor->getContainedByName(name.c_str());
 	}
 
 	// Now check location if applicable

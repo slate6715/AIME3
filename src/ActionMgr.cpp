@@ -172,9 +172,23 @@ void ActionMgr::handleActions(MUD &engine) {
 
 	auto cur_time = std::chrono::system_clock::now();
 
+	// Loop through all actions in the queue, executing them
 	auto aptr = _action_queue.begin();
 	while ((aptr != _action_queue.end()) && ((*aptr)->getExecTime() <= cur_time)) {
+
+
 		(*aptr)->execute(engine);
+
+		// Check for post-action triggers
+		std::string posttrig = aptr->get()->getPostTrig();
+		if (posttrig.size() > 0) {
+			handleSpecials(aptr->get(), posttrig.c_str());
+		}
+
+		std::shared_ptr<Organism> actor = aptr->get()->getActor();
+		if (actor != nullptr)
+			actor->sendPrompt();
+
 		aptr = _action_queue.erase(aptr);
 	}
 
@@ -235,7 +249,7 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 
 
 	Action *new_act = new Action(*actptr);
-	new_act->setAgent(actor);
+	new_act->setActor(actor);
 
 	size_t start = pos+1;
 	// Get target 1
@@ -346,6 +360,15 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 		delete new_act;
 		return NULL;
 	}
+
+	// Check for pretrig specials attached to targets or the current location
+	std::string pretrig = new_act->getPreTrig();
+	if (pretrig.size() > 0) {
+		int results = handleSpecials(new_act, pretrig.c_str());
+		if (results == 2)
+			return NULL;
+	}
+
 	// Command line actions are executed right away
 	new_act->setExecuteNow();
 
@@ -453,5 +476,45 @@ std::shared_ptr<Action> ActionMgr::findAction(const char *cmd) {
 		a_iter++;
 	}
 	return nullptr;
+}
+
+/*********************************************************************************************
+ * execSpecial - looks for the given trigger attached to this entity and executes it if found.
+ *
+ *    Params:  trigger - the trigger string to match
+ *             actor - the organism executing this action
+ *
+ *    Returns: -1 for error
+ *             0 indicates the trigger was not found attached to this entity
+ *             1 indicates the trigger executed and the command process should proceed normally
+ *             2 indicates the trigger executed and the command process should terminate
+ *
+ *********************************************************************************************/
+
+int ActionMgr::handleSpecials(Action *action, const char *trigger) {
+	int results = 0;
+
+   // Look for specials on target1 if applicable
+   if (action->getTarget1() != nullptr) {
+      // If the special ran and said to terminate, don't continue
+      if ((results = action->getTarget1()->execSpecial(trigger, action->getActor())) == 2) {
+         return 2;
+      }
+   }
+
+   // Look for specials on target2
+   if (action->getTarget2() != nullptr) {
+      // If the special ran and said to terminate, don't continue
+      if ((results = action->getTarget2()->execSpecial(trigger, action->getActor())) == 2) {
+         return 2;
+      }
+   }
+
+   // Look for specials in the location
+   if ((results = action->getActor()->getCurLoc()->execSpecial(trigger, action->getActor())) == 2) {
+      return 2;
+   }
+
+	return results;
 }
 

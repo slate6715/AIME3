@@ -39,6 +39,7 @@ Organism::Organism(const char *id):
 	addBodyPart("head", "neck");
 	addBodyPart("torso", "chest");
 	addBodyPart("torso", "back");
+	addBodyPart("torso", "waist");
 	addBodyPart("leftleg", "thigh");
 	addBodyPart("leftleg", "foot");
 	addBodyPart("rightleg", "thigh");

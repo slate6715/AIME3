@@ -9,6 +9,7 @@
 #include "Attribute.h"
 
 class EntityDB;
+class Organism;
 
 /***************************************************************************************
  * Entity - the most abstract class of interactable MUD objects. This is a generic class
@@ -97,6 +98,7 @@ public:
 	// it can be safely removed
 	virtual size_t purgeEntity(std::shared_ptr<Entity> item);
 
+	int execSpecial(const char *trigger, std::shared_ptr<Organism> actor);
 
 protected:
 	Entity(const char *id);	// Must be called from the child constructor
@@ -132,6 +134,8 @@ private:
 	std::string _id;
 
 	std::shared_ptr<Entity> _cur_loc;
+	
+	std::vector<std::pair<std::string, std::string>> _specials;
 };
 
 

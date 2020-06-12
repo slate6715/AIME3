@@ -47,6 +47,7 @@ public:
 
 
 private:
+	int handleSpecials(Action *action, const char *trigger);
 
 	// The database of available actions and aliases 
 	std::map<std::string, std::shared_ptr<Action>> _action_db;

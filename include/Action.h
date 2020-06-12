@@ -53,7 +53,7 @@ public:
 	std::chrono::system_clock::time_point getExecTime() const { return _exec_time; };
 	
 	void setExecuteNow();
-	void setAgent(std::shared_ptr<Organism> agent);
+	void setActor(std::shared_ptr<Organism> actor);
 	void setFormat(const char *format);
 	void setTarget1(std::shared_ptr<Entity> target) { _target1 = target; };
    void setTarget2(std::shared_ptr<Entity> target) { _target2 = target; };
@@ -62,7 +62,7 @@ public:
 
 	parse_type getParseType() const { return _ptype; };
 	const char *getFormat() const { return _format.c_str(); };
-	std::shared_ptr<Organism> getAgent() { return _agent; };
+	std::shared_ptr<Organism> getActor() { return _actor; };
 	bool isActFlagSet(act_flags atype);
 
 	// Gets the parsed input token at the given index
@@ -73,6 +73,9 @@ public:
 
 	// Copies the alias list into a new vector
 	std::vector<std::string> getAliases() { return _alias; };
+
+	const char *getPreTrig() const { return _pretrig.c_str(); };
+	const char *getPostTrig() const { return _posttrig.c_str(); };
 
 	// Finds a target based on flags, location, etc--basic availability and populates
 	// errors in the errmsg string
@@ -105,7 +108,7 @@ private:
 	int (*_act_ptr)(MUD &, Action &);
 
 	// The organism executing this action
-	std::shared_ptr<Organism> _agent;
+	std::shared_ptr<Organism> _actor;
 
 	// Action flags stored here
 	std::bitset<32>	_actflags;	
@@ -113,6 +116,12 @@ private:
 	// Alias - alternate names for this command
 	std::vector<std::string> _alias;
 
+	// Specials triggers for this action - pre happens before the command is called
+	// and post after the command finishes executing
+	std::string _pretrig;
+	std::string _posttrig;
+
+	// Target pointers for action execution
 	std::shared_ptr<Entity> _target1;
 	std::shared_ptr<Entity> _target2;
 };

@@ -6,7 +6,7 @@
 #include "global.h"
 #include "Attribute.h"
 #include "misc.h"
-
+#include "ScriptEngine.h"
 
 /*********************************************************************************************
  * EntityDB (constructor) - Called by a child class to initialize any Entity elements
@@ -164,6 +164,25 @@ int Entity::loadData(pugi::xml_node &entnode) {
       }
    }
 
+	for (pugi::xml_node special = entnode.child("special"); special; special = special.next_sibling("special")) {
+		try {
+			pugi::xml_attribute attr = special.attribute("trigger");
+         if (attr == nullptr) {
+            errmsg << getTypeName() << " '" << getID() << "' special node missing mandatory trigger field.";
+            mudlog->writeLog(errmsg.str().c_str());
+            return 0;
+         }
+         std::string trigger = attr.value();
+
+			_specials.push_back(std::pair<std::string, std::string>(trigger, special.child_value()));
+		}
+      catch (std::invalid_argument &e) {
+         errmsg << getTypeName() << " '" << getID() << "' specials error: " << e.what();
+         mudlog->writeLog(errmsg.str().c_str());
+         return 0;
+      }
+	}
+
 	return 1;
 
 }
@@ -252,7 +271,7 @@ bool Entity::moveEntity(std::shared_ptr<Entity> new_ent, std::shared_ptr<Entity>
 		throw std::runtime_error("Entity::moveEntity: attempted to set location to null Entity");
 	}
 
-	if (self == nullptr) {
+	if ((_cur_loc != nullptr) && (self == nullptr)) {
 		self = _cur_loc->getContainedByPtr(this);
 		if (self == nullptr){
 			throw std::runtime_error("Entity::moveEntity: Could not retrieve self shared_ptr");
@@ -585,4 +604,40 @@ bool Entity::close(std::string &errmsg) {
 	errmsg = "You can't close that.\n";
 	return false;
 }
+
+/*********************************************************************************************
+ * execSpecial - looks for the given trigger attached to this entity and executes it if found.
+ *               
+ *		Params:	trigger - the trigger string to match
+ *					actor - the organism executing this action
+ *
+ *		Returns: -1 for error
+ *					0 indicates the trigger was not found attached to this entity
+ *					1 indicates the trigger executed and the command process should proceed normally
+ *					2 indicates the trigger executed and the command process should terminate
+ *
+ *********************************************************************************************/
+
+int Entity::execSpecial(const char *trigger, std::shared_ptr<Organism> actor) {
+
+	// Loop through all the specials attached to this object
+	for (unsigned int i=0; i<_specials.size(); i++) {
+		
+		// Compare special against trigger
+		if (_specials[i].first.compare(trigger) == 0)
+		{
+			ScriptEngine script(_specials[i].second);
+
+			script.setActor(actor);
+
+			script.execute();
+
+			return 1;
+		}
+	}
+
+	// No special found with that trigger, exit
+	return 0;
+}
+
 
