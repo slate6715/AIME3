@@ -6,7 +6,8 @@
 #include "misc.h"
 #include "global.h"
 
-const char *gflag_list[] = {"noget", "nodrop", "food", "rope", NULL};
+const char *gflag_list[] = {"noget", "nodrop", "food", "rope", "luckfast", "thiefonly", "extinguish", 
+								"blockmagic", NULL};
 
 
 /*********************************************************************************************
@@ -17,6 +18,9 @@ Getable::Getable(const char *id):
 								Static(id)
 {
 	_typename = "Getable";
+
+   // Make sure we have at least the bare minimum roomdesc
+   _roomdesc.assign(Custom, std::pair<std::string, std::string>("", ""));
 
 }
 
@@ -73,7 +77,37 @@ int Getable::loadData(pugi::xml_node &entnode) {
    // Get the Altnames (if any)
    for (pugi::xml_node anode = entnode.child("roomdesc");	anode; anode = 
 																					anode.next_sibling("roomdesc")) {
-		pushRoomDesc(anode.child_value());
+	   // Get the state (open, closed, etc) this container or door starts in
+		pugi::xml_attribute attr;
+		if ((attr = anode.attribute("label")) == nullptr) {
+			errmsg << "Getable Object '" << getID() << "' roomdesc missing mandatory label attribute.";
+			mudlog->writeLog(errmsg.str().c_str());
+			return 0;
+		}
+		std::string label = attr.value();
+
+		lower(label);
+
+		if (label.compare("pristine") == 0) {
+			setRoomDesc(Pristine, anode.child_value());
+		} else if (label.compare("dropped") == 0) {
+         setRoomDesc(Dropped, anode.child_value());
+      } else if (label.compare("lit") == 0) {
+         setRoomDesc(Lit, anode.child_value());
+      } else if (label.compare("depleted") == 0) {
+         setRoomDesc(Depleted, anode.child_value());
+      } else if (label.compare("custom") == 0) {
+			if ((attr = anode.attribute("customname")) == nullptr) {
+	         errmsg << "Getable Object '" << getID() << "' custom roomdesc missing mandatory customname attribute.";
+		      mudlog->writeLog(errmsg.str().c_str());
+			   return 0;
+			}
+         setRoomDesc(Custom, anode.child_value(), attr.value());
+		} else {
+         errmsg << "Getable Object '" << getID() << "' roomdesc label '" << label << "' not a recognized label.";
+         mudlog->writeLog(errmsg.str().c_str());
+         return 0;
+		}
    }
 
 	if (_roomdesc.size() == 0) {
@@ -151,33 +185,80 @@ bool Getable::isFlagSetInternal(const char *flagname, bool &results) {
 }
 
 /*********************************************************************************************
- * pushRoomDesc, popRoomDesc, getRoomDesc - manages the roomDesc stack that a user sees when
- *				they look in the room. Only the top on the stack is seen. When an item is gotten, 
- *				typically the stack gets popped.. NOTE: will not allow the last one to be popped.
+ * setRoomDesc - changes the text on a RoomDesc for that particular state. If new_state is 
+ *				set to Custom, then customname must be populated
+ *
+ *		Throws:	invalid_argument if there's an issue with customname
+ *
+ *********************************************************************************************/
+
+void Getable::setRoomDesc(descstates new_state, const char *new_desc, const char *customname) {
+	if (new_state == Custom) {
+		if (customname == NULL)
+			throw std::invalid_argument("Attempt to set Custom roomDesc but no customname is set");
+
+		std::string cname(customname);
+
+		// First see if it already exists
+		for (unsigned int i=Custom; i<_roomdesc.size(); i++) {
+			if (cname.compare(_roomdesc[i].second.c_str()) == 0) {
+				_roomdesc[i].first = new_desc;
+				return;
+			}			
+		}
+
+		// It wasn't found, add it
+		_roomdesc.push_back(std::pair<std::string, std::string>(new_desc, customname));
+		return;
+	}
+
+	_roomdesc[new_state].first = new_desc;
+}
+
+/*********************************************************************************************
+ * changeRoomDesc - changes the RoomDesc state of this Getable. If the newstate is set to Custom, 
+ *                  then customname must be populated
+ *
+ *    Throws:  invalid_argument if there's an issue with customname
+ *
+ *********************************************************************************************/
+
+void Getable::changeRoomDesc(descstates new_state, const char *customname) {
+   if (new_state == Custom) {
+      if (customname == NULL)
+         throw std::invalid_argument("Attempt to change to a Custom roomDesc but no customname is set");
+
+      std::string cname(customname);
+
+      // First see if it already exists
+      for (unsigned int i=Custom; i<_roomdesc.size(); i++) {
+         if (cname.compare(_roomdesc[i].second.c_str()) == 0) {
+				_dstate = i;
+            return;
+         }
+      }
+
+		throw std::invalid_argument("Attempt to change to a Custom roomDesc but the customname doesn't exist");
+   }
+
+   // A little more logic--if no review is set in Dropped
+   if ((new_state == Lit) && (_roomdesc[new_state].first.size() == 0))
+      new_state = Dropped;
+
+   if ((new_state == Dropped) && (_roomdesc[new_state].first.size() == 0))
+      new_state = Pristine;
+
+	_dstate = new_state; 
+}
+
+/*********************************************************************************************
+ * getRoomDesc - gets the currently active roomdesc
  *
  *
  *********************************************************************************************/
 
-   // Manages the roomdesc--the description one sees when they look in the room
-void Getable::pushRoomDesc(const char *new_desc){
-	_roomdesc.push(std::string(new_desc));
-}
-
-void Getable::popRoomDesc() {
-	// Don't let them pop the last roomdesc
-	if (_roomdesc.size() == 1) {
-		std::stringstream msg;
-		msg << "Attempt to remove the last RoomDesc from the stack, Getable '" << 
-						getID() << "'";
-		mudlog->writeLog(msg.str().c_str());
-		return;
-	}
-	
-	_roomdesc.pop();
-}
-
 const char *Getable::getRoomDesc() {
-	return _roomdesc.top().c_str();
+	return _roomdesc[_dstate].first.c_str();
 }
 
 /*********************************************************************************************

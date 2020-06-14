@@ -26,7 +26,7 @@ public:
 
    virtual ~Location();
 
-	enum lflags {Outdoors, Bright, Death, Realtime};
+	enum lflags {Outdoors, Bright, Death, Realtime, NoMobiles, Dark, NoSummon, Private, OnePerson };
 	enum exitflags {Hidden, Special};
 	enum exitdirs {North, South, East, West, Up, Down, Northeast, Northwest, Southeast, Southwest, 
 					   Custom};

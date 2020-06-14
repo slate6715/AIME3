@@ -19,7 +19,7 @@ const char *dir3_list[] = {"the north", "the south", "the east", "the west", "ab
                           "the northwest", "the southeast", "the southwest", "custom", NULL};
 const char *org_attriblist[] = {"strength", "constitution", "dexterity", "intelligence", "wisdom", "charisma", "experience", "damage", NULL};
 
-const char *oflag_list[] = {NULL};
+const char *oflag_list[] = { "NoSummon", NULL};
 
 /*********************************************************************************************
  * Organism (constructor) - Called by a child class to initialize any Organism elements

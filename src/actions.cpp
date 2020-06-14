@@ -234,6 +234,9 @@ int getcom(MUD &engine, Action &act_used) {
 
 		msg << actor->getTitle() << " picks up the " << gptr->getGameName(buf) << ".";
 		cur_loc->sendMsg(msg.str().c_str());
+
+		gptr->changeRoomDesc(Getable::Dropped);
+
 		return 1;
 	}
 
@@ -285,7 +288,7 @@ int getcom(MUD &engine, Action &act_used) {
 		cur_loc->sendMsg(msg.str().c_str(), actor);
 	}
 
-   gptr->popRoomDesc();
+   gptr->changeRoomDesc(Getable::Dropped);
 
    return 1;
 }
@@ -358,7 +361,7 @@ int putcom(MUD &engine, Action &act_used) {
       cur_loc->sendMsg(msg.str().c_str(), actor);
    }
 
-   gptr->popRoomDesc();
+   gptr->changeRoomDesc(Getable::Dropped);
 
    return 1;
 }

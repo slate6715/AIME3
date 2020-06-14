@@ -6,6 +6,8 @@
 
 const char *NPC_attriblist[] = {"aggression", "speed", NULL};
 
+const char *nflag_list[] = {"nosummon", NULL};
+
 /*********************************************************************************************
  * NPC (constructor) - Called by a child class to initialize any NPC elements
  *
@@ -90,8 +92,18 @@ bool NPC::setFlagInternal(const char *flagname, bool newval) {
    if (Organism::setFlagInternal(flagname, newval))
       return true;
 
-   // Here we would look for player flags
-	return false;
+   std::string flagstr = flagname;
+   lower(flagstr);
+
+   size_t i=0;
+   while ((nflag_list[i] != NULL) && (flagstr.compare(nflag_list[i]) != 0))
+      i++;
+
+   if (nflag_list[i] == NULL)
+      return false;
+
+   _npcflags[i] = true;
+   return true;
 }
 
 /*********************************************************************************************
@@ -109,7 +121,18 @@ bool NPC::isFlagSetInternal(const char *flagname, bool &results) {
    if (Organism::isFlagSetInternal(flagname, results))
       return true;
 
-	return false;
+   std::string flagstr = flagname;
+   lower(flagstr);
+
+   size_t i=0;
+   while ((nflag_list[i] != NULL) && (flagstr.compare(nflag_list[i]) != 0))
+      i++;
+
+   if (nflag_list[i] == NULL)
+      return false;
+
+   results =_npcflags[i];
+   return true;
 }
 
 /*********************************************************************************************

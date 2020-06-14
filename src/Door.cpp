@@ -8,7 +8,7 @@
 #include "Location.h"
 #include "Getable.h"
 
-const char *doorflag_list[] = {"hideclosedexit", "ropedoor", NULL};
+const char *doorflag_list[] = {"hideclosedexit", "ropedoor", "pushtoggle", NULL};
 
 
 /*********************************************************************************************

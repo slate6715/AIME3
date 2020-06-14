@@ -16,6 +16,8 @@ public:
    NPC(const NPC &copy_from);
    virtual ~NPC();
 
+	enum nflags { NoSummon };
+
 	enum NPC_attrib {Aggression, Speed};
 
 protected:
@@ -36,7 +38,8 @@ protected:
 private:
 
 	std::string _startloc;
-	
+
+	std::bitset<32> _npcflags;	
 };
 
 

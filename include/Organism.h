@@ -30,7 +30,7 @@ class Organism : public Physical
 public:
 	
    virtual ~Organism();
-
+	
 	enum review_type { Standing, Entering, Leaving };
 	enum org_attrib { Strength, Constitution, Dexterity, Intelligence, Wisdom, Charisma, Experience, Damage, Last };
 

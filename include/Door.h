@@ -22,7 +22,7 @@ public:
 
    virtual ~Door();
 
-	enum doorflags { HideClosedExit, RopeDoor };
+	enum doorflags { HideClosedExit, RopeDoor, PushToggle };
 
    // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
    virtual void addLinks(EntityDB &edb, std::shared_ptr<Physical> self);

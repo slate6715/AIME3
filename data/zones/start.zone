@@ -41,8 +41,8 @@ Admodeus is the picture of the true southern gentleman. He sports a completely w
 <attribute name="size" value="40" />
 <attribute name="damage" value="45" />
 <equipped bpname="hand" bpgroup="rightarm" />
-<roomdesc>A long, black, elegant gentleman's staff lies here.</roomdesc>
-<roomdesc>Admodeus carries a long, black staff casually in his right hand.</roomdesc>
+<roomdesc label="pristine">A long, black, elegant gentleman's staff lies here.</roomdesc>
+<roomdesc label="dropped">Admodeus carries a long, black staff casually in his right hand.</roomdesc>
 <examine>
 The staff is made of a smooth, hard material that appears to absorb all light. It is a consistent width down it's length, terminated by a copper cap at the bottom. At the top, an impossibly-large large pearl has been fixed into the material, providing an easy handhold. 
 </examine>
@@ -54,8 +54,8 @@ The staff is made of a smooth, hard material that appears to absorb all light. I
 <attribute name="damage" value="0" />
 <attribute name="armor" value="10" />
 <equipped bpname="head" bpgroup="head" />
-<roomdesc>A white straw hat lies on the ground.</roomdesc>
-<roomdesc>Admodeus wears a white straw hat on his head, tipped slightly to the side.</roomdesc>
+<roomdesc label="pristine">A white straw hat lies on the ground.</roomdesc>
+<roomdesc label="dropped">Admodeus wears a white straw hat on his head, tipped slightly to the side.</roomdesc>
 <examine>
 The straw hat sports a small brim and has a white cotton band wrapped around it. 
 </examine>
@@ -103,7 +103,7 @@ The straw hat sports a small brim and has a white cotton band wrapped around it.
 <roomdesc state="closed" />
 <roomdesc state="locked" />
 <key id="start:brasskey" />
-<examine> The door is barely visible against the cliff wall, obscured by medium-sized rocks and covered in chalk dust. A simple, metal doorknob juts out from the weathered wood with a small keyhole immediately below. 
+<examine>The door is barely visible against the cliff wall, obscured by medium-sized rocks and covered in chalk dust. A simple, metal doorknob juts out from the weathered wood with a small keyhole immediately below. 
 </examine>
 <examine2>
 </examine2>
@@ -123,8 +123,8 @@ The straw hat sports a small brim and has a white cotton band wrapped around it.
 <altname name="weed" />
 <altname name="seaweed" />
 <altname name="mass" />
-<roomdesc> A mass of kelp has washed up on shore. </roomdesc>
-<roomdesc> A pile of kelp has been discarded here. </roomdesc>
+<roomdesc label="pristine"> A mass of kelp has washed up on shore. </roomdesc>
+<roomdesc label="dropped"> A pile of kelp has been discarded here. </roomdesc>
 </getable>
 
 <location id="start:duskbeach" title="The Beach at Sunset">

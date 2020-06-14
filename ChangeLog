@@ -8,6 +8,7 @@
 - Added functionality for rope doors that "open" when you tie a rope to them
 - Changed a number of _desc attributes to _examine
 - Added parsing for Target2 and modified flags to handle Target1 and Target2 flags
+- Added some extra flags (without code support yet)
 
 6/12/2020
 - Added the ScriptEngine class to manage scripting/specials

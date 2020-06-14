@@ -20,7 +20,7 @@ public:
 
    virtual ~Static();
 
-	enum sflags { Container, Lockable, NotCloseable, Lightable, MagicLit };
+	enum sflags { Container, Lockable, NotCloseable, Lightable, MagicLit, NoSummon };
 
    enum doorstate { Open, Closed, Locked, Special };
 
