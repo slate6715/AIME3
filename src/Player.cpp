@@ -298,6 +298,10 @@ void Player::formatForTelnet(const std::string &unformatted, std::string &format
 			}	
 		}
 
+		// Skip odd characters
+		if (unformatted[i] < 0)
+			continue;
+
 		// Keep going while it's just a regular character
 		if (!keychars[(std::size_t) unformatted[i]]) {
 			_last_wrap++;
