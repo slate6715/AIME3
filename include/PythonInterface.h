@@ -3,24 +3,24 @@
 
 #include <memory>
 
-class Entity;
+class Physical;
 class Organism;
 
-class IEntity {
+class IPhysical {
 public:
-   IEntity(std::shared_ptr<Entity> eptr);
-   IEntity(const IEntity &copy_from);
+   IPhysical(std::shared_ptr<Physical> eptr);
+   IPhysical(const IPhysical &copy_from);
 
    void sendMsg(const char *msg);
 	void sendMsgLoc(const char *msg);
 
-	void moveTo(IEntity new_loc);
+	void moveTo(IPhysical new_loc);
 
    std::string getCurLocID();
 	std::string getTitle();
 
 private:
-   std::shared_ptr<Entity> _eptr;
+   std::shared_ptr<Physical> _eptr;
 };
 
 
@@ -29,7 +29,7 @@ public:
    IMUD();
    ~IMUD();
 
-	IEntity getEntity(const char *id);
+	IPhysical getPhysical(const char *id);
 
 private:
 

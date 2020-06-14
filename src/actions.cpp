@@ -10,6 +10,7 @@
 #include "global.h"
 #include "Getable.h"
 #include "Door.h"
+#include "Equipment.h"
 
 
 /*******************************************************************************************
@@ -74,7 +75,7 @@ int gocom(MUD &engine, Action &act_used) {
 	}
 
 	Location::exitdirs exitval;
-	std::shared_ptr<Entity> exit_loc = cur_loc->getExitAbbrev(dir, &exitval);
+	std::shared_ptr<Physical> exit_loc = cur_loc->getExitAbbrev(dir, &exitval);
 
 	if (exit_loc == nullptr) {
 		actor->sendMsg("There is no exit that direction.\n");
@@ -100,7 +101,7 @@ int gocom(MUD &engine, Action &act_used) {
 
 	cur_loc->sendMsg(reviewstr, actor);
 	cur_loc->sendMsg("\n", actor);
-	actor->moveEntity(exit_loc);
+	actor->movePhysical(exit_loc);
 
    actor->getReviewProcessed(Organism::Entering, reviewstr, Location::getOppositeDir(exitval), dir.c_str());
 	exit_loc->sendMsg(reviewstr, actor);
@@ -131,11 +132,11 @@ int lookcom(MUD &engine, Action &act_used) {
 	if ((preposition.compare("at")) != 0 && (preposition.compare("in") != 0))
 		preposition = "at";
 
-	std::shared_ptr<Entity> target1 = act_used.getTarget1();
+	std::shared_ptr<Physical> target1 = act_used.getTarget1();
 	// Examine something
 	if (preposition.compare("at") == 0) {
 		// Display the description of the entity
-		actor->sendMsg(target1->getDesc());
+		actor->sendMsg(target1->getExamine());
 
 		// If we're examining an organism, also display their visible objects
 		std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(target1);
@@ -192,7 +193,7 @@ int dropcom(MUD &engine, Action &act_used) {
 		return 0;
 	}
 
-	gptr->moveEntity(actor->getCurLoc(), act_used.getTarget1());
+	gptr->movePhysical(actor->getCurLoc(), act_used.getTarget1());
 	std::string msg("You drop the ");
 	msg += gptr->getTitle();
 	msg += "\n";
@@ -206,16 +207,156 @@ int dropcom(MUD &engine, Action &act_used) {
  *******************************************************************************************/
 int getcom(MUD &engine, Action &act_used) {
    std::shared_ptr<Organism> actor = act_used.getActor();
+   std::shared_ptr<Physical> cur_loc = actor->getCurLoc();
+	std::shared_ptr<Physical> pptr;
+	std::shared_ptr<Getable> gptr;
+	std::string buf;
+	bool in_inventory = true;
    (void) engine; // Eliminate compile warnings
 
-   std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(act_used.getTarget1());
-   std::shared_ptr<Entity> cur_loc = actor->getCurLoc();
+	// Need to find the objects ourselves. If only two tokens, then no container involved
+	std::stringstream msg;
+	if (act_used.numTokens() == 2) {
+		if ((pptr = cur_loc->getContainedByName(act_used.getToken(1))) == nullptr) {
+			actor->sendMsg("You cannot find that here.\n");
+			return 0;
+		} 
 
-   gptr->moveEntity(actor, act_used.getTarget1());
-   std::string msg("You pick up the ");
-   msg += gptr->getTitle();
-   msg += "\n";
-   actor->sendMsg(msg.c_str());
+		if ((gptr = std::dynamic_pointer_cast<Getable>(pptr)) == nullptr) {
+			actor->sendMsg("That is not something you can pick up.\n");
+			return 0;
+		}
+
+		gptr->movePhysical(actor, gptr);
+		msg << "You pick up the " << gptr->getGameName(buf) << ".\n";
+		actor->sendMsg(msg.str().c_str());
+		msg.str("");
+
+		msg << actor->getTitle() << " picks up the " << gptr->getGameName(buf) << ".";
+		cur_loc->sendMsg(msg.str().c_str());
+		return 1;
+	}
+
+	// If we're dealing with a container, handle it
+	std::string container;
+	if (act_used.numTokens() == 3)
+		container = act_used.getToken(2);
+	else
+		container = act_used.getToken(3);
+
+	if ((pptr = actor->getContainedByName(container.c_str())) == nullptr) {
+		in_inventory = false;
+		if ((pptr = cur_loc->getContainedByName(container.c_str())) == nullptr) {
+			msg << "You cannot find the " << container << " here.\n";
+			actor->sendMsg(msg.str().c_str());
+			return 0;
+		}
+	}
+
+	
+   std::shared_ptr<Static> sptr = std::dynamic_pointer_cast<Static>(pptr);
+	if ((sptr == nullptr) || (!sptr->isStaticFlagSet(Static::Container))) {
+		msg << "The " << sptr->getGameName(buf) << " is not a container.\n";
+		actor->sendMsg(msg.str().c_str());
+		return 0; 
+	}
+
+	if (sptr->getDoorState() != Static::Open) {
+		msg << "The " << sptr->getGameName(buf) << " is closed.\n";
+		actor->sendMsg(msg.str().c_str());
+		return 0;
+	}
+
+	std::shared_ptr<Physical> pptr2 = sptr->getContainedByName(act_used.getToken(1));
+	if ((pptr2 == nullptr) || ((gptr = std::dynamic_pointer_cast<Getable>(pptr2)) == nullptr)) {
+		msg << "There is no getable object named '" << act_used.getToken(1) << "' in the " << sptr->getGameName(buf) << "\n";
+		actor->sendMsg(msg.str().c_str());
+		return 0;
+	}
+
+   gptr->movePhysical(actor, gptr);
+
+	msg << "You pull the " << gptr->getTitle() << " out of the " << sptr->getGameName(buf) << ".\n";
+	actor->sendMsg(msg.str().c_str());
+
+	if (!in_inventory) {
+		msg.str("");
+		msg << actor->getTitle() << " pulls something out of the " << sptr->getGameName(buf) << ".\n";
+		cur_loc->sendMsg(msg.str().c_str(), actor);
+	}
+
+   gptr->popRoomDesc();
+
+   return 1;
+}
+
+/*******************************************************************************************
+ * putcom - put something in a container
+ *******************************************************************************************/
+int putcom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   std::shared_ptr<Physical> cur_loc = actor->getCurLoc();
+   std::shared_ptr<Physical> pptr;
+   std::shared_ptr<Getable> gptr;
+   std::string buf;
+	std::stringstream msg;
+   bool in_inventory = true;
+   (void) engine; // Eliminate compile warnings
+
+	// First, get the item we want to put in a container
+	if ((pptr = actor->getContainedByName(act_used.getToken(1))) == nullptr) {
+		if ((pptr = cur_loc->getContainedByName(act_used.getToken(1))) == nullptr) {
+         msg << "You cannot find the " << act_used.getToken(1) << " here.\n";
+         actor->sendMsg(msg.str().c_str());
+         return 0;
+		}
+	}
+
+	if ((gptr = std::dynamic_pointer_cast<Getable>(pptr)) == nullptr) {
+		msg << "You cannot pick up the " << pptr->getTitle() << ".\n";
+		actor->sendMsg(msg.str().c_str());
+		return 0;
+	}
+
+   // If we're dealing with a container, handle it
+   std::string container;
+   if (act_used.numTokens() == 3)
+      container = act_used.getToken(2);
+   else
+      container = act_used.getToken(3);
+
+   if ((pptr = actor->getContainedByName(container.c_str())) == nullptr) {
+      in_inventory = false;
+      if ((pptr = cur_loc->getContainedByName(container.c_str())) == nullptr) {
+         msg << "You cannot find the " << container << " here.\n";
+         actor->sendMsg(msg.str().c_str());
+         return 0;
+      }
+   }
+
+   std::shared_ptr<Static> sptr = std::dynamic_pointer_cast<Static>(pptr);
+   if ((sptr == nullptr) || (!sptr->isStaticFlagSet(Static::Container))) {
+      msg << "The " << sptr->getGameName(buf) << " is not a container.\n";
+      actor->sendMsg(msg.str().c_str());
+      return 0;
+   }
+
+   if (sptr->getDoorState() != Static::Open) {
+      msg << "The " << sptr->getGameName(buf) << " is closed.\n";
+      actor->sendMsg(msg.str().c_str());
+      return 0;
+   }
+
+   gptr->movePhysical(sptr, gptr);
+
+   msg << "You put the " << gptr->getTitle() << " in the " << sptr->getTitle() << ".\n";
+   actor->sendMsg(msg.str().c_str());
+
+   if (!in_inventory) {
+      msg.str("");
+      msg << actor->getTitle() << " puts something into the " << sptr->getGameName(buf) << ".\n";
+      cur_loc->sendMsg(msg.str().c_str(), actor);
+   }
 
    gptr->popRoomDesc();
 
@@ -341,7 +482,7 @@ int quitcom(MUD &engine, Action &act_used) {
 	}
 
 	EntityDB &edb = *engine.getEntityDB();
-	edb.purgeEntity(actor);
+	edb.purgePhysical(actor);
 
 	actor->clearNonSaved(false);
 
@@ -360,7 +501,7 @@ int opencom(MUD &engine, Action &act_used) {
 	std::stringstream msg;
    (void) engine; // Eliminate compile warnings
 
-	std::shared_ptr<Entity> target = act_used.getTarget1();
+	std::shared_ptr<Physical> target = act_used.getTarget1();
 	std::string errmsg;
 	if (!target->open(errmsg)) {
 		actor->sendMsg(errmsg.c_str());
@@ -386,7 +527,7 @@ int closecom(MUD &engine, Action &act_used) {
    std::stringstream msg;
    (void) engine; // Eliminate compile warnings
 
-   std::shared_ptr<Entity> target = act_used.getTarget1();
+   std::shared_ptr<Physical> target = act_used.getTarget1();
    std::string errmsg;
    if (!target->close(errmsg)) {
       actor->sendMsg(errmsg.c_str());
@@ -422,6 +563,174 @@ int statscom(MUD &engine, Action &act_used) {
 	actor->sendTraits();
 
 	actor->sendMsg("&+c---------------------------------------------\n\n&*");
+
+   return 1;
+}
+
+/*******************************************************************************************
+ * equipcom - Wear or wield equipment
+ *******************************************************************************************/
+
+int equipcom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   (void) engine; // Eliminate compile warnings
+
+   std::shared_ptr<Equipment> eptr = std::dynamic_pointer_cast<Equipment>(act_used.getTarget1());
+
+   if (eptr == nullptr) {
+      actor->sendMsg("You can't equip that item.\n");
+      return 0;
+	}
+
+	std::string errmsg;
+	if (!actor->equip(eptr, errmsg)) {
+		actor->sendMsg(errmsg.c_str());
+		return 0;
+	}
+
+   std::string msg("You equip the ");
+   msg += eptr->getTitle();
+   msg += "\n";
+   actor->sendMsg(msg.c_str());
+
+   return 1;
+}
+
+/*******************************************************************************************
+ * removecom - Unwear or unwield equipment
+ *******************************************************************************************/
+
+int removecom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   (void) engine; // Eliminate compile warnings
+
+   std::shared_ptr<Equipment> eptr = std::dynamic_pointer_cast<Equipment>(act_used.getTarget1());
+
+   if (eptr == nullptr) {
+      actor->sendMsg("You do not have that equipped.\n");
+      return 0;
+   }
+
+   std::string errmsg;
+   if (!actor->remove(eptr, errmsg)) {
+      actor->sendMsg(errmsg.c_str());
+      return 0;
+   }
+
+   std::string msg("You remove the ");
+   msg += eptr->getTitle();
+   msg += "\n";
+   actor->sendMsg(msg.c_str());
+
+   return 1;
+}
+
+/*******************************************************************************************
+ * tiecom - tie a rope to something, usually a door
+ *******************************************************************************************/
+int tiecom(MUD &engine, Action &act_used) {
+	std::stringstream msg;
+
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   (void) engine; // Eliminate compile warnings
+
+   std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(act_used.getTarget1());
+   std::shared_ptr<Physical> cur_loc = actor->getCurLoc();
+
+	if (!gptr->isGetableFlagSet(Getable::Rope)) {
+		actor->sendMsg("That cannot be tied to anything.\n");
+		return 0;
+	}
+
+	std::shared_ptr<Door> dptr = std::dynamic_pointer_cast<Door>(act_used.getTarget2());
+	if ((dptr == nullptr) || (!dptr->isDoorFlagSet(Door::RopeDoor))) {
+		msg << "You cannot tie the " << gptr->getTitle() << " to anything.\n";
+		actor->sendMsg(msg.str().c_str());
+		return 0;
+	}
+
+	std::string buf;	
+	if (!dptr->open(gptr, buf)) {
+		actor->sendMsg(buf.c_str());
+		return 0;	
+	}
+
+	msg << "You tie the " << gptr->getTitle() << " to the " << dptr->getTitle() << ".\n";
+	actor->sendMsg(msg.str().c_str());
+
+	msg.str("");
+	msg << actor->getTitle() << " ties a " << gptr->getTitle() << " to the " << dptr->getTitle() << ".\n";
+	cur_loc->sendMsg(msg.str().c_str(), actor);
+	
+
+   return 1;
+}
+
+/*******************************************************************************************
+ * untiecom - tie a rope to something, usually a door
+ *******************************************************************************************/
+int untiecom(MUD &engine, Action &act_used) {
+   std::stringstream msg;
+
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   (void) engine;
+
+	// We need to locate these objects manually. If they did not specify a door, find the first door
+	
+   std::shared_ptr<Physical> cur_loc = actor->getCurLoc();
+
+	// If there are more than two tokens, they specified an object
+	std::shared_ptr<Door> dptr = nullptr;
+	if (act_used.numTokens() > 2) {
+		std::string doorname;
+		if (act_used.numTokens() == 3)
+			doorname = act_used.getToken(2);
+		else
+			doorname = act_used.getToken(3);
+		std::shared_ptr<Physical> pptr = cur_loc->getContainedByName(doorname.c_str());
+		if (pptr == nullptr) {
+			actor->sendMsg("I cannot locate the ");
+			actor->sendMsg(doorname);
+			actor->sendMsg(" here\n");
+			return 0;
+		}
+
+		if ((dptr = std::dynamic_pointer_cast<Door>(pptr)) == nullptr) {
+			actor->sendMsg("You cannot untie things from that.\n");
+			return 0;
+		}
+	} else {
+		auto cont_it = cur_loc->beginContained();
+		for (; cont_it != cur_loc->endContained(); cont_it++) {
+			if ((dptr = std::dynamic_pointer_cast<Door>(*cont_it)) != nullptr)
+				break;
+		}
+
+		if (dptr == nullptr) {
+			actor->sendMsg("I do not see a ");
+			actor->sendMsg(act_used.getToken(1));
+			actor->sendMsg(" that can be untied.\n");
+			return 0;
+		}
+	}
+
+	// We should have a door pointer now, try to untie it
+	std::string buf;
+	std::shared_ptr<Physical> rope = dptr->closeTool(buf);
+	if (rope == nullptr) {
+		actor->sendMsg(buf.c_str());
+		return 0;
+	}
+
+	rope->movePhysical(actor, rope);
+
+   msg << "You untie the " << rope->getTitle() << " from the " << dptr->getTitle() << "\n";
+   actor->sendMsg(msg.str().c_str());
+
+   msg.str("");
+   msg << actor->getTitle() << " unties the " << rope->getTitle() << " from the " << dptr->getTitle() << ".\n";
+   cur_loc->sendMsg(msg.str().c_str(), actor);
+
 
    return 1;
 }

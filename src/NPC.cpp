@@ -127,18 +127,18 @@ void NPC::setStartLoc(const char *newloc) {
  *
  *********************************************************************************************/
 
-void NPC::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
+void NPC::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
    std::stringstream msg;
 
    // Place this at its start location
-   std::shared_ptr<Entity> entptr = edb.getEntity(_startloc.c_str());
+   std::shared_ptr<Physical> entptr = edb.getPhysical(_startloc.c_str());
 
    if (entptr == nullptr) {
       msg << "NPC '" << getID() << "' startloc '" << _startloc << "' doesn't appear to exist.";
       mudlog->writeLog(msg.str().c_str());
       return;
    }
-   moveEntity(entptr, self);
+   movePhysical(entptr, self);
 
 }
 

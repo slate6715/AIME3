@@ -138,7 +138,7 @@ void MUD::initialize() {
 	_entity_db.loadTraits(_mud_config);
 
 	// Load all entities
-	_entity_db.loadEntities(_mud_config);
+	_entity_db.loadPhysicals(_mud_config);
 }
 
 /*********************************************************************************************

@@ -7,9 +7,9 @@
 #include "global.h"
 
 
-const char *ptype_list[] = {"undef", "single", "acttarg", "acttargoptcont", "look", "chat", "tell", NULL};
-const char *aflag_list[] = {"targetmud", "targetloc", "targetinv", "targetorg", "nolookup", "aliastarget", 
-									NULL};
+const char *ptype_list[] = {"undef", "single", "acttarg", "acttargcont", "acttargoptcont", "look", "chat", "tell", NULL};
+const char *aflag_list[] = {"target1mud", "target1loc", "target1inv", "target1org", "target2mud", "target2loc", 
+									 "target2inv", "target2org", "nolookup", "aliastarget", NULL};
 
 hardcoded_actions cmd_array[] = {
 		{"infocom", infocom},
@@ -17,6 +17,7 @@ hardcoded_actions cmd_array[] = {
 		{"lookcom", lookcom},
 		{"exitscom", exitscom},
 		{"getcom", getcom},
+		{"putcom", putcom},
 		{"dropcom", dropcom},
 		{"inventorycom", inventorycom},
 		{"userscom", userscom},
@@ -27,6 +28,10 @@ hardcoded_actions cmd_array[] = {
       {"opencom", opencom},
       {"closecom", closecom},
       {"statscom", statscom},
+		{"equipcom", equipcom},
+		{"removecom", removecom},
+		{"tiecom", tiecom},
+		{"untiecom", untiecom},
 		{"",0}
 };
 
@@ -380,47 +385,61 @@ bool Action::isFlagSetInternal(const char *flagname, bool &results) {
  *
  *    Params:  name - the object name to look for
  *             errmsg - populates an error message for the user
+ *					target - target 1 or 2
+ *					
  *
  *    Returns: pointer if found/accessible, nullptr otherwise 
  *
  *********************************************************************************************/
 
-std::shared_ptr<Entity> Action::findTarget(std::string &name, std::string &errmsg, EntityDB &edb, 
-																			UserMgr &umgr) {
+std::shared_ptr<Physical> Action::findTarget(std::string &name, std::string &errmsg, int targetsel)
+{
+	std::stringstream errmsgstr;
 
-	std::shared_ptr<Entity> target1;
+	unsigned int offset = 0;
+	if (targetsel == 1) {
+		offset = 0;	// Use target1 flags
+	} else if (targetsel == 2) {
+		offset = 4;	// Adjust flags to target2 variety
+	} else {
+		throw std::invalid_argument("findTarget called with target not equal to 1 or 2");
+	}
+
+	std::shared_ptr<Physical> target;
    std::shared_ptr<Organism> actor = getActor();
-   std::shared_ptr<Entity> cur_loc = actor->getCurLoc();
+   std::shared_ptr<Physical> cur_loc = actor->getCurLoc();
 
    // Check inventory first 
-	if (isActFlagSet(TargetInv)) {
-		target1 = actor->getContainedByName(name.c_str());
+	if (isActFlagSet((act_flags) (Target1Inv + offset))) {
+		target = actor->getContainedByName(name.c_str());
 	}
 
 	// Now check location if applicable
-	if ((target1 == nullptr) && (isActFlagSet(TargetLoc))) {
-		target1 = cur_loc->getContainedByName(name.c_str());
+	if ((target == nullptr) && (isActFlagSet((act_flags) (Target1Loc + offset)))) {
+		target = cur_loc->getContainedByName(name.c_str());
 	}
 
 	// Raise an error if we didn't find anything and we're not checking the entire MUD
-   if ((target1 == nullptr) && (!isActFlagSet(Action::TargetMUD))) {
+   if ((target == nullptr) && (!isActFlagSet((act_flags) (Action::Target1MUD + offset)))) {
 		// If we don't see a ':', then we're probably targeting a user
-		errmsg = "That does not appear to be here.";
+		errmsgstr << "You don't see '" << name << "' here.";
+		errmsg = errmsgstr.str();
       return NULL;
 	}
 
    // If this needs to target an organism
-    if (isActFlagSet(Action::TargetOrg)) {
-		if ((target1 != nullptr) && (std::dynamic_pointer_cast<Organism>(target1) == nullptr)) {
-			errmsg = "That is an inanimate object.";
+    if (isActFlagSet((act_flags) (Action::Target1Org + offset))) {
+		if ((target != nullptr) && (std::dynamic_pointer_cast<Organism>(target) == nullptr)) {
+			errmsgstr << target->getGameName(errmsg) << " is an inanimate object.";
+			errmsg = errmsgstr.str();
          return NULL;
 		}
 
 		// If we still haven't found it and we're looking for an organism, check the players
-		if (target1 == nullptr) {
+		if (target == nullptr) {
 			std::string plrid("player:");
 			plrid += name;
-			if ((target1 = umgr.getPlayer(plrid.c_str())) == nullptr) {
+			if ((target = engine.getUserMgr()->getPlayer(plrid.c_str())) == nullptr) {
 				errmsg = "That player does not appear to be available.";
 				return NULL;
 			}
@@ -428,12 +447,12 @@ std::shared_ptr<Entity> Action::findTarget(std::string &name, std::string &errms
 		}
    }
    // If we still haven't found it, check mud-wide (must be in form zone:obj)
-   else if ((target1 == nullptr) && 
-				((target1 = edb.getEntity(name.c_str())) == nullptr)) {
+   else if ((target == nullptr) && 
+				((target = engine.getEntityDB()->getPhysical(name.c_str())) == nullptr)) {
 		errmsg = "That object does not appear to exist.";
       return NULL;
    }
-	return target1;
+	return target;
  
 }
 

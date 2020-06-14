@@ -9,8 +9,8 @@ To the east, there's appears to be slightly less darkness.
 </location> 
 
 <static id="start:surface" startloc="start:thevoid">
-<desc>The surface, while solid enough to hold your weight, flexes with each step. This is accompanied by hundreds of faint crinkling noises that almost sound like static.
-</desc>
+<examine>The surface, while solid enough to hold your weight, flexes with each step. This is accompanied by hundreds of faint crinkling noises that almost sound like static.
+</examine>
 <altname name="ground" />
 <altname name="floor" />
 </static>
@@ -31,9 +31,9 @@ To the east, there's appears to be slightly less darkness.
 <attribute name="speed" value="0" />
 <trait id="gender:male" />
 <reviewmsg type="standing">%n stands here wearing a white suit and a white brimmed hat.</reviewmsg>
-<desc>
+<examine>
 Admodeus is the picture of the true southern gentleman. He sports a completely white suit and carries a black cane. His hair is white, as is his oversized mustache. Completing the image is a small goatee under his chin.
-</desc>
+</examine>
 </npc>
 
 <equipment id="start:asmodeus_cane" title="Asmodeus' Cane" startloc="start:asmodeus" startequipped="true">
@@ -43,9 +43,9 @@ Admodeus is the picture of the true southern gentleman. He sports a completely w
 <equipped bpname="hand" bpgroup="rightarm" />
 <roomdesc>A long, black, elegant gentleman's staff lies here.</roomdesc>
 <roomdesc>Admodeus carries a long, black staff casually in his right hand.</roomdesc>
-<desc>
+<examine>
 The staff is made of a smooth, hard material that appears to absorb all light. It is a consistent width down it's length, terminated by a copper cap at the bottom. At the top, an impossibly-large large pearl has been fixed into the material, providing an easy handhold. 
-</desc>
+</examine>
 </equipment>
 
 <equipment id="start:asmodeus_hat" title="Asmodeus' Hat" startloc="start:asmodeus" startequipped="true">
@@ -56,9 +56,9 @@ The staff is made of a smooth, hard material that appears to absorb all light. I
 <equipped bpname="head" bpgroup="head" />
 <roomdesc>A white straw hat lies on the ground.</roomdesc>
 <roomdesc>Admodeus wears a white straw hat on his head, tipped slightly to the side.</roomdesc>
-<desc>
+<examine>
 The straw hat sports a small brim and has a white cotton band wrapped around it. 
-</desc>
+</examine>
 </equipment>
 
 <location id="start:sea" title="The Sea">
@@ -91,21 +91,22 @@ The straw hat sports a small brim and has a white cotton band wrapped around it.
 <altname name="cliff" />
 <altname name="chalk" />
 <altname name="rock" />
-<desc>The cliffs tower above you a good 15 meters. The sheer face, combined with crumbling hand-holds, make this an impossible climb, even for a seasoned mountaineer. You notice something slightly-off down near some large rocks at the base of a cliff. Upon closer examination, you find a wooden door covered in chalk dust. A simple metal handle and small keyhole are its only ornamentation.
-</desc>
+<examine>The cliffs tower above you a good 15 meters. The sheer face, combined with crumbling hand-holds, make this an impossible climb, even for a seasoned mountaineer. You notice something slightly-off down near some large rocks at the base of a cliff. Upon closer examination, you find a wooden door covered in chalk dust. A simple metal handle and small keyhole are its only ornamentation.
+</examine>
 </static> 
 
 <door id="start:cliffdoor" startloc="start:alcove" startloc2="start:cave" doorstate="locked" title="Cliff Door">
 <flag name="HideClosedExit" />
-<flag name="Closeable" />
 <flag name="Lockable" />
 <altname name="door" />
 <roomdesc state="open"> A door fixed into the cliff wall is open, allowing passage into a tunnel. </roomdesc>
 <roomdesc state="closed" />
 <roomdesc state="locked" />
 <key id="start:brasskey" />
-<desc> The door is barely visible against the cliff wall, obscured by medium-sized rocks and covered in chalk dust. A simple, metal doorknob juts out from the weathered wood with a small keyhole immediately below. 
-</desc>
+<examine> The door is barely visible against the cliff wall, obscured by medium-sized rocks and covered in chalk dust. A simple, metal doorknob juts out from the weathered wood with a small keyhole immediately below. 
+</examine>
+<examine2>
+</examine2>
 </door>
 
 <location id="start:junglecoast" title="Jungle Coast">
@@ -117,8 +118,8 @@ The straw hat sports a small brim and has a white cotton band wrapped around it.
 </location>
 
 <getable id="start:kelp" startloc="start:junglecoast" title="Mass of Kelp" >
-<desc>Basic kelp. Consists of flat leaf-like structures connected to stems. This mass looks fairly fresh and must have recently washed up on shore. 
-</desc>
+<examine>Basic kelp. Consists of flat leaf-like structures connected to stems. This mass looks fairly fresh and must have recently washed up on shore. 
+</examine>
 <altname name="weed" />
 <altname name="seaweed" />
 <altname name="mass" />
@@ -185,12 +186,13 @@ The straw hat sports a small brim and has a white cotton band wrapped around it.
 </location>
 
 <door id="start:gate" startloc="start:intersection" startloc2="start:path" doorstate="closed" title="iron gate">
-<flag name="Closeable" />
 <altname name="door" />
 <roomdesc state="open"> The iron gate is open. </roomdesc>
 <roomdesc state="closed"> The iron gate is closed, blocking the trail. </roomdesc>
 <roomdesc state="locked" />
-<desc> The gate is made of iron painted black and includes two sides that swing from stone pillars on each side of the trail. The top of the gate gently curves to peak at the middle where gate opens. Twisted iron bars create slats that are too small for most humans to get through. The gate is held in place by a simple latch lacking a visible lock. Across the front, thick wire has been bent and welded to the iron bars, creating a flowing script. The words are centered across the entirety of the gate so when it is shut, it can be read completely. 
-</desc>
+<examine> The gate is made of iron painted black and includes two sides that swing from stone pillars on each side of the trail. The top of the gate gently curves to peak at the middle where gate opens. Twisted iron bars create slats that are too small for most humans to get through. The gate is held in place by a simple latch lacking a visible lock. Across the front, thick wire has been bent and welded to the iron bars, creating a flowing script. The words are centered across the entirety of the gate so when it is shut, it can be read completely. 
+</examine>
+<examine2>
+</examine2>
 </door>
 

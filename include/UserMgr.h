@@ -40,7 +40,7 @@ public:
 	void checkNewUsers(libconfig::Config &mud_cfg);
 
    // Removes all references to this item from the player objects
-   size_t purgeEntity(std::shared_ptr<Entity> item);
+   size_t purgePhysical(std::shared_ptr<Physical> item);
 
 	// Remove a player from the database - all shared pointer refs must be purged
 	void removePlayer(Player *plr);
@@ -62,7 +62,7 @@ public:
 
 	int sendMsg(const char *msg, std::vector<std::string> *exclude_flags,
 										  std::vector<std::string> *require_flags, 
-										  std::shared_ptr<Entity> exclude_ind);
+										  std::shared_ptr<Physical> exclude_ind);
 
 private:
 
@@ -85,8 +85,6 @@ private:
 
 	std::string _infodir;
 	std::string _userdir;
-	std::string _welcomefile;
-	std::string _motdfile;
 };
 
 

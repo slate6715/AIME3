@@ -13,44 +13,44 @@ IMUD::~IMUD() {
 }
 
 /*********************************************************************************************
- * getEntity - Given an id, gets an IEntity that points to the Entity
+ * getPhysical - Given an id, gets an IPhysical that points to the Physical
  *
  *	Throws: script_error if the entity is not found
  *
  *********************************************************************************************/
 
-IEntity IMUD::getEntity(const char *id) {
+IPhysical IMUD::getPhysical(const char *id) {
 	EntityDB &edb = *(engine.getEntityDB());
-	std::shared_ptr<Entity> eptr = edb.getEntity(id);
+	std::shared_ptr<Physical> eptr = edb.getPhysical(id);
 
 	if (eptr == nullptr) {
 		std::stringstream errmsg;
 
-		errmsg << "getEntity could not retrieve '" << id << "'. It may not exist.";
+		errmsg << "getPhysical could not retrieve '" << id << "'. It may not exist.";
 		throw script_error(errmsg.str().c_str());
 	}
 
-	return IEntity(eptr);
+	return IPhysical(eptr);
 }
 
-IEntity::IEntity(std::shared_ptr<Entity> eptr):
+IPhysical::IPhysical(std::shared_ptr<Physical> eptr):
 											_eptr(eptr)
 {
 
 }
 
-IEntity::IEntity(const IEntity &copy_from):
+IPhysical::IPhysical(const IPhysical &copy_from):
 								_eptr(copy_from._eptr)
 {
 
 }
 
 /*********************************************************************************************
- * getCurLocID - Gets the id string of this Entity's current location
+ * getCurLocID - Gets the id string of this Physical's current location
  *
  *********************************************************************************************/
 
-std::string IEntity::getCurLocID() {
+std::string IPhysical::getCurLocID() {
 	if (_eptr->getCurLoc() == nullptr)
 		return "none";
 
@@ -58,23 +58,23 @@ std::string IEntity::getCurLocID() {
 }
 
 /*********************************************************************************************
- * getTitle - Gets the Title of this Entity (Title form varies by type)
+ * getTitle - Gets the Title of this Physical (Title form varies by type)
  *
  *********************************************************************************************/
 
-std::string IEntity::getTitle() {
+std::string IPhysical::getTitle() {
 	std::string buf;
 	_eptr->getGameName(buf);
 	return buf;
 }
 
 /*********************************************************************************************
- * sendMsg - sends the text to an Organism associated with this Entity (or does nothing if not 
+ * sendMsg - sends the text to an Organism associated with this Physical (or does nothing if not 
  *				 an Organism
  *
  *********************************************************************************************/
 
-void IEntity::sendMsg(const char *msg) {
+void IPhysical::sendMsg(const char *msg) {
 	std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(_eptr);
 
 	// Fail quietly for now if this isn't the right type of entity
@@ -90,7 +90,7 @@ void IEntity::sendMsg(const char *msg) {
  *
  *********************************************************************************************/
 
-void IEntity::sendMsgLoc(const char *msg) {
+void IPhysical::sendMsgLoc(const char *msg) {
    std::shared_ptr<Player> pptr = std::dynamic_pointer_cast<Player>(_eptr);
 
 	_eptr->getCurLoc()->sendMsg(msg, pptr);
@@ -101,8 +101,8 @@ void IEntity::sendMsgLoc(const char *msg) {
  *
  *********************************************************************************************/
 
-void IEntity::moveTo(IEntity new_loc) {
-	if (!_eptr->moveEntity(new_loc._eptr, _eptr)) {
+void IPhysical::moveTo(IPhysical new_loc) {
+	if (!_eptr->movePhysical(new_loc._eptr, _eptr)) {
       std::stringstream errmsg;
 
       errmsg << "moveTo special function failed for some reason moving: " << _eptr->getID();

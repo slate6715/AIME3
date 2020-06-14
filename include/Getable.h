@@ -20,10 +20,10 @@ public:
 
    virtual ~Getable();
 
-	enum gflags { NoGet, NoDrop, Food };
+	enum gflags { NoGet, NoDrop, Food, Rope };
 
    // Gets the primary reference name the game refers to this entity by
-   virtual const char *getGameName(std::string &buf);
+   virtual const char *getGameName(std::string &buf) const;
 
 	// void setDesc(const char *newdesc);
 
@@ -37,7 +37,9 @@ public:
 	const char *getRoomDesc();
    const char *getTitle() const { return _title.c_str(); };
 
-   virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const;
+   virtual const char *listContents(std::string &buf, const Physical *exclude = NULL) const;
+
+   bool isGetableFlagSet(gflags flag) { return _getflags[flag]; };
 
 protected:
 

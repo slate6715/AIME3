@@ -318,6 +318,8 @@ void LoginHandler::getPrompt(std::string &buf) {
 
 
 void LoginHandler::prePop(std::vector<std::string> &results) {
+
+
 	results.push_back("loggedin");
 	results.push_back(_username);
 }

@@ -197,4 +197,25 @@ unsigned int getLineNumber(const char *filename, unsigned int offset) {
 	return count;
 }
 
+/*******************************************************************************************
+ * isPreposition - is the given string an english preposition used in the MUD, return true
+ *
+ *******************************************************************************************/
+
+bool isPreposition(const char *str) {
+	const char *prepositions[] = {
+			"in",
+			"on",
+			"to",
+			"at",
+			"from",
+			"into",
+			"with",
+			"by",
+			"of",			
+			NULL
+		};
+		return locateInTable(str, prepositions);
+}
+
 

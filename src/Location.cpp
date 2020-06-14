@@ -9,7 +9,7 @@
 #include "global.h"
 #include "Door.h"
 
-const char *lflag_list[] = {"outdoors", "bright", "death", NULL};
+const char *lflag_list[] = {"outdoors", "bright", "death", "realtime", NULL};
 const char *eflag_list[] = {"hidden", "special", NULL};
 
 const char *exitlist[] = {"north", "south", "east", "west", "up", "down", "northeast", "northwest", 
@@ -23,7 +23,7 @@ Location::exitdirs opposite[] = {Location::South, Location::North, Location::Wes
  *
  *********************************************************************************************/
 Location::Location(const char *id):
-								Entity(id)
+								Physical(id)
 {
 	_typename = "Location";
 
@@ -31,7 +31,7 @@ Location::Location(const char *id):
 
 // Copy constructor
 Location::Location(const Location &copy_from):
-								Entity(copy_from)
+								Physical(copy_from)
 {
 
 }
@@ -52,7 +52,7 @@ Location::~Location() {
 void Location::saveData(pugi::xml_node &entnode) const {
 
 	// First, call the parent version
-	Entity::saveData(entnode);
+	Physical::saveData(entnode);
 
    // Add organism data (none yet)
    // pugi::xml_attribute idnode = entnode.append_attribute("id");
@@ -74,7 +74,7 @@ int Location::loadData(pugi::xml_node &entnode) {
 
 	// First, call the parent function
 	int results = 0;
-	if ((results = Entity::loadData(entnode)) != 1)
+	if ((results = Physical::loadData(entnode)) != 1)
 		return results;
 
 	std::stringstream errmsg;
@@ -184,7 +184,7 @@ void Location::setTitle(const char *newtitle) {
  *********************************************************************************************/
 
 bool Location::setFlagInternal(const char *flagname, bool newval) {
-   if (Entity::setFlagInternal(flagname, newval))
+   if (Physical::setFlagInternal(flagname, newval))
       return true;
 
    std::string flagstr = flagname;
@@ -213,7 +213,7 @@ bool Location::setFlagInternal(const char *flagname, bool newval) {
  *********************************************************************************************/
 
 bool Location::isFlagSetInternal(const char *flagname, bool &results) {
-   if (Entity::isFlagSetInternal(flagname, results))
+   if (Physical::isFlagSetInternal(flagname, results))
       return true;
 
    std::string flagstr = flagname;
@@ -241,7 +241,7 @@ bool Location::isFlagSetInternal(const char *flagname, bool &results) {
  *
  *********************************************************************************************/
 
-std::shared_ptr<Entity> Location::getExit(const char *exitname) {
+std::shared_ptr<Physical> Location::getExit(const char *exitname) {
    if (exitname == NULL)
       return nullptr;
 
@@ -252,7 +252,7 @@ std::shared_ptr<Entity> Location::getExit(const char *exitname) {
    return nullptr;
 }
 
-std::shared_ptr<Entity> Location::getExitAbbrev(std::string &exitname, exitdirs *val) {
+std::shared_ptr<Physical> Location::getExitAbbrev(std::string &exitname, exitdirs *val) {
 	std::string dir = exitname;
 	if (dir.size() == 0)
 		return nullptr;
@@ -287,14 +287,14 @@ std::shared_ptr<Entity> Location::getExitAbbrev(std::string &exitname, exitdirs 
  *
  *********************************************************************************************/
 
-void Location::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
+void Location::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
 	std::stringstream msg;
 	(void) self;
 
 	// Go through the exits, creating links
 	auto exit_it = _exits.begin();
 	while (exit_it != _exits.end()) {
-		std::shared_ptr<Entity> entptr = edb.getEntity(exit_it->link_id.c_str());
+		std::shared_ptr<Physical> entptr = edb.getPhysical(exit_it->link_id.c_str());
 		std::shared_ptr<Location> locptr;
 		std::shared_ptr<Door> doorptr;
 
@@ -343,7 +343,7 @@ const char *Location::getExitsStr(std::string &buf) {
 			continue;
 
 		// Get the exit's location--if it is a door, get the other side
-		std::shared_ptr<Entity> locptr = _exits[i].link_loc;
+		std::shared_ptr<Physical> locptr = _exits[i].link_loc;
 		std::shared_ptr<Door> doorptr = std::dynamic_pointer_cast<Door>(locptr);
 
 		dir = _exits[i].dir;
@@ -381,36 +381,6 @@ const char *Location::getExitsStr(std::string &buf) {
 	return buf.c_str();
 }
 
-/*********************************************************************************************
- * getContainedByName - returns a shared_ptr to the contained entity that matches the name.
- *             Polymorphic. For this class version, only matches the name field
- *
- *    Params:  name - string to search the NameID for
- *             allow_abbrev - if true, entity only needs to match up to sizeof(name)
- *
- *    Returns: shared_ptr if found, nullptr if not
- *
- *********************************************************************************************/
-
-std::shared_ptr<Entity> Location::getContainedByName(const char *name, bool allow_abbrev) {
-   std::string namebuf = name;
-   std::string ebuf;
-
-   // Check by title or nameID
-   std::shared_ptr<Entity> results = Entity::getContainedByName(name, allow_abbrev);
-   if (results != nullptr)
-      return results;
-
-   // Search by altnames next
-   auto eit = _contained.begin();
-   for ( ; eit != _contained.end(); eit++) {
-      if (eit->get()->hasAltName(name, allow_abbrev))
-         return *eit;
-   }
-
-   return nullptr;
-
-}
 
 /*********************************************************************************************
  * listContents - preps a string with a list of visible getables and organisms first
@@ -418,11 +388,25 @@ std::shared_ptr<Entity> Location::getContainedByName(const char *name, bool allo
  *
  *********************************************************************************************/
 
-const char *Location::listContents(std::string &buf, const Entity *exclude) const {
+const char *Location::listContents(std::string &buf, const Physical *exclude) const {
 	auto cit = _contained.begin();
 
-	// Show getables first
+	// Show doors first
 	for ( ; cit != _contained.end(); cit++) {
+		std::shared_ptr<Door> dptr = std::dynamic_pointer_cast<Door>(*cit);
+		if (dptr == nullptr)
+			continue;
+
+		const char *rdesc = dptr->getCurRoomdesc(this);
+		if (rdesc != NULL) {
+			buf += rdesc;
+			buf += "\n";
+		}
+		
+	}	
+
+	// Show getables
+	for (cit = _contained.begin(); cit != _contained.end(); cit++) {
       std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(*cit);
 
       if (gptr == nullptr)
@@ -456,12 +440,12 @@ const char *Location::listContents(std::string &buf, const Entity *exclude) cons
  *
  *********************************************************************************************/
 
-void Location::sendMsg(const char *msg, std::shared_ptr<Entity> exclude) {
+void Location::sendMsg(const char *msg, std::shared_ptr<Physical> exclude) {
    std::string unformatted = msg;
    sendMsg(unformatted, exclude);
 }
 
-void Location::sendMsg(std::string &msg, std::shared_ptr<Entity> exclude) {
+void Location::sendMsg(std::string &msg, std::shared_ptr<Physical> exclude) {
 	
 	auto cit = _contained.begin();
 	for ( ; cit != _contained.end(); cit++) {

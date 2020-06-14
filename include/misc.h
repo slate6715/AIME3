@@ -27,9 +27,13 @@ void genRandString(std::string &buf, size_t n);
 // has a single string or a list of strings
 void sendInfoFiles(std::shared_ptr<Player> plr, libconfig::Config &cfg, const char *ifile_setting);
 
+// Locate name in table
 unsigned int locateInTable(const char *name, const char **table);
 
+// If buf is equal to compare_str, only taking into account buf.size() chars (abbreviations)
 bool equalAbbrev(std::string &buf, const char *compare_str);
+
+bool isPreposition(const char *str);
 
 // Used for iterating files in a directory
 struct path_leaf_string 

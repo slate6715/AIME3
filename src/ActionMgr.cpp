@@ -211,8 +211,6 @@ void ActionMgr::handleActions(MUD &engine) {
 Action *ActionMgr::preAction(const char *cmd, std::string &errmsg, 
 																	std::shared_ptr<Organism> actor) {
 	std::string buf = cmd;
-	EntityDB &edb = *engine.getEntityDB();
-	UserMgr &umgr = *engine.getUserMgr();
 	
 	// Odd situation where nothing was submitted
 	if (buf.size() == 0)
@@ -255,6 +253,7 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 	// Get target 1
 	if ((new_act->getParseType() == Action::ActTargOptCont) || 
 		 (new_act->getParseType() == Action::ActTarg) ||
+		 (new_act->getParseType() == Action::ActTargCont) ||
 		 (new_act->getParseType() == Action::Tell)) {
 		
 		bool is_alias = false;
@@ -280,7 +279,7 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 
 		// Get target 1
 		if (!new_act->isActFlagSet(Action::NoLookup)) {
-			new_act->setTarget1(new_act->findTarget(elements[1], errmsg, edb, umgr));
+			new_act->setTarget1(new_act->findTarget(elements[1], errmsg, 1));
 
 			if (new_act->getTarget1() == nullptr) {
 				delete new_act;
@@ -293,11 +292,45 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 	} 
 
 	// If we have more words to get, get them
-	if (new_act->getParseType() == Action::ActTargOptCont) {
+	if ((new_act->getParseType() == Action::ActTargOptCont) || (new_act->getParseType() == Action::ActTargCont)) {
       while ((pos = buf.find(" ", start)) != std::string::npos) {
          elements.push_back(buf.substr(start, pos-start));
          start = pos + 1;
       }
+		if (start < buf.size())
+			elements.push_back(buf.substr(start, buf.size()-start));
+
+		if (new_act->getParseType() == Action::ActTargCont) {
+			if (elements.size() < 3) {
+				errmsg = "Missing elements. Format: ";
+				errmsg += new_act->getFormat();
+				delete new_act;
+				return NULL;
+			} else if (elements.size() == 3) {
+				if (isPreposition(elements[2].c_str())) {
+					errmsg = "Missing target. Format: ";
+					errmsg += new_act->getFormat();
+					delete new_act;
+					return NULL;
+				}
+
+			}
+		}
+
+		// Do we need to find target2?
+		if (!new_act->isActFlagSet(Action::NoLookup) && (elements.size() > 2)) {
+			std::string targ2;
+			if (elements.size() == 3)
+				targ2 = elements[2];
+			else
+				targ2 = elements[3];
+
+			new_act->setTarget2(new_act->findTarget(targ2, errmsg, 2));
+			if (new_act->getTarget2() == nullptr) {
+				delete new_act;
+				return NULL;
+			}
+		}
 
 	} else if (new_act->getParseType() == Action::Look) {
 		// First get the next token. If none exist, then we're done
@@ -310,7 +343,7 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 
 			// Check for a preposition
 			lower(token);
-			if ((token.compare("at") == 0) || (token.compare("in") == 0)) {
+			if (isPreposition(token.c_str())) {
 				elements.push_back(token);
 
 				// Prepositions need to be followed by a target
@@ -328,7 +361,7 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 			// Now get the target
 			elements.push_back(token);
 
-			new_act->setTarget1(new_act->findTarget(token, errmsg, edb, umgr));
+			new_act->setTarget1(new_act->findTarget(token, errmsg, 1));
 			if (new_act->getTarget1() == nullptr) {
 				delete new_act;
 				return NULL;

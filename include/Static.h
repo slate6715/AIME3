@@ -3,14 +3,14 @@
 
 #include <bitset>
 #include <vector>
-#include "Entity.h"
+#include "Physical.h"
 
 /***************************************************************************************
  * Static - An immobile object that is mainly used to provide descriptions or for basic
  *				interaction. A static is also a parent class of all interactable objects
  *
  ***************************************************************************************/
-class Static : public Entity 
+class Static : public Physical 
 {
 public:
 	
@@ -20,28 +20,27 @@ public:
 
    virtual ~Static();
 
-	enum sflags { Container, Lockable, Closeable, Lightable, MagicLit };
+	enum sflags { Container, Lockable, NotCloseable, Lightable, MagicLit };
 
    enum doorstate { Open, Closed, Locked, Special };
 
-	void setDesc(const char *newdesc);
+	void setExamine(const char *newexamine);
 	void setStartLoc(const char *newloc);
 	void addAltName(const char *names);
 	
    // Gets the primary reference name the game refers to this entity by
-	virtual const char *getGameName(std::string &buf);
+	virtual const char *getGameName(std::string &buf) const;
 
-	virtual const char *getDesc() const { return _desc.c_str(); };
+	virtual const char *getTitle() const { return NULL; }; // No title for statics
+	virtual const char *getExamine() const { return _examine.c_str(); };
 	const char *getStartLoc() const { return _startloc.c_str(); };
 
 	virtual bool hasAltName(const char *str, bool allow_abbrev);
 
    // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
-   virtual void addLinks(EntityDB &edb, std::shared_ptr<Entity> self);
+   virtual void addLinks(EntityDB &edb, std::shared_ptr<Physical> self);
 
-   virtual std::shared_ptr<Entity> getContainedByName(const char *name, bool allow_abbrev = true);
-
-	virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const;
+	virtual const char *listContents(std::string &buf, const Physical *exclude = NULL) const;
 
    doorstate getDoorState() { return _state; };
    void setDoorState(doorstate new_state) { _state = new_state; };
@@ -63,7 +62,7 @@ protected:
 
 private:
 	
-	std::string _desc;
+	std::string _examine;
 	std::vector<std::string> _altnames;
 	std::string _startloc;
 

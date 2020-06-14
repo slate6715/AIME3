@@ -10,7 +10,7 @@
 class PageHandler : public Handler
 {
 public:
-	PageHandler(std::shared_ptr<Player> plr, LogMgr &log, unsigned int lines_per_page);
+	PageHandler(std::shared_ptr<Player> plr, unsigned int lines_per_page);
 	PageHandler(const PageHandler &copy_from);
 
 	virtual ~PageHandler();
@@ -20,14 +20,14 @@ public:
    virtual void prePop(std::vector<std::string> &results);
 	virtual void postPush();
 
+	virtual bool activate();
+
 	void addContent(const char *msg);
 	void addContent(std::string &msg);
 	void addFileContent(const char *filename);
 
 private:
 	bool showNextPage();
-
-	LogMgr &_log;
 
 	size_t _lines_per_page;
 	std::string _to_display;

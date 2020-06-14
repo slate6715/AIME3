@@ -33,13 +33,13 @@ ScriptEngine::~ScriptEngine() {
 void ScriptEngine::initialize(boost::python::object &main_namespace) {
    // initialize our functions
    main_namespace["IMUD"] = class_<IMUD>("IMUD")
-                                 .def("getEntity", &IMUD::getEntity);
-   main_namespace["Entity"] = class_<IEntity>("Entity", init<const IEntity &>())
-                                 .def("sendMsg", &IEntity::sendMsg)
-											.def("sendMsgLoc", &IEntity::sendMsgLoc)
-											.def("moveTo", &IEntity::moveTo)
-											.def("getCurLocID", &IEntity::getCurLocID)
-											.def("getTitle", &IEntity::getTitle);
+                                 .def("getPhysical", &IMUD::getPhysical);
+   main_namespace["Physical"] = class_<IPhysical>("Physical", init<const IPhysical &>())
+                                 .def("sendMsg", &IPhysical::sendMsg)
+											.def("sendMsgLoc", &IPhysical::sendMsgLoc)
+											.def("moveTo", &IPhysical::moveTo)
+											.def("getCurLocID", &IPhysical::getCurLocID)
+											.def("getTitle", &IPhysical::getTitle);
 
    main_namespace["MUD"] = ptr(&_access);
 
@@ -48,7 +48,7 @@ void ScriptEngine::initialize(boost::python::object &main_namespace) {
 
 
 /*********************************************************************************************
- * getEntity - Given an id, gets an IEntity that points to the Entity
+ * getEntity - Given an id, gets an IPhysical that points to the Entity
  *
  * Throws: script_error if the entity is not found
  *
@@ -64,9 +64,9 @@ int ScriptEngine::execute() {
 	initialize(main_namespace);
 
 	// 
-	IEntity actor(_actor);
-	IEntity target1(_target1);
-	IEntity target2(_target2);
+	IPhysical actor(_actor);
+	IPhysical target1(_target1);
+	IPhysical target2(_target2);
 
 	if (_actor != nullptr)
 		main_namespace["actor"] = ptr(&actor);

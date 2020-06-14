@@ -9,12 +9,14 @@
 #include "Player.h"
 #include "LoginHandler.h"
 #include "GameHandler.h"
+#include "PageHandler.h"
 #include "ActionMgr.h"
 #include "Location.h"
 #include "misc.h"
 #include "../external/pugixml.hpp"
 #include "global.h"
 #include "Getable.h"
+#include "Equipment.h"
 
 // Defines the password hash/salt bytelength
 const unsigned int hashlen = 16;
@@ -102,12 +104,12 @@ bool Player::sendFile(const char *filename) {
  *
  *********************************************************************************************/
 
-void Player::sendMsg(const char *msg, std::shared_ptr<Entity> exclude) {
+void Player::sendMsg(const char *msg, std::shared_ptr<Physical> exclude) {
 	std::string unformatted = msg;
 	sendMsg(unformatted, exclude);
 }
 
-void Player::sendMsg(std::string &msg, std::shared_ptr<Entity> exclude) {
+void Player::sendMsg(std::string &msg, std::shared_ptr<Physical> exclude) {
 	(void) exclude;
 
 	std::string formatted;
@@ -129,6 +131,17 @@ void Player::welcomeUser(libconfig::Config &mud_cfg, std::shared_ptr<Player> thi
 
 	// First, place a GameHandler on the stack that should not be popped
 	_handler_stack.push(std::unique_ptr<Handler>(new GameHandler(thisplr)));
+
+	// Place a pagehandler to display the MOTD after they login
+	PageHandler *phandler = new PageHandler(thisplr, 60);
+	std::string loginfile, infodir;
+	mud_cfg.lookupValue("datadir.infodir", infodir);
+	infodir += "/";
+	mud_cfg.lookupValue("infofiles.logged_in", loginfile);
+	infodir += loginfile;
+	phandler->addFileContent(infodir.c_str());
+
+	_handler_stack.push(std::unique_ptr<Handler>(phandler));
 
 	// Now place a login handler on the stack
 	_handler_stack.push(std::unique_ptr<Handler>(new LoginHandler(thisplr, mud_cfg)));
@@ -242,12 +255,15 @@ void Player::formatForTelnet(const std::string &unformatted, std::string &format
 	unsigned int lastpos = 0;
 	for (unsigned int i=0; i<unformatted.size(); i++) {
 
+      // if we find a '\r', then restart our wrapping and check the next for a \n 
+      if ((unformatted[i] == '\r') || (unformatted[i] == '\n'))
+		{
+			_last_wrap = 0;
+			continue;
+		}
+
 		// If we're at our word-wrap location, wrap it
 		if ((_wrap_width != 0) && (_last_wrap >= _wrap_width)) {
-
-			// First, if we find a \r without a \n, then we should restart the counter
-			if ((unformatted[i] == '\r') && (i < unformatted.size()) && (unformatted[i+1] != '\n'))
-				_last_wrap = 0;
 
 			// Step backwards to find a space
 			unsigned int j=i;
@@ -257,21 +273,33 @@ void Player::formatForTelnet(const std::string &unformatted, std::string &format
 					formatted.append("\r\n");
 					lastpos = j+1;
 					_last_wrap = 0;
-					break;
+					i = lastpos;
+					continue;
 				}
 			}
-			
+
+			// We may have a situation where the colorcode was placed right before wrap		
+			if ((j == lastpos) && ((i - lastpos) < _wrap_width)) {
+				formatted.append("\r\n");
+				lastpos = j;
+				_last_wrap = 0;
+				i = j;
+				continue;
+			}
+	
 			// We did not find a space to wrap. Just chop it at wraplength
-			if ((j == 0) || (j == lastpos)) {
-				formatted.append(unformatted, lastpos, i-lastpos);
+			else if (j == lastpos) {
+				formatted.append(unformatted, lastpos, i-lastpos+1);
+				formatted.append("\r\n");
 				lastpos = i+1;
 				_last_wrap = 0;
-				break;
+				i = lastpos;
+				continue;
 			}	
 		}
 
 		// Keep going while it's just a regular character
-		if (!keychars[(std::size_t) (unsigned char) unformatted[i]]) {
+		if (!keychars[(std::size_t) unformatted[i]]) {
 			_last_wrap++;
 			continue;
 		}
@@ -488,6 +516,7 @@ void Player::sendLocContents() {
 
 int Player::handleCommand(std::string &cmd) {
 
+
 	// Execute the command
 	_handler_stack.top()->handleCommand(cmd);
 
@@ -512,6 +541,11 @@ void Player::popHandler(std::vector<std::string> &results) {
 	_handler_stack.top()->prePop(results);
 
 	_handler_stack.pop();
+
+	// Execute any code when this handler activates (like with the PageHandler)
+	if (_handler_stack.top()->activate())
+		popHandler(results);
+
 }
 
 
@@ -809,12 +843,12 @@ bool Player::isFlagSetInternal(const char *flagname, bool &results) {
 }
 
 /*********************************************************************************************
- * listContents - preps a string with a list of visible items in this static's container
+ * listContents - preps a string with a list of visible items in this player's container (inventory)
  *
  *
  *********************************************************************************************/
 
-const char *Player::listContents(std::string &buf, const Entity *exclude) const {
+const char *Player::listContents(std::string &buf, const Physical *exclude) const {
 	(void) exclude;
    auto cit = _contained.begin();
 
@@ -831,6 +865,14 @@ const char *Player::listContents(std::string &buf, const Entity *exclude) const 
          continue;
 
       buf += gptr->getTitle();
+
+		// If it is a worn item, list where it is worn. This gets a bit complicated though so we look
+		// for patterns
+		std::shared_ptr<Equipment> eptr = std::dynamic_pointer_cast<Equipment>(gptr);
+		if (eptr != nullptr) {
+				
+		}
+	
       buf += "\n";
    }
 
@@ -854,9 +896,9 @@ void Player::clearNonSaved(bool death) {
 	
 
 		// Drop items that are not to be saved
-		if ((*c_it)->isFlagSet("NoSave")) {
-			(*c_it)->moveEntity(getCurLoc(), *c_it);
-		}
+		//if ((*c_it)->isFlagSet("NoSave")) {
+		//	(*c_it)->movePhysical(getCurLoc(), *c_it);
+		//}
 
 		// trigger a special for any unique requirements to save or not save (TODO)
 
@@ -877,20 +919,20 @@ void Player::quit() {
 }
 
 /*********************************************************************************************
- * purgeEntity - Removes all references to the parameter from the Entities in the database so
+ * purgePhysical - Removes all references to the parameter from the Entities in the database so
  *               it can be safely removed
  *
  *    Returns: number of references to this object cleared
  *
  *********************************************************************************************/
 
-size_t UserMgr::purgeEntity(std::shared_ptr<Entity> item) {
+size_t UserMgr::purgePhysical(std::shared_ptr<Physical> item) {
    size_t count = 0;
 
    // Loop through all items, purging the entity
    auto plr_it = _db.begin();
    for ( ; plr_it != _db.end(); plr_it++) {
-      count += plr_it->second->purgeEntity(item);
+      count += plr_it->second->purgePhysical(item);
    }
    return count;
 }

@@ -183,7 +183,7 @@ bool Equipment::isFlagSetInternal(const char *flagname, bool &results) {
  *
  *********************************************************************************************/
 
-void Equipment::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
+void Equipment::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
    std::stringstream errmsg;
 
 	// Will add the equipment to its start location
@@ -200,7 +200,8 @@ void Equipment::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
 			return;
 		}
 
-		if (optr->equip(self) <= 0) {
+		std::string buf;
+		if (optr->equip(self, buf) <= 0) {
          errmsg << "Equipment '" << getID() << "' error equipping at start organism '" << getStartLoc() << "'"; 
          mudlog->writeLog(errmsg.str().c_str());
          return;

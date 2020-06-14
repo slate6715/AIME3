@@ -3,7 +3,7 @@
 
 #include <bitset>
 #include <vector>
-#include "Entity.h"
+#include "Physical.h"
 
 class EntityDB;
 class Location;
@@ -16,7 +16,7 @@ struct locexit;
  *				  game objects naturally.
  *
  ***************************************************************************************/
-class Location : public Entity 
+class Location : public Physical 
 {
 public:
 	
@@ -26,7 +26,7 @@ public:
 
    virtual ~Location();
 
-	enum lflags {Outdoors, Bright, Death};
+	enum lflags {Outdoors, Bright, Death, Realtime};
 	enum exitflags {Hidden, Special};
 	enum exitdirs {North, South, East, West, Up, Down, Northeast, Northwest, Southeast, Southwest, 
 					   Custom};
@@ -35,23 +35,22 @@ public:
    void setTitle(const char *newtitle);
 
 	virtual const char *getDesc() const { return _desc.c_str(); };
+	virtual const char *getExamine() const { return _desc.c_str(); };
 	virtual const char *getTitle() const { return _title.c_str(); };
-   virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const;
+   virtual const char *listContents(std::string &buf, const Physical *exclude = NULL) const;
 
-	std::shared_ptr<Entity> getExit(const char *exitname);
-   std::shared_ptr<Entity> getExitAbbrev(std::string &exitname, exitdirs *val = NULL);
+	std::shared_ptr<Physical> getExit(const char *exitname);
+   std::shared_ptr<Physical> getExitAbbrev(std::string &exitname, exitdirs *val = NULL);
 
    // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
-   virtual void addLinks(EntityDB &edb, std::shared_ptr<Entity> self);
+   virtual void addLinks(EntityDB &edb, std::shared_ptr<Physical> self);
 
 	// Assembles a formatted list of the visible exits
 	const char *getExitsStr(std::string &buf);
 
-   virtual std::shared_ptr<Entity> getContainedByName(const char *name, bool allow_abbrev = true);
-
    // Send a message to this entity or its contents - class-specific behavior
-   virtual void sendMsg(const char *msg, std::shared_ptr<Entity> exclude=nullptr); 
-   virtual void sendMsg(std::string &msg, std::shared_ptr<Entity> exclude=nullptr); 
+   virtual void sendMsg(const char *msg, std::shared_ptr<Physical> exclude=nullptr); 
+   virtual void sendMsg(std::string &msg, std::shared_ptr<Physical> exclude=nullptr); 
 
 	static exitdirs getOppositeDir(exitdirs dir);
 
@@ -78,7 +77,7 @@ struct locexit {
    std::string dir;
    std::string link_id;
    Location::exitdirs exitval;
-   std::shared_ptr<Entity>  link_loc;
+   std::shared_ptr<Physical>  link_loc;
    std::bitset<32> eflags;
 };
 

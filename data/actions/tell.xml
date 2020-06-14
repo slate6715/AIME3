@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
 <action id="action:tell" acttype="Hardcoded" parsetype="Tell" format="tell <target> <text>" function="tellcom">
-<flag name="TargetOrg" />
-<flag name="TargetMUD" />
+<flag name="Target1Org" />
+<flag name="Target1MUD" />
 </action> 

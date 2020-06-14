@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
 <action id="action:open" acttype="Hardcoded" parsetype="ActTarg" format="open <object>" function="opencom">
-<flag name="TargetLoc" />
-<flag name="TargetInv" />
+<flag name="Target1Loc" />
+<flag name="Target1Inv" />
 </action> 

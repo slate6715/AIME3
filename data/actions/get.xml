@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <action id="action:get" acttype="Hardcoded" parsetype="ActTargOptCont" format="get <object> [from <container>]" function="getcom">
-<flag name="TargetLoc" />
+<flag name="NoLookup" />
 <alias name="take" />
 <alias name="g" />
 <alias name="t" />

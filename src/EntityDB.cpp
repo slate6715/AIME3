@@ -39,7 +39,7 @@ EntityDB::~EntityDB() {
 }
 
 /*********************************************************************************************
- * loadEntities - reads the zones directory and loads all files in that directory. Does not
+ * loadPhysicals - reads the zones directory and loads all files in that directory. Does not
  *						necessarily care what files an entity is in but what its ID is that defines a
  *						zone membership.
  *
@@ -49,7 +49,7 @@ EntityDB::~EntityDB() {
  *
  *********************************************************************************************/
 
-int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
+int EntityDB::loadPhysicals(libconfig::Config &mud_cfg) {
 
 	std::stringstream errmsg;
 	int count = 0;
@@ -95,8 +95,9 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
 				delete new_ent;
 				continue;
 			}
-         _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(),
-                                                   std::shared_ptr<Entity>(new_ent)));
+			std::shared_ptr<Physical> newptr(new_ent);
+			new_ent->setSelfPtr(newptr);
+         _db.insert(std::pair<std::string, std::shared_ptr<Physical>>(new_ent->getID(), newptr));
 			count++;
 		}
       // Get all static (non-moveable) objects
@@ -109,8 +110,9 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
             delete new_ent;
             continue;
          }
-         _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(),
-                                                   std::shared_ptr<Entity>(new_ent)));
+         std::shared_ptr<Physical> newptr(new_ent);
+         new_ent->setSelfPtr(newptr);
+         _db.insert(std::pair<std::string, std::shared_ptr<Physical>>(new_ent->getID(), newptr));
          count++;
  			 
 		}
@@ -124,8 +126,9 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
             delete new_ent;
             continue;
          }
-         _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(),
-                                                   std::shared_ptr<Entity>(new_ent)));
+         std::shared_ptr<Physical> newptr(new_ent);
+         new_ent->setSelfPtr(newptr);
+         _db.insert(std::pair<std::string, std::shared_ptr<Physical>>(new_ent->getID(), newptr));
          count++;
 
       }
@@ -139,8 +142,9 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
             delete new_ent;
             continue;
          }
-         _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(),
-                                                   std::shared_ptr<Entity>(new_ent)));
+         std::shared_ptr<Physical> newptr(new_ent);
+         new_ent->setSelfPtr(newptr);
+         _db.insert(std::pair<std::string, std::shared_ptr<Physical>>(new_ent->getID(),newptr));
          count++;
 
       }
@@ -156,8 +160,9 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
             delete new_ent;
             continue;
          }
-         _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(),
-                                                   std::shared_ptr<Entity>(new_ent)));
+         std::shared_ptr<Physical> newptr(new_ent);
+         new_ent->setSelfPtr(newptr);
+         _db.insert(std::pair<std::string, std::shared_ptr<Physical>>(new_ent->getID(),newptr));
          count++;
 
       }
@@ -171,8 +176,9 @@ int EntityDB::loadEntities(libconfig::Config &mud_cfg) {
             delete new_ent;
             continue;
          }
-         _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(),
-                                                   std::shared_ptr<Entity>(new_ent)));
+         std::shared_ptr<Physical> newptr(new_ent);
+         new_ent->setSelfPtr(newptr);
+         _db.insert(std::pair<std::string, std::shared_ptr<Physical>>(new_ent->getID(), newptr));
          count++;
 
       }
@@ -254,17 +260,17 @@ int EntityDB::loadTraits(libconfig::Config &mud_cfg) {
 }
 
 /*********************************************************************************************
- * getEntity - retrieves the entity with the given id
+ * getPhysical - retrieves the entity with the given id
  *
  *		Returns: shared_ptr to the entity, or set to null if not found
  *
  *********************************************************************************************/
 
-std::shared_ptr<Entity> EntityDB::getEntity(const char *id) {
+std::shared_ptr<Physical> EntityDB::getPhysical(const char *id) {
 	auto eptr = _db.find(id);
 	
 	if (eptr == _db.end())
-		return std::shared_ptr<Entity>(nullptr);
+		return std::shared_ptr<Physical>(nullptr);
 	return eptr->second;
 }
 
@@ -284,20 +290,20 @@ std::shared_ptr<Trait> EntityDB::getTrait(const char *id) {
 }
 
 /*********************************************************************************************
- * purgeEntity - Removes all references to the parameter from the Entities in the database so
+ * purgePhysical - Removes all references to the parameter from the Entities in the database so
  *					  it can be safely removed
  *
  *		Returns: number of references to this object cleared
  *
  *********************************************************************************************/
 
-size_t EntityDB::purgeEntity(std::shared_ptr<Entity> item) {
+size_t EntityDB::purgePhysical(std::shared_ptr<Physical> item) {
 	size_t count = 0;
 
 	// Loop through all items, purging the entity
 	auto ent_it = _db.begin();
 	for ( ; ent_it != _db.end(); ent_it++) {
-		count += ent_it->second->purgeEntity(item);
+		count += ent_it->second->purgePhysical(item);
 	}
 	return count;
 }

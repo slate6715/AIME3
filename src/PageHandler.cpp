@@ -6,11 +6,11 @@
 #include "PageHandler.h"
 #include "misc.h"
 #include "Player.h"
+#include "global.h"
 
 
-PageHandler::PageHandler(std::shared_ptr<Player> plr, LogMgr &log, unsigned int lines_per_page):
+PageHandler::PageHandler(std::shared_ptr<Player> plr, unsigned int lines_per_page):
                         Handler(plr),
-								_log(log),
 								_lines_per_page(lines_per_page),
 								_to_display("")
 {
@@ -18,7 +18,6 @@ PageHandler::PageHandler(std::shared_ptr<Player> plr, LogMgr &log, unsigned int 
 
 PageHandler::PageHandler(const PageHandler &copy_from):
                         Handler(copy_from),
-								_log(copy_from._log),
 								_lines_per_page(copy_from._lines_per_page),
 								_to_display(copy_from._to_display)
 {
@@ -64,12 +63,11 @@ void PageHandler::getPrompt(std::string &buf) {
  *
  *    Params:  results - an empty vector to hold results
  *
+ *
  *********************************************************************************************/
 
 
 void PageHandler::postPush() {
-   // Nothing to do here.
-
 }
 
 /*********************************************************************************************
@@ -82,9 +80,20 @@ void PageHandler::postPush() {
 
 void PageHandler::prePop(std::vector<std::string> &results) {
 	// Nothing to do here.
-	results.push_back("none");
-
+	(void) results;
 }
+
+/*********************************************************************************************
+ * activate - displays the first page of data and, if complete, sends a signal to pop
+ *
+ *    Returns: true if the handler is finished, false otherwise
+ *
+ *********************************************************************************************/
+
+bool PageHandler::activate() {
+	return showNextPage();
+}
+
 
 /*********************************************************************************************
  * addContent - Adds text to the handler to be displayed
@@ -126,7 +135,6 @@ void PageHandler::addFileContent(const char *filename) {
 
       // Read in the file all at once
       buf.assign((std::istreambuf_iterator<char>(readfile)), std::istreambuf_iterator<char>());
-      _plr->sendMsg(buf);
 
       readfile.close();
 		_to_display += buf;
@@ -136,7 +144,7 @@ void PageHandler::addFileContent(const char *filename) {
 
       msg << "Attempted to open/send file '" << filename << "' to player '" << _plr->getID() << 
 																						"' failed. Error: " << e.what();
-      _log.writeLog(msg.str().c_str());
+      mudlog->writeLog(msg.str().c_str());
    }
 
 }

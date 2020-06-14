@@ -30,7 +30,7 @@ public:
    // const char *getTitle() const { return _title.c_str(); };
 
    // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
-   virtual void addLinks(EntityDB &edb, std::shared_ptr<Entity> self);
+   virtual void addLinks(EntityDB &edb, std::shared_ptr<Physical> self);
 
 	size_t getEquipListSize() const { return _equip_list.size(); };
 	const char *getEquipListName(size_t index) const { return _equip_list[index].first.c_str(); };

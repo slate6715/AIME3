@@ -6,7 +6,7 @@
 #include "misc.h"
 #include "global.h"
 
-const char *gflag_list[] = {"noget", "nodrop", "food", NULL};
+const char *gflag_list[] = {"noget", "nodrop", "food", "rope", NULL};
 
 
 /*********************************************************************************************
@@ -195,7 +195,7 @@ void Getable::setTitle(const char *newtitle) {
  *
  *********************************************************************************************/
 
-const char *Getable::listContents(std::string &buf, const Entity *exclude) const {
+const char *Getable::listContents(std::string &buf, const Physical *exclude) const {
    auto cit = _contained.begin();
 
    // Show getables first
@@ -218,7 +218,7 @@ const char *Getable::listContents(std::string &buf, const Entity *exclude) const
  *
  *********************************************************************************************/
 
-const char *Getable::getGameName(std::string &buf) {
+const char *Getable::getGameName(std::string &buf) const {
 	buf = _title;
 	return buf.c_str();
 }

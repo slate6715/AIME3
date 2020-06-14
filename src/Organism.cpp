@@ -26,7 +26,7 @@ const char *oflag_list[] = {NULL};
  *
  *********************************************************************************************/
 Organism::Organism(const char *id):
-								Entity(id) 
+								Physical(id) 
 {
 	// Review defaults
 	_reviews.push_back("%n is standing here.");				// Standing
@@ -70,7 +70,7 @@ Organism::Organism(const char *id):
 
 // Called by child class
 Organism::Organism(const Organism &copy_from):
-								Entity(copy_from)
+								Physical(copy_from)
 {
 
 }
@@ -92,14 +92,14 @@ Organism::~Organism() {
 void Organism::saveData(pugi::xml_node &entnode) const {
 
 	// First, call the parent version
-	Entity::saveData(entnode);
+	Physical::saveData(entnode);
 
    pugi::xml_node xnode;
    pugi::xml_attribute xattr;
 
-	// Save the desc
-	xnode = entnode.append_child("desc");
-	xnode.append_child(pugi::node_pcdata).set_value(_desc.c_str());
+	// Save the examine 
+	xnode = entnode.append_child("examine");
+	xnode.append_child(pugi::node_pcdata).set_value(_examine.c_str());
 
 	// Save the reviews
 	const char *reviewtype[] = {"standing", "entering", "leaving", NULL};
@@ -137,16 +137,16 @@ int Organism::loadData(pugi::xml_node &entnode) {
 
 	// First, call the parent function
 	int results = 0;
-	if ((results = Entity::loadData(entnode)) != 1)
+	if ((results = Physical::loadData(entnode)) != 1)
 		return results;
 
 	// Now populate organism data (none yet)
-   pugi::xml_node node = entnode.child("desc");
+   pugi::xml_node node = entnode.child("examine");
    if (node == nullptr) {
-      mudlog->writeLog("Organism save file missing mandatory 'desc' field.", 2);
+      mudlog->writeLog("Organism save file missing mandatory 'examine' field.", 2);
       return 0;
    }
-   _desc = node.child_value();
+   _examine = node.child_value();
 
    for (pugi::xml_node review = entnode.child("reviewmsg"); review; review = 
 																					review.next_sibling("reviewmsg")) {
@@ -218,7 +218,7 @@ int Organism::loadData(pugi::xml_node &entnode) {
  *********************************************************************************************/
 
 bool Organism::setFlagInternal(const char *flagname, bool newval) {
-   if (Entity::setFlagInternal(flagname, newval))
+   if (Physical::setFlagInternal(flagname, newval))
       return true;
 
 	unsigned int i = locateInTable(flagname, oflag_list);
@@ -241,7 +241,7 @@ bool Organism::setFlagInternal(const char *flagname, bool newval) {
  *********************************************************************************************/
 
 bool Organism::isFlagSetInternal(const char *flagname, bool &results) {
-   if (Entity::isFlagSetInternal(flagname, results))
+   if (Physical::isFlagSetInternal(flagname, results))
       return true;
 
    std::string flagstr = flagname;
@@ -404,7 +404,7 @@ const char *Organism::getAttributeStr(org_attrib attr) {
 }
 
 bool Organism::setAttribInternal(const char *attrib, int value) {
-   if (Entity::setAttribInternal(attrib, value))
+   if (Physical::setAttribInternal(attrib, value))
       return true;
 
    unsigned int i = locateInTable(attrib, org_attriblist);
@@ -416,7 +416,7 @@ bool Organism::setAttribInternal(const char *attrib, int value) {
 }
 
 bool Organism::setAttribInternal(const char *attrib, float value) {
-   if (Entity::setAttribInternal(attrib, value))
+   if (Physical::setAttribInternal(attrib, value))
       return true;
 
    unsigned int i = locateInTable(attrib, org_attriblist);
@@ -428,7 +428,7 @@ bool Organism::setAttribInternal(const char *attrib, float value) {
 }
 
 bool Organism::setAttribInternal(const char *attrib, const char *value) {
-   if (Entity::setAttribInternal(attrib, value))
+   if (Physical::setAttribInternal(attrib, value))
       return true;
 
    unsigned int i = locateInTable(attrib, org_attriblist);
@@ -440,7 +440,7 @@ bool Organism::setAttribInternal(const char *attrib, const char *value) {
 }
 
 bool Organism::setAttribInternal(const char *attrib, Attribute &value) {
-   if (Entity::setAttribInternal(attrib, value))
+   if (Physical::setAttribInternal(attrib, value))
       return true;
 
    unsigned int i = locateInTable(attrib, org_attriblist);
@@ -452,7 +452,7 @@ bool Organism::setAttribInternal(const char *attrib, Attribute &value) {
 }
 
 bool Organism::getAttribInternal(const char *attrib, int &value) {
-   if (Entity::getAttribInternal(attrib, value))
+   if (Physical::getAttribInternal(attrib, value))
       return true;
 
    unsigned int i = locateInTable(attrib, org_attriblist);
@@ -465,7 +465,7 @@ bool Organism::getAttribInternal(const char *attrib, int &value) {
 }
 
 bool Organism::getAttribInternal(const char *attrib, float &value) {
-   if (Entity::getAttribInternal(attrib, value))
+   if (Physical::getAttribInternal(attrib, value))
       return true;
 
    unsigned int i = locateInTable(attrib, org_attriblist);
@@ -477,7 +477,7 @@ bool Organism::getAttribInternal(const char *attrib, float &value) {
 }
 
 bool Organism::getAttribInternal(const char *attrib, std::string &value) {
-   if (Entity::getAttribInternal(attrib, value))
+   if (Physical::getAttribInternal(attrib, value))
       return true;
 
    unsigned int i = locateInTable(attrib, org_attriblist);
@@ -498,7 +498,7 @@ bool Organism::getAttribInternal(const char *attrib, std::string &value) {
 Attribute::attr_type Organism::getAttribTypeInternal(const char *attrib) const {
 
 	// First, check the parent
-	Attribute::attr_type atype = Entity::getAttribTypeInternal(attrib);
+	Attribute::attr_type atype = Physical::getAttribTypeInternal(attrib);
 
 	if (atype != Attribute::Undefined)
 		return atype;
@@ -521,7 +521,7 @@ Attribute::attr_type Organism::getAttribTypeInternal(const char *attrib) const {
 
 void Organism::fillAttrXMLNode(pugi::xml_node &anode) const {
 	// First call the parent
-	Entity::fillAttrXMLNode(anode);
+	Physical::fillAttrXMLNode(anode);
 
 	// Populate with all the attributes
 	pugi::xml_node nextnode;
@@ -600,30 +600,93 @@ bool Organism::getBodyPartFlag(const char *group, const char *name, bpart_flags 
  *
  *		Params:	equip_ptr - pointer to an entity object that should be an Equipment type
  *
- *		Returns: 1 for success
- *					0 for can't be equipped due to no available hands for weapons or no room for
- *						wearable objects
- *					-1 if the entity is not an equipment type
- *					-2 if the body part doesn't exist
+ *		Returns: true for success, false for failure and errmsg is populated
  *
  *********************************************************************************************/
-int Organism::equip(std::shared_ptr<Entity> equip_ptr) {
+bool Organism::equip(std::shared_ptr<Physical> equip_ptr, std::string &errmsg) {
 	std::shared_ptr<Equipment> eptr = std::dynamic_pointer_cast<Equipment>(equip_ptr);
 
-	if (eptr == nullptr)
-		return -1;
+	// Make sure it is an equipment type
+	if (eptr == nullptr) {
+		errmsg = "You can't equip that item.\n";
+		return false;
+	}
 
-	// First, verify there's room for this piece of equipment (todo)
+	// Loop through body parts to see if the necessary parts are available and it is not already worn
 	for (unsigned int i=0; i<eptr->getEquipListSize(); i++) {
-		
+		int results = findBodyPartContained(eptr->getEquipListGroup(i), eptr->getEquipListName(i), eptr);
+		if (results == -1) {
+			std::stringstream errmsgstr;
+			errmsgstr << "You are missing the required " << eptr->getEquipListName(i) << 
+							" body part needed to equip the " << eptr->getTitle() << "\n";
+			errmsg = errmsgstr.str();
+			return false;
+		} else if (results == 1) {
+			errmsg = "You are already wearing that.\n";
+			return false;
+		}
 	}
 
 	// Now add the equipment
    for (unsigned int i=0; i<eptr->getEquipListSize(); i++) {
-		if (!addBodyPartContained(eptr->getEquipListGroup(i), eptr->getEquipListName(i), eptr))
-			return -2;
+		if (!addBodyPartContained(eptr->getEquipListGroup(i), eptr->getEquipListName(i), eptr)) {
+			errmsg = "Unexpected error.\n";
+			return false;
+		}
    }
-	return 1;
+	return true;
+}
+
+/*********************************************************************************************
+ * remove - removes equipped entities
+ *
+ *    Params:  equip_ptr - pointer to an entity object that should be an Equipment type
+ *
+ *    Returns: true for success, false for failure and errmsg is populated
+ *
+ *********************************************************************************************/
+bool Organism::remove(std::shared_ptr<Physical> equip_ptr, std::string &errmsg) {
+   std::shared_ptr<Equipment> eptr = std::dynamic_pointer_cast<Equipment>(equip_ptr);
+
+   // Make sure it is an equipment type
+   if (eptr == nullptr) {
+      errmsg = "You can't equip that item.\n";
+      return false;
+   }
+
+   // Loop through body parts to see if the necessary parts are available and it is not already worn
+   for (unsigned int i=0; i<eptr->getEquipListSize(); i++) {
+      int results = remBodyPartContained(eptr->getEquipListGroup(i), eptr->getEquipListName(i), eptr);
+      if (results <= 0) {
+			errmsg = "You do not have that item equipped.\n";
+			return false;
+		}
+   }
+
+   return true;
+}
+
+/*********************************************************************************************
+ * findBodyPartContained - checks if the given equipment is contained by the body part
+ *
+ *    Returns: 1 for contained, 0 for not, -1 for missing body part
+ *
+ *********************************************************************************************/
+
+int Organism::findBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr) {
+   std::pair<std::string, std::string> epair(name, group);
+
+   auto bpptr = _bodyparts.find(epair);
+   if (bpptr == _bodyparts.end())
+      return -1;
+
+	auto wornptr = bpptr->second.worn.begin();
+	for ( ; wornptr != bpptr->second.worn.end(); bpptr++) {
+		if (*wornptr == equip_ptr)
+			return 1;
+	}
+
+   return 0;
 }
 
 /*********************************************************************************************
@@ -645,6 +708,30 @@ bool Organism::addBodyPartContained(const char *name, const char *group, std::sh
 }
 
 /*********************************************************************************************
+ * remBodyPartContained - removes the indicated equipment to the body part given it's name and group
+ *
+ *    Returns: -1 for body part doesn't exist, 0 for not found, 1 for success
+ *
+ *********************************************************************************************/
+
+int Organism::remBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr) {
+   std::pair<std::string, std::string> epair(name, group);
+
+   auto bpptr = _bodyparts.find(epair);
+   if (bpptr == _bodyparts.end())
+      return -1;
+
+   auto wornptr = bpptr->second.worn.begin();
+   for ( ; wornptr != bpptr->second.worn.end(); bpptr++) {
+      if (*wornptr == equip_ptr)
+         bpptr->second.worn.erase(wornptr);
+			return 1;
+   }
+
+   return 0;
+}
+
+/*********************************************************************************************
  * listContents - preps a string with a list of visible items, usually just the worn and
  *						wielded objects
  *
@@ -653,7 +740,7 @@ bool Organism::addBodyPartContained(const char *name, const char *group, std::sh
  *
  *********************************************************************************************/
 
-const char *Organism::listContents(std::string &buf, const Entity *exclude) const {
+const char *Organism::listContents(std::string &buf, const Physical *exclude) const {
    auto cit = _contained.begin();
 
 		
@@ -741,8 +828,19 @@ void Organism::sendTraits() {
  *
  *********************************************************************************************/
 
-const char *Organism::getGameName(std::string &buf) {
+const char *Organism::getGameName(std::string &buf) const {
 	return getNameID(buf);
 }
+
+/*********************************************************************************************
+ * listWhereWorn - Populates the bodyparts list with the parts that are wearing the item
+ *
+ *
+ *********************************************************************************************/
+
+void Organism::listWhereWorn(std::shared_ptr<Physical> obj, std::list<std::string> &bodyparts) {
+	
+}
+
 
 

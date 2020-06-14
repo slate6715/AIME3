@@ -20,8 +20,7 @@ UserMgr::UserMgr(MUD &engine):
 					_newuser_idx(0),
 					_listening_thread(nullptr),
 					_infodir("data/info"),
-					_userdir("data/users"),
-					_welcomefile("welcome.info")
+					_userdir("data/users")
 {
 
 
@@ -35,8 +34,7 @@ UserMgr::UserMgr(const UserMgr &copy_from):
 					_newuser_idx(copy_from._newuser_idx),
 					_listening_thread(nullptr),
 					_infodir(copy_from._infodir),
-					_userdir(copy_from._userdir),
-					_welcomefile(copy_from._welcomefile)
+					_userdir(copy_from._userdir)
 {
 
 }
@@ -57,17 +55,8 @@ UserMgr::~UserMgr() {
 void UserMgr::initialize(lc::Config &cfg_info) {
 	cfg_info.lookupValue("datadir.infodir", _infodir);
 	cfg_info.lookupValue("datadir.userdir", _userdir);
-	
-	std::string buf;
-	cfg_info.lookupValue("infofiles.welcome", buf);
-	_welcomefile = _infodir;
-	_welcomefile += "/";
-	_welcomefile += buf;
 
-	cfg_info.lookupValue("infofiles.motd", buf);
-	_motdfile = _infodir;
-	_motdfile += "/";
-	_motdfile += buf;
+	std::string buf;	
 
 	int timeval;
 	cfg_info.lookupValue("network.conn_timeout", timeval);
@@ -230,7 +219,7 @@ void UserMgr::handleUsers(libconfig::Config &cfg_info, EntityDB &edb){
 					plr.popHandler(hresults);
 
 					// This was a LoginHandler and the user just successfully logged in
-					if (hresults[0] == "loggedin") {
+					if ((hresults.size() > 0) && (hresults[0] == "loggedin")) {
 						// We need to remove the player from the user list, change their name, and re-add
 						std::string userkey("player:");
 						userkey += hresults[1];
@@ -248,8 +237,8 @@ void UserMgr::handleUsers(libconfig::Config &cfg_info, EntityDB &edb){
 						std::string startloc;
 						cfg_info.lookupValue("gameplay.startloc", startloc);
 
-						std::shared_ptr<Entity> curloc;
-						if ((curloc = edb.getEntity(startloc.c_str())) == nullptr) {
+						std::shared_ptr<Physical> curloc;
+						if ((curloc = edb.getPhysical(startloc.c_str())) == nullptr) {
 							std::string msg("Unable to assign incoming player to start loc '");
 							msg += startloc;
 							msg += "' defined in config file.";
@@ -260,10 +249,8 @@ void UserMgr::handleUsers(libconfig::Config &cfg_info, EntityDB &edb){
 							continue;	
 						}
 			
-						plr.moveEntity(curloc, newplr_it.first->second);
+						plr.movePhysical(curloc, newplr_it.first->second);
 
-						// Send the MOTD to the user
-						plr.sendFile(_motdfile.c_str());
 
 						plr.sendCurLocation();
 						plr.sendPrompt();
@@ -384,7 +371,7 @@ const char *UserMgr::showUsers(std::string &buf) {
 
 int UserMgr::sendMsg(const char *msg, std::vector<std::string> *exclude_flags,
                                 std::vector<std::string> *required_flags,
-                                std::shared_ptr<Entity> exclude_ind) {
+                                std::shared_ptr<Physical> exclude_ind) {
 
 	int count = 0;
 

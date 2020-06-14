@@ -3,7 +3,7 @@
 
 #include <map>
 #include <memory>
-#include "Entity.h"
+#include "Physical.h"
 
 class Trait;
 
@@ -20,18 +20,18 @@ public:
    EntityDB(const EntityDB &copy_from);
    virtual ~EntityDB();
 
-	int loadEntities(libconfig::Config &mud_cfg);
+	int loadPhysicals(libconfig::Config &mud_cfg);
 	int loadTraits(libconfig::Config &mud_cfg);
 
-	std::shared_ptr<Entity> getEntity(const char *id);
+	std::shared_ptr<Physical> getPhysical(const char *id);
 
 	std::shared_ptr<Trait> getTrait(const char *id);
 
 	// Removes all references to this item from the database objects`
-	size_t purgeEntity(std::shared_ptr<Entity> item);
+	size_t purgePhysical(std::shared_ptr<Physical> item);
  
 private:
-	std::map<std::string, std::shared_ptr<Entity>> _db;
+	std::map<std::string, std::shared_ptr<Physical>> _db;
 
 	std::map<std::string, std::shared_ptr<Trait>> _traits;
 };

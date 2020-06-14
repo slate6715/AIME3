@@ -32,8 +32,8 @@ public:
 
 	virtual bool sendFile(const char *filename);
    // Send a message to this entity or its contents - class-specific behavior
-   virtual void sendMsg(const char *msg, std::shared_ptr<Entity> exclude=nullptr); 
-   virtual void sendMsg(std::string &msg, std::shared_ptr<Entity> exclude=nullptr);
+   virtual void sendMsg(const char *msg, std::shared_ptr<Physical> exclude=nullptr); 
+   virtual void sendMsg(std::string &msg, std::shared_ptr<Physical> exclude=nullptr);
 
    // Sends the prompt of the top message handler to the player
    virtual void sendPrompt();
@@ -46,7 +46,7 @@ public:
 
 	// Send location contents to the player
 	void sendLocContents();
-   virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const;
+   virtual const char *listContents(std::string &buf, const Physical *exclude = NULL) const;
 
 	// Displays the exits of the current location to the user
 	virtual void sendExits();

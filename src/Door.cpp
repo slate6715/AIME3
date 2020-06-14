@@ -6,8 +6,9 @@
 #include "misc.h"
 #include "global.h"
 #include "Location.h"
+#include "Getable.h"
 
-const char *doorflag_list[] = {"hideclosedexit", NULL};
+const char *doorflag_list[] = {"hideclosedexit", "ropedoor", NULL};
 
 
 /*********************************************************************************************
@@ -18,6 +19,7 @@ Door::Door(const char *id):
 								Static(id)
 {
 	_roomdesc.assign(4, "");
+	_roomdesc2.assign(4, "");
 	_typename = "Door";
 }
 
@@ -43,7 +45,7 @@ Door::~Door() {
 void Door::saveData(pugi::xml_node &entnode) const {
 
 	// First, call the parent version
-	Entity::saveData(entnode);
+	Static::saveData(entnode);
 
    // Add organism data (none yet)
    // pugi::xml_attribute idnode = entnode.append_attribute("id");
@@ -80,6 +82,15 @@ int Door::loadData(pugi::xml_node &entnode) {
    }
    setStartLoc2(attr.value());
 
+   // Get the acttype - must be either hardcoded or script
+   pugi::xml_node node = entnode.child("examine2");
+   if (node == nullptr) {
+      errmsg << "Door '" << getID() << "' missing mandatory examine2 field.";
+      mudlog->writeLog(errmsg.str().c_str());
+      return 0;
+   }
+   setExamine2(node.child_value());
+
    // Get the RoomDesc
    for (pugi::xml_node anode = entnode.child("roomdesc");	anode; anode = 
 																					anode.next_sibling("roomdesc")) {
@@ -111,6 +122,39 @@ int Door::loadData(pugi::xml_node &entnode) {
          return 0;
 		} 
 			
+   }
+
+   // Get the RoomDesc2 (other side of door)
+   for (pugi::xml_node anode = entnode.child("roomdesc2");   anode; anode =
+                                                               anode.next_sibling("roomdesc2")) {
+
+      // Get the state for thid desc
+      pugi::xml_attribute attr = anode.attribute("state");
+      if (attr == nullptr) {
+         errmsg << "Door '" << getID() << "' roomdesc2 missing mandatory state field.";
+         mudlog->writeLog(errmsg.str().c_str());
+         return 0;
+      }
+
+      std::string state = attr.value();
+      lower(state);
+
+      std::string rdstr(anode.child_value() == NULL ? "" : anode.child_value());
+
+      if (state.compare("open") == 0)
+         _roomdesc2[Open] = rdstr;
+      else if (state.compare("closed") == 0)
+         _roomdesc2[Closed] = rdstr;
+      else if (state.compare("locked") == 0)
+         _roomdesc2[Locked] = rdstr;
+      else if (state.compare("special") == 0)
+         _roomdesc2[Special] = rdstr;
+      else {
+         errmsg << "Door '" << getID() << "' roomdesc2 state not a valid state.";
+         mudlog->writeLog(errmsg.str().c_str());
+         return 0;
+      }
+
    }
 
    // Get the title that appears in most text in game
@@ -197,7 +241,7 @@ bool Door::isFlagSetInternal(const char *flagname, bool &results) {
  *
  *********************************************************************************************/
 
-void Door::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
+void Door::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
    std::stringstream msg;
 
 	// Static should add the door to startloc1
@@ -212,7 +256,7 @@ void Door::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
 
 
 	// Now add this door to startloc2
-   std::shared_ptr<Entity> entptr = edb.getEntity(_startloc2.c_str());
+   std::shared_ptr<Physical> entptr = edb.getPhysical(_startloc2.c_str());
 
 	if (entptr == nullptr) {
 		msg << "Door '" << getID() << "' startloc2 '" << _startloc2 << "' doesn't appear to exist.";
@@ -230,7 +274,7 @@ void Door::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
 	// Add this door to the second room 
    _cur_loc2 = entptr;
 
-   entptr->addEntity(self);
+   entptr->addPhysical(self);
 
 
 }
@@ -241,13 +285,13 @@ void Door::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
  *
  *********************************************************************************************/
 
-std::shared_ptr<Entity> Door::getOppositeLoc(std::shared_ptr<Entity> cur_loc) {
+std::shared_ptr<Physical> Door::getOppositeLoc(std::shared_ptr<Physical> cur_loc) {
 	std::shared_ptr<Location> locptr = std::dynamic_pointer_cast<Location>(cur_loc);
 	return getOppositeLoc(&(*locptr));
 }
 
-std::shared_ptr<Entity> Door::getOppositeLoc(Location *cur_loc) {
-	std::shared_ptr<Entity> loc1(getCurLoc()), loc2(getCurLoc2());
+std::shared_ptr<Physical> Door::getOppositeLoc(Location *cur_loc) {
+	std::shared_ptr<Physical> loc1(getCurLoc()), loc2(getCurLoc2());
 
 	
    if (*loc1 == cur_loc)
@@ -263,4 +307,141 @@ std::shared_ptr<Entity> Door::getOppositeLoc(Location *cur_loc) {
       return nullptr;
    }
 }
+
+/*********************************************************************************************
+ * getCurRoomdesc - Gets the roomdesc matching the cur_loc and current door state
+ *
+ *********************************************************************************************/
+
+const char *Door::getCurRoomdesc(const Location *cur_loc) {
+
+	if (getCurLoc().get() == cur_loc)
+		return _roomdesc[getDoorState()].c_str();
+	else if (_cur_loc2.get() == cur_loc)
+		return _roomdesc[getDoorState()].c_str();
+	else {
+		throw std::invalid_argument("getCurRoomdesc cur_loc does not match a door location.");
+	}
+}
+
+/*********************************************************************************************
+ * open - does some checks and, if allowed, opens the container so it can be viewed and items
+ *        exchanged
+ *
+ *    Params: errmsg - error text is stored here if the function fails its checks
+ *
+ *    Returns: true if successful, false if an error happened
+ *
+ *********************************************************************************************/
+
+bool Door::open(std::string &errmsg) {
+
+	if (isDoorFlagSet(RopeDoor)) {
+		errmsg = "You can't open that";
+		return false;
+	}
+
+   // It must be unlocked
+   if (getDoorState() == Locked) {
+      errmsg = "It's locked.\n";
+      return false;
+   }
+
+   if (getDoorState() == Open) {
+      errmsg = "It is already open.\n";
+      return false;
+   }
+
+   setDoorState(Open);
+   return true;
+}
+
+// Rope version
+bool Door::open(std::shared_ptr<Physical> tool, std::string &errmsg) {
+
+	if (!isDoorFlagSet(RopeDoor))
+	{
+      std::string errmsg("You cannot tie anything to the ");
+      errmsg += getTitle();
+		errmsg += ".\n";
+      return false;		
+	}
+
+	if (getDoorState() == Open) {
+		errmsg = "Something is already tied there.\n";
+		return false;
+	}
+
+	tool->movePhysical(Physical::getPhysSelfPtr(), tool);
+	setDoorState(Open);
+	return true;
+}
+
+
+/*********************************************************************************************
+ * close - does some checks and, if allowed, closes the container
+ *
+ *    Params: errmsg - error text is stored here if the function fails its checks
+ *
+ *    Returns: true if successful, false if an error happened
+ *
+ *********************************************************************************************/
+
+bool Door::close(std::string &errmsg) {
+
+   if (isDoorFlagSet(RopeDoor)) {
+      errmsg = "You can't close that";
+      return false;
+   }
+
+   // It must be closeable
+   if (isStaticFlagSet(NotCloseable)) {
+      errmsg = "That can't be closed.\n";
+      return false;
+   }
+
+   // It must be open
+   if (getDoorState() != Open) {
+      errmsg = "It is already closed.\n";
+      return false;
+   }
+
+   setDoorState(Closed);
+   return true;
+}
+
+std::shared_ptr<Physical> Door::closeTool(std::string &errmsg) {
+
+	// Nothing in the 
+	if ((getDoorState() != Open) || (_contained.size() == 0)) {
+		errmsg = "Nothing is tied to that.\n";
+		return nullptr;
+	}
+
+	auto cptr = _contained.begin();
+	while (cptr != _contained.end()) {
+		std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(*cptr);
+		if ((gptr != nullptr) && (gptr->isGetableFlagSet(Getable::Rope))) {
+			removePhysical(gptr);
+			setDoorState(Closed);
+			return gptr;
+		}
+		cptr++;
+	}
+
+	errmsg = "Nothing is tied to that.\n";
+	return nullptr;
+}
+
+/*********************************************************************************************
+ * getGameName - fills the buffer with the primary name that the game refers to this entity.
+ *
+ *
+ *********************************************************************************************/
+
+const char *Door::getGameName(std::string &buf) const {
+	buf = _title;
+	return buf.c_str();
+}
+
 

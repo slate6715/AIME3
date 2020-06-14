@@ -6,11 +6,13 @@
 #include <bitset>
 #include <vector>
 #include "Entity.h"
+#include "Physical.h"
 #include "actions.h"
 
 class MUD;
 class UserMgr;
 class Organism;
+class EntityDB;
 
 /***************************************************************************************
  * Action - contains all the necessary components to execute a command in the game.
@@ -27,6 +29,7 @@ public:
 			Undef,	// Not used default value that will throw an exception
 			Single,	// Simplest command - single word
 			ActTarg,	// <action> <target>
+			ActTargCont,	// <action> <target> <preposition> <target2>
 			ActTargOptCont,// <action> <target> [<preposition> <target2>
 			Look,		// <action> [<preposition>] <target>
 			Chat,		// <action> <string>
@@ -36,10 +39,14 @@ public:
 	enum act_types { Hardcoded, Script, Trigger };
 
 	enum act_flags {
-			TargetMUD,	 // Target1 might be in the broader MUD (not in current loc)
-			TargetLoc,	 // Look for target1 in the actor's current location
-			TargetInv,	 // Look in the actor's inventory for the target
-			TargetOrg,	 // Target1 must be an organism (mobile or player)
+			Target1MUD,	 // Target1 might be in the broader MUD (not in current loc)
+			Target1Loc,	 // Look for target1 in the actor's current location
+			Target1Inv,	 // Look in the actor's inventory for the target
+			Target1Org,	 // Target1 must be an organism (mobile or player)
+         Target2MUD,   // Target2 might be in the broader MUD (not in current loc)
+         Target2Loc,   // Look for target2 in the actor's current location
+         Target2Inv,   // Look in the actor's inventory for the target2
+         Target2Org,   // Target2 must be an organism (mobile or player)
 			NoLookup,	 // Action class will not lookup the target object but simply pass in the string
 			AliasTarget  // Aliases can act as the target (such as with "go east" and "east")
 	};
@@ -55,8 +62,8 @@ public:
 	void setExecuteNow();
 	void setActor(std::shared_ptr<Organism> actor);
 	void setFormat(const char *format);
-	void setTarget1(std::shared_ptr<Entity> target) { _target1 = target; };
-   void setTarget2(std::shared_ptr<Entity> target) { _target2 = target; };
+	void setTarget1(std::shared_ptr<Physical> target) { _target1 = target; };
+   void setTarget2(std::shared_ptr<Physical> target) { _target2 = target; };
 
 	int execute(MUD &mud);
 
@@ -79,11 +86,10 @@ public:
 
 	// Finds a target based on flags, location, etc--basic availability and populates
 	// errors in the errmsg string
-	std::shared_ptr<Entity> findTarget(std::string &name, std::string &errmsg, EntityDB &edb,
-																	UserMgr &umgr);
+	std::shared_ptr<Physical> findTarget(std::string &name, std::string &errmsg, int targetsel = 1);
 
-	std::shared_ptr<Entity> getTarget1() { return _target1; };
-	std::shared_ptr<Entity> getTarget2() { return _target2; };
+	std::shared_ptr<Physical> getTarget1() { return _target1; };
+	std::shared_ptr<Physical> getTarget2() { return _target2; };
 
 protected:
 
@@ -122,8 +128,9 @@ private:
 	std::string _posttrig;
 
 	// Target pointers for action execution
-	std::shared_ptr<Entity> _target1;
-	std::shared_ptr<Entity> _target2;
+	std::shared_ptr<Physical> _target1;
+
+	std::shared_ptr<Physical> _target2;
 };
 
 struct hardcoded_actions {

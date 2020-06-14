@@ -20,9 +20,9 @@ public:
 
 	int execute();
 
-	void setActor(std::shared_ptr<Entity> actor) { _actor = actor; };
-   void setTarget1(std::shared_ptr<Entity> target) { _target1 = target; };
-   void setTarget2(std::shared_ptr<Entity> target) { _target2 = target; };
+	void setActor(std::shared_ptr<Physical> actor) { _actor = actor; };
+   void setTarget1(std::shared_ptr<Physical> target) { _target1 = target; };
+   void setTarget2(std::shared_ptr<Physical> target) { _target2 = target; };
 
 	const char *getErrMsg() { return _errmsg.c_str(); };
 
@@ -30,9 +30,9 @@ private:
 
 	IMUD _access;
 	
-	std::shared_ptr<Entity> _actor;
-	std::shared_ptr<Entity> _target1;
-	std::shared_ptr<Entity> _target2;
+	std::shared_ptr<Physical> _actor;
+	std::shared_ptr<Physical> _target1;
+	std::shared_ptr<Physical> _target2;
 
 	std::string _script;
 

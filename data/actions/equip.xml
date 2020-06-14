@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<action id="action:equip" acttype="Hardcoded" parsetype="ActTarg" format="equip <object>" function="equipcom">
+<flag name="Target1Inv" />
+<alias name="wear"/>
+<alias name="wield"/>
+</action> 

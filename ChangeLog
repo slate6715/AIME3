@@ -1,3 +1,14 @@
+06/14/2020
+- Fixed a word wrap error when a colorcode appeared right before the wrap length
+- Finished the PageHandler and set it up to display the login message (usually motd)
+- Changed Entity getContainedByName to attempt to use altnames
+- Added the Physical class as a subclass to Entity and moved all Physical mud objects under it
+- Added equip and remove functions
+- Added the put function and redid get to handle containers
+- Added functionality for rope doors that "open" when you tie a rope to them
+- Changed a number of _desc attributes to _examine
+- Added parsing for Target2 and modified flags to handle Target1 and Target2 flags
+
 6/12/2020
 - Added the ScriptEngine class to manage scripting/specials
 - Integrated Python script embedding to the MUD engine

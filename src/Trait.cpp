@@ -184,7 +184,7 @@ void Trait::maskPlayer(std::shared_ptr<Player> plr) {
 			}
 
 			// Set the attribute
-			plr->Entity::setAttribute(_init_list[i].name.c_str(), _init_list[i].attr->getStr());
+			plr->Physical::setAttribute(_init_list[i].name.c_str(), _init_list[i].attr->getStr());
 			continue;
 		}
 
@@ -197,7 +197,7 @@ void Trait::maskPlayer(std::shared_ptr<Player> plr) {
             continue;
 			}
 			
-			plr->Entity::setAttribute(_init_list[i].name.c_str(), *(_init_list[i].attr));
+			plr->Physical::setAttribute(_init_list[i].name.c_str(), *(_init_list[i].attr));
 			continue;
 		}
 		
@@ -208,14 +208,14 @@ void Trait::maskPlayer(std::shared_ptr<Player> plr) {
 				newval = value + *(_init_list[i].attr);
 			else
 				newval = value * *(_init_list[i].attr);
-			plr->Entity::setAttribute(_init_list[i].name.c_str(), newval);
+			plr->Physical::setAttribute(_init_list[i].name.c_str(), newval);
 		} else {
 			FloatAttribute newval, value = plr->getAttribFloat(_init_list[i].name.c_str());
          if (_init_list[i].action == Add)
             newval = value + *(_init_list[i].attr);
          else
             newval = value * *(_init_list[i].attr);
-         plr->Entity::setAttribute(_init_list[i].name.c_str(), newval);
+         plr->Physical::setAttribute(_init_list[i].name.c_str(), newval);
 		}
 	}
 }

@@ -8,7 +8,7 @@
 #include "Getable.h"
 #include "Door.h"
 
-const char *sflag_list[] = {"container", "lockable", "closeable", "lightable", "magiclit", NULL};
+const char *sflag_list[] = {"container", "lockable", "notcloseable", "lightable", "magiclit", NULL};
 
 
 /*********************************************************************************************
@@ -16,7 +16,7 @@ const char *sflag_list[] = {"container", "lockable", "closeable", "lightable", "
  *
  *********************************************************************************************/
 Static::Static(const char *id):
-								Entity(id)
+								Physical(id)
 {
 	_typename = "Static";
 
@@ -24,7 +24,7 @@ Static::Static(const char *id):
 
 // Copy constructor
 Static::Static(const Static &copy_from):
-								Entity(copy_from)
+								Physical(copy_from)
 {
 
 }
@@ -45,7 +45,7 @@ Static::~Static() {
 void Static::saveData(pugi::xml_node &entnode) const {
 
 	// First, call the parent version
-	Entity::saveData(entnode);
+	Physical::saveData(entnode);
 
    // Add organism data (none yet)
    // pugi::xml_attribute idnode = entnode.append_attribute("id");
@@ -67,19 +67,19 @@ int Static::loadData(pugi::xml_node &entnode) {
 
 	// First, call the parent function
 	int results = 0;
-	if ((results = Entity::loadData(entnode)) != 1)
+	if ((results = Physical::loadData(entnode)) != 1)
 		return results;
 
 	std::stringstream errmsg;
 
    // Get the acttype - must be either hardcoded or script
-	pugi::xml_node node = entnode.child("desc");
+	pugi::xml_node node = entnode.child("examine");
    if (node == nullptr) {
-      errmsg << "Static '" << getID() << "' missing mandatory desc field.";
+      errmsg << "Static '" << getID() << "' missing mandatory examine field.";
       mudlog->writeLog(errmsg.str().c_str());
       return 0;
    }
-	setDesc(node.child_value());
+	setExamine(node.child_value());
 
    // Get the acttype - must be either hardcoded or script
    pugi::xml_attribute attr = entnode.attribute("startloc");
@@ -157,8 +157,8 @@ int Static::loadData(pugi::xml_node &entnode) {
  *
  *********************************************************************************************/
 
-void Static::setDesc(const char *newdesc) {
-	_desc = newdesc;
+void Static::setExamine(const char *newexamine) {
+	_examine = newexamine;
 }
 
 void Static::setStartLoc(const char *newloc) {
@@ -178,7 +178,7 @@ void Static::addAltName(const char *names) {
  *********************************************************************************************/
 
 bool Static::setFlagInternal(const char *flagname, bool newval) {
-   if (Entity::setFlagInternal(flagname, newval))
+   if (Physical::setFlagInternal(flagname, newval))
       return true;
 
    std::string flagstr = flagname;
@@ -207,7 +207,7 @@ bool Static::setFlagInternal(const char *flagname, bool newval) {
  *********************************************************************************************/
 
 bool Static::isFlagSetInternal(const char *flagname, bool &results) {
-   if (Entity::isFlagSetInternal(flagname, results))
+   if (Physical::isFlagSetInternal(flagname, results))
       return true;
 
    std::string flagstr = flagname;
@@ -252,7 +252,7 @@ bool Static::hasAltName(const char *str, bool allow_abbrev) {
  *
  *********************************************************************************************/
 
-void Static::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
+void Static::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
    std::stringstream msg;
 
 	// If startloc == "none", then it starts in limbo
@@ -261,7 +261,7 @@ void Static::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
 	}
 
 	// Place this at its start location
-   std::shared_ptr<Entity> entptr = edb.getEntity(_startloc.c_str());
+   std::shared_ptr<Physical> entptr = edb.getPhysical(_startloc.c_str());
 
 	if (entptr == nullptr) {
 		msg << "Object '" << getID() << "' startloc '" << _startloc << "' doesn't appear to exist.";
@@ -269,41 +269,10 @@ void Static::addLinks(EntityDB &edb, std::shared_ptr<Entity> self) {
 		return;
    } 
 
-	moveEntity(entptr, self);
+	movePhysical(entptr, self);
 
 }
 
-
-/*********************************************************************************************
- * getContainedByName - returns a shared_ptr to the contained entity that matches the name.
- *             Polymorphic. For this class version, only matches the name field
- *
- *    Params:  name - string to search the NameID for
- *             allow_abbrev - if true, entity only needs to match up to sizeof(name)
- *
- *    Returns: shared_ptr if found, nullptr if not
- *
- *********************************************************************************************/
-
-std::shared_ptr<Entity> Static::getContainedByName(const char *name, bool allow_abbrev) {
-   std::string namebuf = name;
-   std::string ebuf;
-
-	// Check by title or nameID
-   std::shared_ptr<Entity> results = Entity::getContainedByName(name, allow_abbrev);
-   if (results != nullptr)
-      return results;
-
-   // Search by altnames next
-   auto eit = _contained.begin();
-   for ( ; eit != _contained.end(); eit++) {
-      if (eit->get()->hasAltName(name, allow_abbrev))
-         return *eit;
-   }
-
-   return nullptr;
-
-}
 
 /*********************************************************************************************
  * listContents - preps a string with a list of visible items in this static's container
@@ -311,7 +280,7 @@ std::shared_ptr<Entity> Static::getContainedByName(const char *name, bool allow_
  *
  *********************************************************************************************/
 
-const char *Static::listContents(std::string &buf, const Entity *exclude) const {
+const char *Static::listContents(std::string &buf, const Physical *exclude) const {
 	(void) exclude; // Not used in this version
    auto cit = _contained.begin();
 
@@ -369,8 +338,8 @@ bool Static::setDoorState(const char *new_state) {
 
 bool Static::open(std::string &errmsg) {
 	
-	// First, it must be a container or a door
-	if (!isStaticFlagSet(Container) && (dynamic_cast<Door *>(this) == NULL)) {
+	// First, it must be a container (overloaded for doors)
+	if (!isStaticFlagSet(Container)) {
 		errmsg = "You can't open that.\n";
 		return false;
 	}
@@ -408,7 +377,7 @@ bool Static::close(std::string &errmsg) {
    }
 
 	// It must be closeable
-	if (!isStaticFlagSet(Closeable)) {
+	if (isStaticFlagSet(NotCloseable)) {
 		errmsg = "That can't be closed.\n";
 		return false;
 	}
@@ -429,7 +398,7 @@ bool Static::close(std::string &errmsg) {
  *
  *********************************************************************************************/
 
-const char *Static::getGameName(std::string &buf) {
+const char *Static::getGameName(std::string &buf) const {
 	return getNameID(buf);
 }
 

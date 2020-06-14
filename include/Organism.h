@@ -2,9 +2,10 @@
 #define ORGANISM_H
 
 #include <vector>
+#include <list>
 #include <bitset>
 #include <map>
-#include "Entity.h"
+#include "Physical.h"
 #include "Location.h"
 
 class Equipment;
@@ -15,7 +16,7 @@ enum bpart_flags { CanWield, Damaged, Missing };
 
 struct body_part {
 	std::bitset<32> bpflags;
-	std::vector<std::shared_ptr<Equipment>> worn;
+	std::list<std::shared_ptr<Equipment>> worn;
 };
 
 /***************************************************************************************
@@ -24,7 +25,7 @@ struct body_part {
  *				  directly
  *
  ***************************************************************************************/
-class Organism : public Entity 
+class Organism : public Physical 
 {
 public:
 	
@@ -34,20 +35,22 @@ public:
 	enum org_attrib { Strength, Constitution, Dexterity, Intelligence, Wisdom, Charisma, Experience, Damage, Last };
 
 	// Gets the primary reference name the game refers to this organism by
-   virtual const char *getGameName(std::string &buf);
+   virtual const char *getGameName(std::string &buf) const;
 
 	// Virtual functions that do nothing for NPCs
    virtual bool sendFile(const char *filename) { (void) filename; return true; };
    // Send a message to this entity or its contents - class-specific behavior
-   virtual void sendMsg(const char *msg, std::shared_ptr<Entity> exclude=nullptr)                                                                                      { (void) msg; (void) exclude; };
-   virtual void sendMsg(std::string &msg, std::shared_ptr<Entity> exclude=nullptr)                                                                                     { (void) msg; (void) exclude; };
+   virtual void sendMsg(const char *msg, std::shared_ptr<Physical> exclude=nullptr)                                                                                      { (void) msg; (void) exclude; };
+   virtual void sendMsg(std::string &msg, std::shared_ptr<Physical> exclude=nullptr)                                                                                     { (void) msg; (void) exclude; };
 	virtual void sendPrompt() {};
 	virtual void sendCurLocation() {};
 	virtual void sendExits() {};
 	virtual void sendTraits();
 
 	// Series of functions that retrieve class attribute data
-	virtual const char *getDesc() const { return _desc.c_str(); };
+	virtual const char *getExamine() const { return _examine.c_str(); };
+   virtual const char *getTitle() const { return NULL; };
+
 	const char *getReview(review_type review);
    const char *getReview(const char *reviewstr);
 	const char *getReviewProcessed(review_type review, std::string &buf,
@@ -71,15 +74,19 @@ public:
 	void setBodyPartFlag(const char *group, const char *name, bpart_flags flag, bool value);
 	bool getBodyPartFlag(const char *group, const char *name, bpart_flags flag);
 
+	
 	// Manage traits
 	void addTrait(std::shared_ptr<Trait> new_trait);
 	bool hasTrait(const char *trait_id);
 	bool removeTrait(const char *trait_id);
 
 	// Equip a piece of equipment (should already be in the organism's inventory
-	int equip(std::shared_ptr<Entity> equip_ptr);
+	bool equip(std::shared_ptr<Physical> equip_ptr, std::string &errmsg);
+   bool remove(std::shared_ptr<Physical> equip_ptr, std::string &errmsg);
 
-	virtual const char *listContents(std::string &buf, const Entity *exclude = NULL) const;	
+	virtual const char *listContents(std::string &buf, const Physical *exclude = NULL) const;	
+	
+	void listWhereWorn(std::shared_ptr<Physical> obj, std::list<std::string> &bodyparts);
 
 protected:
 	Organism(const char *id);	// Must be called from the child constructor
@@ -105,9 +112,11 @@ protected:
 	Attribute::attr_type getAttribTypeInternal(const char *attrib) const;
 
 	bool addBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
+   int remBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
+	int findBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
 
 private:
-	std::string _desc;
+	std::string _examine;
 
 	std::vector<std::string> _reviews;
 

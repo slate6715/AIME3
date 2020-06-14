@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<action id="action:tie" acttype="Hardcoded" parsetype="ActTargCont" format="tie <object> to <target>" function="tiecom">
+<flag name="Target1Inv" />
+<flag name="Target1Loc" />
+<flag name="Target2Loc" />
+</action> 

@@ -27,6 +27,7 @@ public:
 	virtual void getPrompt(std::string &buf) = 0;
 	virtual void prePop(std::vector<std::string> &results) = 0;
 	virtual void postPush() = 0;
+	virtual bool activate() { return false; };	// Mostly does nothing
 
 	// The handler state - finished = read to pop
 	enum hstate_types { Active, Finished, Disconnect };

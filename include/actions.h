@@ -9,6 +9,7 @@ int gocom(MUD &engine, Action &act_used);
 int lookcom(MUD &engine, Action &act_used);
 int exitscom(MUD &engine, Action &act_used);
 int getcom(MUD &engine, Action &act_used);
+int putcom(MUD &engine, Action &act_used);
 int dropcom(MUD &engine, Action &act_used);
 int inventorycom(MUD &engine, Action &act_used);
 int userscom(MUD &engine, Action &act_used);
@@ -19,6 +20,9 @@ int quitcom(MUD &engine, Action &act_used);
 int opencom(MUD &engine, Action &act_used);
 int closecom(MUD &engine, Action &act_used);
 int statscom(MUD &engine, Action &act_used);
-
+int equipcom(MUD &engine, Action &act_used);
+int removecom(MUD &engine, Action &act_used);
+int tiecom(MUD &engine, Action &act_used);
+int untiecom(MUD &engine, Action &act_used);
 
 #endif // ifndef ACTIONS
