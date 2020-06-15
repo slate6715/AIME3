@@ -11,12 +11,19 @@ public:
    IPhysical(std::shared_ptr<Physical> eptr);
    IPhysical(const IPhysical &copy_from);
 
+	// Send a message to this entity - for locations, exclude can limit people
    void sendMsg(const char *msg);
-	void sendMsgLoc(const char *msg);
+	void sendMsgLoc(const char *msg, IPhysical exclude);
 
 	void moveTo(IPhysical new_loc);
 
+	std::string getDoorState();
+	void setDoorState(const char *state);
+	
    std::string getCurLocID();
+	IPhysical getCurLoc();
+	IPhysical getCurLoc2();
+
 	std::string getTitle();
 
 private:

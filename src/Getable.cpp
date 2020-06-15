@@ -116,15 +116,6 @@ int Getable::loadData(pugi::xml_node &entnode) {
       return 0;
 	}
 
-   // Get the acttype - must be either hardcoded or script
-   pugi::xml_attribute attr = entnode.attribute("title");
-   if (attr == nullptr) {
-      errmsg << "Getable '" << getID() << "' missing mandatory title field.";
-      mudlog->writeLog(errmsg.str().c_str());
-      return 0;
-   }
-	setTitle(attr.value());
-
 	return 1;
 }
 
@@ -266,9 +257,6 @@ const char *Getable::getRoomDesc() {
  *
  *********************************************************************************************/
 
-void Getable::setTitle(const char *newtitle) {
-   _title = newtitle;
-}
 
 /*********************************************************************************************
  * listContents - preps a string with a list of visible objects in a getable
@@ -293,14 +281,4 @@ const char *Getable::listContents(std::string &buf, const Physical *exclude) con
    return buf.c_str();
 }
 
-/*********************************************************************************************
- * getGameName - fills the buffer with the primary name that the game refers to this entity.
- *
- *
- *********************************************************************************************/
-
-const char *Getable::getGameName(std::string &buf) const {
-	buf = _title;
-	return buf.c_str();
-}
 

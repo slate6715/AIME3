@@ -3,6 +3,8 @@
 #include "Organism.h"
 #include "exceptions.h"
 #include "global.h"
+#include "Static.h"
+#include "Door.h"
 
 IMUD::IMUD() {
 
@@ -57,6 +59,21 @@ std::string IPhysical::getCurLocID() {
 	return std::string(_eptr->getCurLoc()->getID());
 }
 
+IPhysical IPhysical::getCurLoc() {
+	return IPhysical(_eptr->getCurLoc());
+}
+
+// For the other side of the door
+IPhysical IPhysical::getCurLoc2() {
+	std::shared_ptr<Door> dptr = std::dynamic_pointer_cast<Door>(_eptr);
+
+	if (dptr == nullptr)
+		throw script_error("getCurLoc2 called on non-Door object.");
+
+   return IPhysical(dptr->getCurLoc2());
+}
+
+
 /*********************************************************************************************
  * getTitle - Gets the Title of this Physical (Title form varies by type)
  *
@@ -70,30 +87,42 @@ std::string IPhysical::getTitle() {
 
 /*********************************************************************************************
  * sendMsg - sends the text to an Organism associated with this Physical (or does nothing if not 
- *				 an Organism
+ *				 an Organism. Second version is for locations to exclude the actor
  *
  *********************************************************************************************/
 
 void IPhysical::sendMsg(const char *msg) {
 	std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(_eptr);
 
-	// Fail quietly for now if this isn't the right type of entity
-	if (optr == NULL)
+	// Send to an organism?
+	if (optr != NULL) {
+		optr->sendMsg(msg);
 		return;
+	}
 
-   optr->sendMsg(msg);
+	// Send to a location?
+	std::shared_ptr<Location> lptr = std::dynamic_pointer_cast<Location>(_eptr);
+	if (lptr != NULL) {
+		lptr->sendMsg(msg);
+		return;
+	}
+
+	std::stringstream errmsg;
+	throw script_error("sendMsg special function called on a non-organism or location.");
 }
 
-/*********************************************************************************************
- * sendMsgLoc - sends a message to this object's Location, excluding the object if it is a
- *					 Player.
- *
- *********************************************************************************************/
+void IPhysical::sendMsgLoc(const char *msg, IPhysical exclude) {
+   std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(_eptr);
 
-void IPhysical::sendMsgLoc(const char *msg) {
-   std::shared_ptr<Player> pptr = std::dynamic_pointer_cast<Player>(_eptr);
+	// This function only works for location, hence the exclude function
+   std::shared_ptr<Location> lptr = std::dynamic_pointer_cast<Location>(_eptr);
+   if (lptr != NULL) {
+      lptr->sendMsg(msg, exclude._eptr);
+      return;
+   }
 
-	_eptr->getCurLoc()->sendMsg(msg, pptr);
+   std::stringstream errmsg;
+   throw script_error("sendMsg special function with exclude called on a non-location.");
 }
 
 /*********************************************************************************************
@@ -107,6 +136,36 @@ void IPhysical::moveTo(IPhysical new_loc) {
 
       errmsg << "moveTo special function failed for some reason moving: " << _eptr->getID();
       throw script_error(errmsg.str().c_str());
+	}
+}
+
+/*********************************************************************************************
+ * getDoorState - 
+ *
+ *********************************************************************************************/
+
+std::string IPhysical::getDoorState() {
+	std::shared_ptr<Static> sptr = std::dynamic_pointer_cast<Static>(_eptr);
+
+	if (sptr == nullptr) {
+		throw script_error("getDoorState special function called on nonStatic");
+	}
+	
+	const char *doorstate[] = {"open", "closed", "locked", "special"};
+	return std::string(doorstate[sptr->getDoorState()]);
+}
+
+void IPhysical::setDoorState(const char *state) {
+
+	std::shared_ptr<Static> sptr = std::dynamic_pointer_cast<Static>(_eptr);
+   if (sptr == nullptr) {
+      throw script_error("setDoorState special function called on nonStatic");
+   }
+
+	if (!sptr->setDoorState(state)) {
+		std::string errmsg("setDoorState special function called with improper state: ");
+		errmsg += state;
+      throw script_error(errmsg.c_str());
 	}
 }
 

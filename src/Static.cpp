@@ -90,6 +90,15 @@ int Static::loadData(pugi::xml_node &entnode) {
    }
    setStartLoc(attr.value());
 
+   // Get the title that appears in most text in game
+   attr = entnode.attribute("title");
+   if (attr == nullptr) {
+      errmsg << "Static '" << getID() << "' missing mandatory title field.";
+      mudlog->writeLog(errmsg.str().c_str());
+      return 0;
+   }
+   setTitle(attr.value());
+
    // Get the Altnames (if any)
    for (pugi::xml_node anode = entnode.child("altname");	anode; anode = 
 																					anode.next_sibling("altname")) {
@@ -167,6 +176,10 @@ void Static::setStartLoc(const char *newloc) {
 
 void Static::addAltName(const char *names) {
    _altnames.push_back(names);
+}
+
+void Static::setTitle(const char *newtitle) {
+	_title = newtitle;
 }
 
 
@@ -399,6 +412,7 @@ bool Static::close(std::string &errmsg) {
  *********************************************************************************************/
 
 const char *Static::getGameName(std::string &buf) const {
-	return getNameID(buf);
+	buf = getTitle();
+	return buf.c_str();
 }
 

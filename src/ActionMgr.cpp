@@ -398,8 +398,10 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 	std::string pretrig = new_act->getPreTrig();
 	if (pretrig.size() > 0) {
 		int results = handleSpecials(new_act, pretrig.c_str());
-		if (results == 2)
+		if (results == 2) {
+			delete new_act;
 			return NULL;
+		}
 	}
 
 	// Command line actions are executed right away

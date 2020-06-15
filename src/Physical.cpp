@@ -511,7 +511,9 @@ int Physical::execSpecial(const char *trigger, std::shared_ptr<Organism> actor) 
 
 			script.setActor(actor);
 
-			script.execute();
+			int results = script.execute();
+			if (results == 1)
+				return 2;
 
 			return 1;
 		}

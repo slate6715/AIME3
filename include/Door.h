@@ -22,19 +22,15 @@ public:
 
    virtual ~Door();
 
-	enum doorflags { HideClosedExit, RopeDoor, PushToggle };
+	enum doorflags { HideClosedExit, RopeDoor, SpecialOnly };
 
    // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
    virtual void addLinks(EntityDB &edb, std::shared_ptr<Physical> self);
 
 	std::shared_ptr<Physical> getCurLoc2() { return _cur_loc2; };
-	virtual const char *getTitle() const { return _title.c_str(); };
 	const char *getExamine2() const { return _examine2.c_str(); };
 
-	virtual const char *getGameName(std::string &buf) const;
-
 	void setStartLoc2(const char *startloc);
-	virtual void setTitle(const char *new_title) { _title = new_title; };
 	void setExamine2(const char *new_examine) { _examine2 = new_examine; };
 
 	bool isDoorFlagSet(doorflags the_flag) { return _doorflags[the_flag]; };
@@ -61,8 +57,6 @@ protected:
    virtual bool isFlagSetInternal(const char *flagname, bool &results);
 
 private:
-
-	std::string _title;
 
 	std::string _examine2;
 	

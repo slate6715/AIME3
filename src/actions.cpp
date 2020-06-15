@@ -738,3 +738,19 @@ int untiecom(MUD &engine, Action &act_used) {
    return 1;
 }
 
+/*******************************************************************************************
+ * failcom - standard function to use as default for mostly specials-only functions
+ *******************************************************************************************/
+
+int failcom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   (void) engine; // Eliminate compile warnings
+
+	std::string buf;
+	std::stringstream msg;
+	msg << "You cannot " << act_used.getNameID(buf) << " that.\n";
+	actor->sendMsg(msg.str().c_str());
+
+	return 0;
+}
+

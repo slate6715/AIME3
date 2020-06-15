@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<action id="action:push" acttype="Hardcoded" parsetype="ActTarg" format="push <object>" function="failcom" 
+		  pretrig="prepush" posttrig="postpush">
+<alias name="move"/>
+<flag name="Target1Loc" />
+</action> 

@@ -24,20 +24,13 @@ public:
 
 	enum descstates { Pristine, Dropped, Lit, Depleted, Custom };
 
-   // Gets the primary reference name the game refers to this entity by
-   virtual const char *getGameName(std::string &buf) const;
 
 	// void setDesc(const char *newdesc);
-
-	// virtual const char *getDesc() const { return _desc.c_str(); };
-   void setTitle(const char *newtitle);
 
 	// Manages the roomdesc--the description one sees when they look in the room
 	void setRoomDesc(descstates new_state, const char *new_desc, const char *customname = NULL);
 	void changeRoomDesc(descstates, const char *customname = NULL);
 	const char *getRoomDesc();
-
-   const char *getTitle() const { return _title.c_str(); };
 
    virtual const char *listContents(std::string &buf, const Physical *exclude = NULL) const;
 
@@ -53,7 +46,6 @@ protected:
 
 private:
 
-	std::string _title;
 	std::vector<std::pair<std::string, std::string> > _roomdesc;
 
 	std::bitset<32> _getflags;

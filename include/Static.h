@@ -27,11 +27,13 @@ public:
 	void setExamine(const char *newexamine);
 	void setStartLoc(const char *newloc);
 	void addAltName(const char *names);
+
+   void setTitle(const char *newtitle);
 	
    // Gets the primary reference name the game refers to this entity by
 	virtual const char *getGameName(std::string &buf) const;
 
-	virtual const char *getTitle() const { return NULL; }; // No title for statics
+   const char *getTitle() const { return _title.c_str(); };
 	virtual const char *getExamine() const { return _examine.c_str(); };
 	const char *getStartLoc() const { return _startloc.c_str(); };
 
@@ -65,6 +67,8 @@ private:
 	std::string _examine;
 	std::vector<std::string> _altnames;
 	std::string _startloc;
+
+	std::string _title;
 
 	std::bitset<32> _staticflags;
 

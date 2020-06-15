@@ -39,6 +39,10 @@ void ScriptEngine::initialize(boost::python::object &main_namespace) {
 											.def("sendMsgLoc", &IPhysical::sendMsgLoc)
 											.def("moveTo", &IPhysical::moveTo)
 											.def("getCurLocID", &IPhysical::getCurLocID)
+											.def("getCurLoc", &IPhysical::getCurLoc)
+											.def("getCurLoc2", &IPhysical::getCurLoc2)
+											.def("getDoorState", &IPhysical::getDoorState)
+											.def("setDoorState", &IPhysical::setDoorState)
 											.def("getTitle", &IPhysical::getTitle);
 
    main_namespace["MUD"] = ptr(&_access);
@@ -98,6 +102,11 @@ int ScriptEngine::execute() {
 
  		object formatted = str("").join(formatted_list);
 		_errmsg = extract<std::string>(formatted);
+
+		// An exit telling the command to stop executing. I'm sure there's a better way
+		// to catch this exception. Unfortunately don't know it yet.
+		if (_errmsg.find("SystemExit: 1") != std::string::npos)
+			return 1;
 
 		std::cout << "Err2: " << _errmsg << "\n";
 		

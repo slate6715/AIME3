@@ -8,7 +8,7 @@
 #include "Location.h"
 #include "Getable.h"
 
-const char *doorflag_list[] = {"hideclosedexit", "ropedoor", "pushtoggle", NULL};
+const char *doorflag_list[] = {"hideclosedexit", "ropedoor", "pushtoggle", "specialonly", NULL};
 
 
 /*********************************************************************************************
@@ -156,15 +156,6 @@ int Door::loadData(pugi::xml_node &entnode) {
       }
 
    }
-
-   // Get the title that appears in most text in game
-   attr = entnode.attribute("title");
-   if (attr == nullptr) {
-      errmsg << "Door '" << getID() << "' missing mandatory title field.";
-      mudlog->writeLog(errmsg.str().c_str());
-      return 0;
-   }
-   setTitle(attr.value());
 
 	return 1;
 }
@@ -336,7 +327,7 @@ const char *Door::getCurRoomdesc(const Location *cur_loc) {
 
 bool Door::open(std::string &errmsg) {
 
-	if (isDoorFlagSet(RopeDoor)) {
+	if ((isDoorFlagSet(RopeDoor)) || (isDoorFlagSet(SpecialOnly))) {
 		errmsg = "You can't open that";
 		return false;
 	}
@@ -389,7 +380,7 @@ bool Door::open(std::shared_ptr<Physical> tool, std::string &errmsg) {
 
 bool Door::close(std::string &errmsg) {
 
-   if (isDoorFlagSet(RopeDoor)) {
+   if ((isDoorFlagSet(RopeDoor)) || (isDoorFlagSet(SpecialOnly))) {
       errmsg = "You can't close that";
       return false;
    }
@@ -431,17 +422,6 @@ std::shared_ptr<Physical> Door::closeTool(std::string &errmsg) {
 
 	errmsg = "Nothing is tied to that.\n";
 	return nullptr;
-}
-
-/*********************************************************************************************
- * getGameName - fills the buffer with the primary name that the game refers to this entity.
- *
- *
- *********************************************************************************************/
-
-const char *Door::getGameName(std::string &buf) const {
-	buf = _title;
-	return buf.c_str();
 }
 
 
