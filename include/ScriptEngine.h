@@ -12,13 +12,12 @@ class Organism;
 class ScriptEngine {
 public:
 	ScriptEngine();
-	ScriptEngine(const char *script);
-	ScriptEngine(std::string &script);
 	~ScriptEngine();
 
-	void initialize(boost::python::object &main_namespace);
+	void initialize();
 
-	int execute();
+	int execute(const char *script);
+	int execute(std::string &script);
 
 	void setActor(std::shared_ptr<Physical> actor) { _actor = actor; };
    void setTarget1(std::shared_ptr<Physical> target) { _target1 = target; };
@@ -37,6 +36,9 @@ private:
 	std::string _script;
 
 	std::string _errmsg;
+
+	boost::python::object _main_module;
+	boost::python::object _main_namespace;
 };
 
 #endif

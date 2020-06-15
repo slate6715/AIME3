@@ -50,7 +50,7 @@ void Physical::saveData(pugi::xml_node &entnode) const {
 /*********************************************************************************************
  * loadData - Called by a child class to populate Physical-specific data from an XML documphys
  *
- *    Params:  entnode - This physity's node within the XML tree so attributes can be drawn from
+ *    Params:  entnode - This physical's node within the XML tree so attributes can be drawn from
  *								 it
  *
  *		Returns: 1 for success, 0 for failure
@@ -128,7 +128,7 @@ bool Physical::containsPhysical(std::shared_ptr<Physical> phys_ptr) {
 }
 
 /*********************************************************************************************
- * addPhysical - adds the specified physity to the container
+ * addPhysical - adds the specified physical to the container
  *
  *    Returns: true if added, false if it was already contained
  *
@@ -143,7 +143,7 @@ bool Physical::addPhysical(std::shared_ptr<Physical> new_phys) {
 }
 
 /*********************************************************************************************
- * removePhysical - Removes the physity from the container
+ * removePhysical - Removes the physical from the container
  *
  *    Returns: true if found and removed, false if it was not found
  *
@@ -163,7 +163,7 @@ bool Physical::removePhysical(std::shared_ptr<Physical> phys_ptr) {
 }
 
 /*********************************************************************************************
- * movePhysical - Moves this physity to a new location, first removing it from the old locale and
+ * movePhysical - Moves this physical to a new location, first removing it from the old locale and
  *					 planting it in the new one
  *
  *		Params:	new_phys - the new location for this object
@@ -197,7 +197,7 @@ bool Physical::movePhysical(std::shared_ptr<Physical> new_phys, std::shared_ptr<
 }
 
 /*********************************************************************************************
- * getContainedByPtr - retrieves the shared pointer of the contained physity based on a regular pointer
+ * getContainedByPtr - retrieves the shared pointer of the contained physical based on a regular pointer
  *
  *    Returns: applicable shared pointer (which points to null if failed) 
  *
@@ -215,7 +215,7 @@ std::shared_ptr<Physical> Physical::getContainedByPtr(Physical *eptr) {
 }
 
 /*********************************************************************************************
- * getContainedByID - returns a shared_ptr to the contained physity that matches name_alias. This
+ * getContainedByID - returns a shared_ptr to the contained physical that matches name_alias. This
  *                   version only checks id
  *
  *    Returns: shared_ptr if found, nullptr if not
@@ -237,12 +237,12 @@ std::shared_ptr<Physical> Physical::getContainedByID(const char *name_alias) {
 }
 
 /*********************************************************************************************
- * getContainedByName - returns a shared_ptr to the contained physity that matches the name.
+ * getContainedByName - returns a shared_ptr to the contained physical that matches the name.
  *					Polymorphic. For this class version, only matches the game name field which varies
- *             depending on the physity class
+ *             depending on the physical class
  *
  *		Params:	name - string to search the NameID for
- *					allow_abbrev - if true, physity only needs to match up to sizeof(name)
+ *					allow_abbrev - if true, physical only needs to match up to sizeof(name)
  *
  *    Returns: shared_ptr if found, nullptr if not
  *
@@ -291,7 +291,7 @@ bool Physical::setFlagInternal(const char *flagname, bool newval) {
 }
 
 /*********************************************************************************************
- * isFlagSetInternal - given the flag string, returns the flag setting for this physity
+ * isFlagSetInternal - given the flag string, returns the flag setting for this physical
  *                      Internal version calls up to parphyss to check their flags.
  *
  *    Returns: true if flag is set, false otherwise
@@ -301,7 +301,7 @@ bool Physical::setFlagInternal(const char *flagname, bool newval) {
  *********************************************************************************************/
 
 bool Physical::isFlagSetInternal(const char *flagname, bool &results) {
-	// No physity flags yet
+	// No physical flags yet
 	(void) flagname; 
 	(void) results;
 	return false;
@@ -457,7 +457,7 @@ Attribute::attr_type Physical::getAttribTypeInternal(const char *attrib) const {
 
 
 /*********************************************************************************************
- * fillAttrXMLNode - populates the parameter XML node with data from this physity's attributes. 
+ * fillAttrXMLNode - populates the parameter XML node with data from this physical's attributes. 
  *                   polymorphic
  *
  *    Returns: true if the same, false otherwise
@@ -487,13 +487,13 @@ bool Physical::close(std::string &errmsg) {
 }
 
 /*********************************************************************************************
- * execSpecial - looks for the given trigger attached to this physity and executes it if found.
+ * execSpecial - looks for the given trigger attached to this physical and executes it if found.
  *               
  *		Params:	trigger - the trigger string to match
  *					actor - the organism executing this action
  *
  *		Returns: -1 for error
- *					0 indicates the trigger was not found attached to this physity
+ *					0 indicates the trigger was not found attached to this physical
  *					1 indicates the trigger executed and the command process should proceed normally
  *					2 indicates the trigger executed and the command process should terminate
  *
@@ -501,17 +501,17 @@ bool Physical::close(std::string &errmsg) {
 
 int Physical::execSpecial(const char *trigger, std::shared_ptr<Organism> actor) {
 
+	ScriptEngine &se = *engine.getScriptEngine();
+
 	// Loop through all the specials attached to this object
 	for (unsigned int i=0; i<_specials.size(); i++) {
 		
 		// Compare special against trigger
 		if (_specials[i].first.compare(trigger) == 0)
 		{
-			ScriptEngine script(_specials[i].second);
+			se.setActor(actor);
 
-			script.setActor(actor);
-
-			int results = script.execute();
+			int results = se.execute(_specials[i].second);
 			if (results == 1)
 				return 2;
 

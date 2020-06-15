@@ -9,18 +9,6 @@ ScriptEngine::ScriptEngine() {
 
 }
 
-ScriptEngine::ScriptEngine(const char *script):
-										_script(script)
-{
-
-}
-
-ScriptEngine::ScriptEngine(std::string &script):
-										_script(script)
-{
-
-}
-
 ScriptEngine::~ScriptEngine() {
 
 }
@@ -30,11 +18,17 @@ ScriptEngine::~ScriptEngine() {
  *
  *
  *********************************************************************************************/
-void ScriptEngine::initialize(boost::python::object &main_namespace) {
+void ScriptEngine::initialize() {
    // initialize our functions
-   main_namespace["IMUD"] = class_<IMUD>("IMUD")
+   Py_Initialize();
+
+   _main_module = import("__main__");
+
+   _main_namespace = _main_module.attr("__dict__");
+
+   _main_namespace["IMUD"] = class_<IMUD>("IMUD")
                                  .def("getPhysical", &IMUD::getPhysical);
-   main_namespace["Physical"] = class_<IPhysical>("Physical", init<const IPhysical &>())
+   _main_namespace["Physical"] = class_<IPhysical>("Physical", init<const IPhysical &>())
                                  .def("sendMsg", &IPhysical::sendMsg)
 											.def("sendMsgLoc", &IPhysical::sendMsgLoc)
 											.def("moveTo", &IPhysical::moveTo)
@@ -45,7 +39,7 @@ void ScriptEngine::initialize(boost::python::object &main_namespace) {
 											.def("setDoorState", &IPhysical::setDoorState)
 											.def("getTitle", &IPhysical::getTitle);
 
-   main_namespace["MUD"] = ptr(&_access);
+   _main_namespace["MUD"] = ptr(&_access);
 
 }
 
@@ -58,29 +52,29 @@ void ScriptEngine::initialize(boost::python::object &main_namespace) {
  *
  *********************************************************************************************/
 
-int ScriptEngine::execute() { 
-	Py_Initialize();
+int ScriptEngine::execute(const char *script) {
+	std::string scriptstr(script);
+	return execute(scriptstr);
+}
 
-	object main_module = import("__main__");
+ 
+int ScriptEngine::execute(std::string &script) {
 
-	object main_namespace = main_module.attr("__dict__");
-
-	initialize(main_namespace);
-
-	// 
+	// Initialize some specific elements to this call 
 	IPhysical actor(_actor);
 	IPhysical target1(_target1);
 	IPhysical target2(_target2);
 
 	if (_actor != nullptr)
-		main_namespace["actor"] = ptr(&actor);
+		_main_namespace["actor"] = ptr(&actor);
 	if (_target1 != nullptr)
-		main_namespace["target1"] = ptr(&target1);
+		_main_namespace["target1"] = ptr(&target1);
 	if (_target2 != nullptr)
-		main_namespace["target2"] = ptr(&target2);
+		_main_namespace["target2"] = ptr(&target2);
 
+	// Execute the script and handle any exceptions
 	try {
-		object ignored = exec(_script.c_str(), main_namespace);
+		object ignored = exec(script.c_str(), _main_namespace);
 	} catch (error_already_set &e) {
 		PyObject *type, *value, *traceback;
 		PyErr_Fetch(&type, &value, &traceback);

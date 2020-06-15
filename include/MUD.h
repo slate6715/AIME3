@@ -6,6 +6,7 @@
 #include "UserMgr.h"
 #include "LogMgr.h"
 #include "ActionMgr.h"
+#include "ScriptEngine.h"
 
 /***************************************************************************************
  * MUD - class that manages the mud as a whole. Each instance of a MUD class will be its
@@ -35,6 +36,7 @@ public:
 	ActionMgr *getActionMgr() { return &_actions; };
 	UserMgr *getUserMgr() { return &_users; };
 	EntityDB *getEntityDB() { return &_entity_db; };
+	ScriptEngine *getScriptEngine() { return &_scripts; };
 
 private:
    // Publicly-accessible attributes
@@ -49,6 +51,9 @@ private:
 
 	// Stores and manages the players connected to the game
 	UserMgr _users;
+
+	// Initialized and prepped to execute python scripts
+	ScriptEngine _scripts;
 
 	bool _shutdown_mud = false;
 
