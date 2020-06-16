@@ -79,8 +79,8 @@ int Getable::loadData(pugi::xml_node &entnode) {
 																					anode.next_sibling("roomdesc")) {
 	   // Get the state (open, closed, etc) this container or door starts in
 		pugi::xml_attribute attr;
-		if ((attr = anode.attribute("label")) == nullptr) {
-			errmsg << "Getable Object '" << getID() << "' roomdesc missing mandatory label attribute.";
+		if ((attr = anode.attribute("state")) == nullptr) {
+			errmsg << "Getable Object '" << getID() << "' roomdesc missing mandatory state attribute.";
 			mudlog->writeLog(errmsg.str().c_str());
 			return 0;
 		}
@@ -104,7 +104,7 @@ int Getable::loadData(pugi::xml_node &entnode) {
 			}
          setRoomDesc(Custom, anode.child_value(), attr.value());
 		} else {
-         errmsg << "Getable Object '" << getID() << "' roomdesc label '" << label << "' not a recognized label.";
+         errmsg << "Getable Object '" << getID() << "' roomdesc state '" << label << "' not a recognized state.";
          mudlog->writeLog(errmsg.str().c_str());
          return 0;
 		}
