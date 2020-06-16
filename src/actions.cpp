@@ -748,7 +748,12 @@ int failcom(MUD &engine, Action &act_used) {
 
 	std::string buf;
 	std::stringstream msg;
-	msg << "You cannot " << act_used.getNameID(buf) << " that.\n";
+
+	if (act_used.getTarget1() != nullptr)
+		msg << "You cannot " << act_used.getNameID(buf) << " that.\n";
+	else
+		msg << "You cannot " << act_used.getNameID(buf) << " here.\n";
+
 	actor->sendMsg(msg.str().c_str());
 
 	return 0;

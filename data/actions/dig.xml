@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<action id="action:dig" acttype="Hardcoded" parsetype="Look" format="dig [[<at|in>] <target>]" function="failcom" pretrig="predig" posttrig="postdig" >
+<flag name="Target1Loc" />
+</action> 

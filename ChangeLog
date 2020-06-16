@@ -2,6 +2,7 @@
 - Fixed Python integration that caused a crash when a script exception happened
 - Added login menu framework
 - Added more flags
+- Added the dig command
 
 06/14/2020
 - Fixed a word wrap error when a colorcode appeared right before the wrap length
