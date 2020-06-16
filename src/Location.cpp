@@ -10,7 +10,7 @@
 #include "Door.h"
 
 const char *lflag_list[] = {"outdoors", "bright", "death", "realtime", "nomobiles", "dark", "nosummon", "private", 
-									 "oneperson", NULL};
+									 "oneperson", "noteleport", NULL};
 const char *eflag_list[] = {"hidden", "special", NULL};
 
 const char *exitlist[] = {"north", "south", "east", "west", "up", "down", "northeast", "northwest", 

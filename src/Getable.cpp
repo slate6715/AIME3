@@ -6,8 +6,8 @@
 #include "misc.h"
 #include "global.h"
 
-const char *gflag_list[] = {"noget", "nodrop", "food", "rope", "luckfast", "thiefonly", "extinguish", 
-								"blockmagic", NULL};
+const char *gflag_list[] = {"noget", "nodrop", "food", "rope", "luckfast", "thiefonly",  
+								"blockmagic", "fastheal", NULL};
 
 
 /*********************************************************************************************

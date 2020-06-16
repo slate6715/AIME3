@@ -8,7 +8,7 @@
 #include "Location.h"
 #include "Getable.h"
 
-const char *doorflag_list[] = {"hideclosedexit", "ropedoor", "pushtoggle", "specialonly", NULL};
+const char *doorflag_list[] = {"hideclosedexit", "ropedoor", "pushtoggle", "specialsonly", NULL};
 
 
 /*********************************************************************************************
@@ -327,7 +327,7 @@ const char *Door::getCurRoomdesc(const Location *cur_loc) {
 
 bool Door::open(std::string &errmsg) {
 
-	if ((isDoorFlagSet(RopeDoor)) || (isDoorFlagSet(SpecialOnly))) {
+	if ((isDoorFlagSet(RopeDoor)) || (isDoorFlagSet(SpecialsOnly))) {
 		errmsg = "You can't open that";
 		return false;
 	}
@@ -380,7 +380,7 @@ bool Door::open(std::shared_ptr<Physical> tool, std::string &errmsg) {
 
 bool Door::close(std::string &errmsg) {
 
-   if ((isDoorFlagSet(RopeDoor)) || (isDoorFlagSet(SpecialOnly))) {
+   if ((isDoorFlagSet(RopeDoor)) || (isDoorFlagSet(SpecialsOnly))) {
       errmsg = "You can't close that";
       return false;
    }

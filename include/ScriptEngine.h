@@ -37,8 +37,8 @@ private:
 
 	std::string _errmsg;
 
-	boost::python::object _main_module;
-	boost::python::object _main_namespace;
+	std::unique_ptr<boost::python::object> _main_module;
+	std::unique_ptr<boost::python::object> _main_namespace;
 };
 
 #endif

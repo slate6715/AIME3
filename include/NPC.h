@@ -16,7 +16,7 @@ public:
    NPC(const NPC &copy_from);
    virtual ~NPC();
 
-	enum nflags { NoSummon };
+	enum nflags { NoSummon, Cross, CanBlind, CanFrost, DrainScr, CanFireball };
 
 	enum NPC_attrib {Aggression, Speed};
 

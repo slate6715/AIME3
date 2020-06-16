@@ -20,7 +20,7 @@ public:
 
    virtual ~Getable();
 
-	enum gflags { NoGet, NoDrop, Food, Rope, LuckFast, ThiefOnly, Extinguish, BlockMagic };
+	enum gflags { NoGet, NoDrop, Food, Rope, LuckFast, ThiefOnly, BlockMagic, FastHeal };
 
 	enum descstates { Pristine, Dropped, Lit, Depleted, Custom };
 

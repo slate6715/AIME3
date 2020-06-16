@@ -237,18 +237,44 @@ int LoginHandler::handleCommand(std::string &cmd) {
 
 			_plr->setWrapWidth((unsigned int) wrap_width);
 
-			handler_state = Finished;		
+			_cur_state = LoginMenu;		
 			_plr->sendMsg("Successfully created your user!\n");	
-			return 1;
+			sendLoginMenu();
+			break;
 
 		case AskPasswd:
 			if (_plr->checkPassword(cmd.c_str())) {
-				handler_state = Finished;
+				_cur_state = LoginMenu;
 				_plr->sendMsg("Successfully logged in!\n");
-			   return 1;					
+				sendLoginMenu();
+				break;
 			}
 			_plr->sendMsg("Incorrect password.\n");
 	
+			break;
+		case LoginMenu:
+			switch (cmd[0]) {
+			case '1':
+				handler_state = Finished;
+				return 1;
+
+			case '2':
+				_plr->sendMsg("Not implemented yet.\n");
+				break;
+
+			case '3':
+				_plr->sendMsg("Not implemented yet.\n");
+				break;
+
+			case 'q':
+				_plr->quit();
+				handler_state = Finished;
+				return 1;
+			
+			default:
+				_plr->sendMsg("Invalid choice.\n");
+				break;
+			}			
 			break;
 		default:
 			throw std::runtime_error("Unknown state in LoginHandler::handleCommand. Could not handle.");
@@ -299,6 +325,10 @@ void LoginHandler::getPrompt(std::string &buf) {
 
 		case GetClass:
 			buf = "What is your class? ";
+			break;
+
+		case LoginMenu:
+			buf = "What is your choice? ";
 			break;
 
       default:
@@ -363,4 +393,20 @@ void LoginHandler::addTrait(std::shared_ptr<Player> plr, const char *trait, bool
 	}
 }
 
+/*********************************************************************************************
+ * sendLoginMenu - simply sends the login menu to the user
+ *
+ *********************************************************************************************/
 
+void LoginHandler::sendLoginMenu() {
+	std::stringstream msg;
+
+	msg << "Login Game Menu:\n";
+	msg << "&+b----------------------------------&*\n";
+	msg << "   &+C1) &+cEnter the game&*\n";
+	msg << "   &+C2) &+cSee current users&*\n";
+	msg << "   &+C3) &+cCheck the latest MUD news&*\n";
+	msg << "   &+CQ) &+cQuit&*\n";
+	msg << "&+b----------------------------------&*\n\n";
+	_plr->sendMsg(msg.str().c_str());
+}

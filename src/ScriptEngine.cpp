@@ -6,6 +6,27 @@
 using namespace boost::python;
 
 ScriptEngine::ScriptEngine() {
+	Py_Initialize();
+
+   _main_module = std::unique_ptr<object>(new object);
+   _main_namespace = std::unique_ptr<object>(new object);
+
+   (*_main_module) = import("__main__");
+
+   (*_main_namespace) = (*_main_module).attr("__dict__");
+
+   (*_main_namespace)["IMUD"] = class_<IMUD>("IMUD")
+                                 .def("getPhysical", &IMUD::getPhysical);
+   (*_main_namespace)["Physical"] = class_<IPhysical>("Physical", init<const IPhysical &>())
+                                 .def("sendMsg", &IPhysical::sendMsg)
+                                 .def("sendMsgLoc", &IPhysical::sendMsgLoc)
+                                 .def("moveTo", &IPhysical::moveTo)
+                                 .def("getCurLocID", &IPhysical::getCurLocID)
+                                 .def("getCurLoc", &IPhysical::getCurLoc)
+                                 .def("getCurLoc2", &IPhysical::getCurLoc2)
+                                 .def("getDoorState", &IPhysical::getDoorState)
+                                 .def("setDoorState", &IPhysical::setDoorState)
+                                 .def("getTitle", &IPhysical::getTitle);
 
 }
 
@@ -20,27 +41,15 @@ ScriptEngine::~ScriptEngine() {
  *********************************************************************************************/
 void ScriptEngine::initialize() {
    // initialize our functions
-   Py_Initialize();
 
-   _main_module = import("__main__");
+	_main_module = std::unique_ptr<object>(new object);
+	_main_namespace = std::unique_ptr<object>(new object);
 
-   _main_namespace = _main_module.attr("__dict__");
+   (*_main_module) = import("__main__");
 
-   _main_namespace["IMUD"] = class_<IMUD>("IMUD")
-                                 .def("getPhysical", &IMUD::getPhysical);
-   _main_namespace["Physical"] = class_<IPhysical>("Physical", init<const IPhysical &>())
-                                 .def("sendMsg", &IPhysical::sendMsg)
-											.def("sendMsgLoc", &IPhysical::sendMsgLoc)
-											.def("moveTo", &IPhysical::moveTo)
-											.def("getCurLocID", &IPhysical::getCurLocID)
-											.def("getCurLoc", &IPhysical::getCurLoc)
-											.def("getCurLoc2", &IPhysical::getCurLoc2)
-											.def("getDoorState", &IPhysical::getDoorState)
-											.def("setDoorState", &IPhysical::setDoorState)
-											.def("getTitle", &IPhysical::getTitle);
+   (*_main_namespace) = (*_main_module).attr("__dict__");
 
-   _main_namespace["MUD"] = ptr(&_access);
-
+   (*_main_namespace)["MUD"] = ptr(&_access);
 }
 
 
@@ -60,21 +69,23 @@ int ScriptEngine::execute(const char *script) {
  
 int ScriptEngine::execute(std::string &script) {
 
+	initialize();
+
 	// Initialize some specific elements to this call 
 	IPhysical actor(_actor);
 	IPhysical target1(_target1);
 	IPhysical target2(_target2);
 
 	if (_actor != nullptr)
-		_main_namespace["actor"] = ptr(&actor);
+		(*_main_namespace)["actor"] = ptr(&actor);
 	if (_target1 != nullptr)
-		_main_namespace["target1"] = ptr(&target1);
+		(*_main_namespace)["target1"] = ptr(&target1);
 	if (_target2 != nullptr)
-		_main_namespace["target2"] = ptr(&target2);
+		(*_main_namespace)["target2"] = ptr(&target2);
 
 	// Execute the script and handle any exceptions
 	try {
-		object ignored = exec(script.c_str(), _main_namespace);
+		object ignored = exec(script.c_str(), (*_main_namespace));
 	} catch (error_already_set &e) {
 		PyObject *type, *value, *traceback;
 		PyErr_Fetch(&type, &value, &traceback);

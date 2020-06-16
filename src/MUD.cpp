@@ -141,7 +141,7 @@ void MUD::initialize() {
 	_entity_db.loadPhysicals(_mud_config);
 
 	// Initialize the script engine
-	_scripts.initialize();
+	// _scripts.initialize();
 
 }
 

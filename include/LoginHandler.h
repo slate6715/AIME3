@@ -14,7 +14,8 @@ public:
 
 	virtual ~LoginHandler();
 
-	enum login_state {AskUser, AskPasswd, AskCreate, CreatePasswd1, CreatePasswd2, GetGender, GetRace, GetClass};
+	enum login_state {AskUser, AskPasswd, AskCreate, CreatePasswd1, CreatePasswd2, GetGender, GetRace, GetClass, 
+							LoginMenu };
 
 	virtual int handleCommand(std::string &cmd);
 	virtual void getPrompt(std::string &buf);
@@ -22,6 +23,8 @@ public:
 	virtual void postPush();
 
 	bool validateUsername(std::string &name);
+
+	void sendLoginMenu();
 
 private:
 

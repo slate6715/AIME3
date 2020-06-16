@@ -80,6 +80,7 @@ int EntityDB::loadPhysicals(libconfig::Config &mud_cfg) {
       if (!result) {
 			// If a parsing error, get the line number
 			unsigned int linenum = getLineNumber(filepath.c_str(), result.offset);		
+			errmsg.str("");
 			errmsg << "Unable to open/parse zone file '" << filepath << "', (line: " << linenum << ") error: " << result.description();
          mudlog->writeLog(errmsg.str().c_str());
          continue;
