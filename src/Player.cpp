@@ -923,6 +923,15 @@ void Player::quit() {
 }
 
 /*********************************************************************************************
+ * exitMUD - exits the game part of the mud to the MUD menu
+ *
+ *
+ *********************************************************************************************/
+
+void Player::exitMUD() {
+}
+
+/*********************************************************************************************
  * purgePhysical - Removes all references to the parameter from the Entities in the database so
  *               it can be safely removed
  *
@@ -939,5 +948,21 @@ size_t UserMgr::purgePhysical(std::shared_ptr<Physical> item) {
       count += plr_it->second->purgePhysical(item);
    }
    return count;
+}
+
+/*********************************************************************************************
+ * kill - kills the Player, dumping them out to the login menu
+ *
+ *
+ *********************************************************************************************/
+
+void Player::kill() {
+   std::shared_ptr<Physical> cur_loc = getCurLoc();
+
+   dropAll();
+
+   cur_loc->removePhysical(std::dynamic_pointer_cast<Physical>(_self));
+
+	// exitMUD();
 }
 

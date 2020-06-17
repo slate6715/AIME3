@@ -8,7 +8,7 @@ To the east, there's appears to be slightly less darkness.
 </desc>
 </location> 
 
-<static id="start:surface" startloc="start:thevoid">
+<static id="start:surface" title="surface" startloc="start:thevoid">
 <examine>The surface, while solid enough to hold your weight, flexes with each step. This is accompanied by hundreds of faint crinkling noises that almost sound like static.
 </examine>
 <altname name="ground" />
@@ -41,8 +41,8 @@ Admodeus is the picture of the true southern gentleman. He sports a completely w
 <attribute name="size" value="40" />
 <attribute name="damage" value="45" />
 <equipped bpname="hand" bpgroup="rightarm" />
-<roomdesc label="pristine">A long, black, elegant gentleman's staff lies here.</roomdesc>
-<roomdesc label="dropped">Admodeus carries a long, black staff casually in his right hand.</roomdesc>
+<roomdesc state="pristine">A long, black, elegant gentleman's staff lies here.</roomdesc>
+<roomdesc state="dropped">Admodeus carries a long, black staff casually in his right hand.</roomdesc>
 <examine>
 The staff is made of a smooth, hard material that appears to absorb all light. It is a consistent width down it's length, terminated by a copper cap at the bottom. At the top, an impossibly-large large pearl has been fixed into the material, providing an easy handhold. 
 </examine>
@@ -54,8 +54,8 @@ The staff is made of a smooth, hard material that appears to absorb all light. I
 <attribute name="damage" value="0" />
 <attribute name="armor" value="10" />
 <equipped bpname="head" bpgroup="head" />
-<roomdesc label="pristine">A white straw hat lies on the ground.</roomdesc>
-<roomdesc label="dropped">Admodeus wears a white straw hat on his head, tipped slightly to the side.</roomdesc>
+<roomdesc state="pristine">A white straw hat lies on the ground.</roomdesc>
+<roomdesc state="dropped">Admodeus wears a white straw hat on his head, tipped slightly to the side.</roomdesc>
 <examine>
 The straw hat sports a small brim and has a white cotton band wrapped around it. 
 </examine>
@@ -87,7 +87,7 @@ The straw hat sports a small brim and has a white cotton band wrapped around it.
 </desc>
 </location>
 
-<static id="start:wall" startloc="start:alcove">
+<static id="start:wall" title="wall" startloc="start:alcove">
 <altname name="cliff" />
 <altname name="chalk" />
 <altname name="rock" />
@@ -117,14 +117,14 @@ The straw hat sports a small brim and has a white cotton band wrapped around it.
 </desc>
 </location>
 
-<getable id="start:kelp" startloc="start:junglecoast" title="Mass of Kelp" >
+<getable id="start:kelp" startloc="start:junglecoast" title="kelp" >
 <examine>Basic kelp. Consists of flat leaf-like structures connected to stems. This mass looks fairly fresh and must have recently washed up on shore. 
 </examine>
 <altname name="weed" />
 <altname name="seaweed" />
 <altname name="mass" />
-<roomdesc label="pristine"> A mass of kelp has washed up on shore. </roomdesc>
-<roomdesc label="dropped"> A pile of kelp has been discarded here. </roomdesc>
+<roomdesc state="pristine"> A mass of kelp has washed up on shore. </roomdesc>
+<roomdesc state="dropped"> A pile of kelp has been discarded here. </roomdesc>
 </getable>
 
 <location id="start:duskbeach" title="The Beach at Sunset">

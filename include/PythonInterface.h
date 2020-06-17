@@ -26,6 +26,10 @@ public:
 
 	std::string getTitle();
 
+	void addContained(IPhysical target);
+	bool isContained(IPhysical target);
+	bool isContainedID(const char *id);
+
 private:
    std::shared_ptr<Physical> _eptr;
 };

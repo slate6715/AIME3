@@ -843,4 +843,16 @@ void Organism::listWhereWorn(std::shared_ptr<Physical> obj, std::list<std::strin
 }
 
 
+/*********************************************************************************************
+ * dropAll - Drop all carried objects in the room
+ *
+ *
+ *********************************************************************************************/
+
+void Organism::dropAll() {
+	while (_contained.size() > 0) {
+		
+	}	
+}
+
 

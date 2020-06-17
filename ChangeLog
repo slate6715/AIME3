@@ -1,3 +1,7 @@
+06/17/2020
+- Added the goto command
+- Added some container management specials functions
+
 06/16/2020
 - Fixed Python integration that caused a crash when a script exception happened
 - Added login menu framework

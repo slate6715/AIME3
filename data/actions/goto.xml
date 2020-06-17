@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<action id="action:goto" acttype="Hardcoded" parsetype="ActTarg" format="goto <zone:name>" function="gotocom">
+<flag name="Target1MUD" />
+</action> 

@@ -84,6 +84,9 @@ public:
 	bool equip(std::shared_ptr<Physical> equip_ptr, std::string &errmsg);
    bool remove(std::shared_ptr<Physical> equip_ptr, std::string &errmsg);
 
+	virtual void kill() = 0;
+	virtual void dropAll();
+
 	virtual const char *listContents(std::string &buf, const Physical *exclude = NULL) const;	
 	
 	void listWhereWorn(std::shared_ptr<Physical> obj, std::list<std::string> &bodyparts);

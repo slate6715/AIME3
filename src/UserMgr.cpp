@@ -13,8 +13,7 @@ namespace lc = libconfig;
  * UserMgr (constructor) - 
  *
  *********************************************************************************************/
-UserMgr::UserMgr(MUD &engine):
-					_engine(engine),
+UserMgr::UserMgr():
 					_db(),
 					_listen_sock(),
 					_newuser_idx(0),
@@ -28,7 +27,6 @@ UserMgr::UserMgr(MUD &engine):
 
 
 UserMgr::UserMgr(const UserMgr &copy_from):
-					_engine(copy_from._engine),
 					_db(copy_from._db),
 					_listen_sock(copy_from._listen_sock),
 					_newuser_idx(copy_from._newuser_idx),
@@ -405,4 +403,5 @@ int UserMgr::sendMsg(const char *msg, std::vector<std::string> *exclude_flags,
 	}
 	return count;
 }
+
 

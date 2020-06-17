@@ -20,7 +20,7 @@ MUD::MUD():
 		_mudlog(),
 		_entity_db(),
 		_actions(),
-		_users(*this),
+		_users(),
 		_time_between_heartbeat(100000)
 {
 

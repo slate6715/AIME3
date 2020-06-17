@@ -19,7 +19,7 @@
 class UserMgr 
 {
 public:
-	UserMgr(MUD &engine);
+	UserMgr();
    UserMgr(const UserMgr &copy_from);
    virtual ~UserMgr();
 
@@ -65,9 +65,6 @@ public:
 										  std::shared_ptr<Physical> exclude_ind);
 
 private:
-
-	// Used by the handlers to queue up commands/actions to be executed
-	MUD &_engine;
 
 	// List of active users
 	std::map<std::string, std::shared_ptr<Player>> _db;

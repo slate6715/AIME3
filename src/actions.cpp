@@ -2,6 +2,7 @@
 #include <libconfig.h++>
 #include <regex>
 #include <memory>
+#include <sstream>
 #include "actions.h"
 #include "MUD.h"
 #include "Action.h"
@@ -757,5 +758,54 @@ int failcom(MUD &engine, Action &act_used) {
 	actor->sendMsg(msg.str().c_str());
 
 	return 0;
+}
+
+/*******************************************************************************************
+ * gotocom - wizard-level function to go to an object or location
+ *******************************************************************************************/
+
+int gotocom(MUD &engine, Action &act_used) {
+	(void) engine;
+	
+	std::stringstream msg;
+	std::string buf;
+	
+	std::shared_ptr<Organism> actor = act_used.getActor();
+	std::shared_ptr<Location> cur_loc, new_loc;
+
+	std::shared_ptr<Physical> target = act_used.getTarget1();
+
+	cur_loc = std::dynamic_pointer_cast<Location>(actor->getCurLoc());
+
+	// Keep getting cur_loc till we find a location
+	while ((target != nullptr) && ((new_loc = std::dynamic_pointer_cast<Location>(target)) == nullptr)) {
+		target = target->getCurLoc();
+	}
+
+	if (target == nullptr) {
+		actor->sendMsg("That object is not contained in a Location.\n");
+		return 0;
+	}
+
+	msg << actor->getGameName(buf) << " disappears suddenly with a loud pop.\n";
+   cur_loc->sendMsg(msg.str().c_str(), actor);
+
+	if (target != act_used.getTarget1())
+	{
+		msg << "You teleport instantly to " << act_used.getTarget1()->getID() << " at " << target->getID() << ".\n";
+	}
+	else
+		msg << "You teleport instantly to " << target->getID() << ".\n";
+	actor->sendMsg(msg.str().c_str());
+
+	actor->movePhysical(new_loc, actor);
+
+	msg.str("");
+	msg << actor->getGameName(buf) << " appears out of nowhere with a loud pop.\n";
+	new_loc->sendMsg(msg.str().c_str(), actor);
+
+	actor->sendCurLocation();
+
+	return 1;	
 }
 

@@ -165,3 +165,21 @@ void NPC::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
 
 }
 
+/*********************************************************************************************
+ * kill - kills the NPC, moving them to nullptr
+ *
+ *
+ *********************************************************************************************/
+
+void NPC::kill() {
+	std::shared_ptr<Physical> cur_loc = getCurLoc();
+
+	// Already dead, do nothing
+	if (cur_loc == nullptr)
+		return;
+
+	dropAll();
+
+	cur_loc->removePhysical(std::dynamic_pointer_cast<Physical>(_self));
+}
+

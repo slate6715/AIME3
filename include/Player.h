@@ -82,9 +82,15 @@ public:
 
 	bool checkPassword(const char *cleartext);
 
+	// Quit to the game menu
+	void exitMUD();
+	
+	// Logoff the mud completely
 	void quit();
 	
 	TCPConn::conn_status getConnStatus() { return _conn->getConnStatus(); };
+
+	virtual void kill();
 
 protected:
 

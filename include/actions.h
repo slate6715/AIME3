@@ -25,5 +25,6 @@ int removecom(MUD &engine, Action &act_used);
 int tiecom(MUD &engine, Action &act_used);
 int untiecom(MUD &engine, Action &act_used);
 int failcom(MUD &engine, Action &act_used);
+int gotocom(MUD &engine, Action &act_used);
 
 #endif // ifndef ACTIONS

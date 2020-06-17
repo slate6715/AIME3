@@ -33,6 +33,7 @@ hardcoded_actions cmd_array[] = {
 		{"tiecom", tiecom},
 		{"untiecom", untiecom},
 		{"failcom", failcom},
+		{"gotocom", gotocom},
 		{"",0}
 };
 
@@ -446,13 +447,17 @@ std::shared_ptr<Physical> Action::findTarget(std::string &name, std::string &err
 			}
 			
 		}
+		if (target != nullptr)
+			return target;
    }
-   // If we still haven't found it, check mud-wide (must be in form zone:obj)
-   else if ((target == nullptr) && 
-				((target = engine.getEntityDB()->getPhysical(name.c_str())) == nullptr)) {
-		errmsg = "That object does not appear to exist.";
+
+   // If we got here, then we should check the entire mud
+   if ((target == nullptr) && ((target = engine.getEntityDB()->getPhysical(name.c_str())) == nullptr)) {
+      errmsg = "That object does not appear to exist.";
       return NULL;
+
    }
+
 	return target;
  
 }

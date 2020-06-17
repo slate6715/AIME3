@@ -302,6 +302,7 @@ void Location::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
 		if (entptr == nullptr) {
 			msg << "Location '" << getID() << "' " << exit_it->dir << " exit '" << exit_it->link_id.c_str() << "' doesn't appear to exist.";
 			mudlog->writeLog(msg.str().c_str());
+			msg.str("");
 			exit_it = _exits.erase(exit_it);
 			continue;
 		} 

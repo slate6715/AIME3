@@ -20,6 +20,8 @@ public:
 
 	enum NPC_attrib {Aggression, Speed};
 
+	virtual void kill();
+
 protected:
 
    virtual void saveData(pugi::xml_node &entnode) const;

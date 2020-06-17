@@ -140,7 +140,7 @@ void IPhysical::moveTo(IPhysical new_loc) {
 }
 
 /*********************************************************************************************
- * getDoorState - 
+ * getDoorState/setDoorState - gets and sets the door state. Options: open, closed, locked, magic
  *
  *********************************************************************************************/
 
@@ -168,4 +168,32 @@ void IPhysical::setDoorState(const char *state) {
       throw script_error(errmsg.c_str());
 	}
 }
+
+/*********************************************************************************************
+ * isContained/isContainedID - returns true if the given object is contained by the parameter
+ *						ID version takes a string ID of the target object we're looking for
+ *
+ *********************************************************************************************/
+
+bool IPhysical::isContained(IPhysical target) {
+	return _eptr->containsPhysical(target._eptr);	
+}
+	
+
+
+bool IPhysical::isContainedID(const char *id) {
+   EntityDB &edb = *(engine.getEntityDB());
+   std::shared_ptr<Physical> eptr = edb.getPhysical(id);
+
+   if (eptr == nullptr) {
+      std::stringstream errmsg;
+
+      errmsg << "isContainedByID could not retrieve '" << id << "'. It may not exist.";
+      throw script_error(errmsg.str().c_str());
+   }
+
+	return _eptr->containsPhysical(eptr);
+
+}
+
 
