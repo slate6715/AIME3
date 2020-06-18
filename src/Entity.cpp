@@ -46,7 +46,8 @@ Entity::~Entity() {
 const char *Entity::getNameID(std::string &buf) const {
 	size_t amppos = _id.find(":");
 	if (amppos == std::string::npos)
-		throw std::runtime_error("EntityID was not in the correct format <zone>:<entityname>");
+		throw std::runtime_error("EntityID was not in the correct format <zone>:<entityname> "
+											"(all lowercase letters, numbers, underscore)");
 
 	buf = _id.substr(amppos+1, _id.size() - amppos);
 	return buf.c_str();
@@ -70,8 +71,11 @@ const char *Entity::getZoneID(std::string &buf) const {
  *********************************************************************************************/
 
 void Entity::setID(const char *new_id) {
-	if ((new_id == NULL) || (strchr(new_id, ':') == NULL))
-		throw std::invalid_argument("Entity setID attempt to set to an invalid format. Must have an ':' in it");
+   std::regex idcheck("[a-z0-9_]+:[a-z0-9_]+");
+
+	if ((new_id == NULL) || (!std::regex_match(new_id, idcheck)))
+		throw std::invalid_argument("Entity setID attempt to set to an invalid format. <zone>:<entityname> "
+                                 "(all lowercase letters, numbers, underscore)");
 
 	_id = new_id;
 }
@@ -112,9 +116,10 @@ int Entity::loadData(pugi::xml_node &entnode) {
 	_id = attr.value();
 
 	std::stringstream errmsg;
-	std::regex idcheck("\\w+:\\w+");
+   std::regex idcheck("[a-z0-9_]+:[a-z0-9_]+");
 	if (!std::regex_match(_id, idcheck)) {
-		errmsg << "ID '" << _id << "' invalid format. Should be <zone>:<id> where zone and ID are alphanumeric or _";
+		errmsg << "ID '" << _id << "' invalid format. Format: <zone>:<id> "
+                                 "(all lowercase letters, numbers, underscore)";
 		mudlog->writeLog(errmsg.str().c_str());
 		return 0;
 	}

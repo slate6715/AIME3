@@ -49,7 +49,6 @@ public:
 
 	// Series of functions that retrieve class attribute data
 	virtual const char *getExamine() const { return _examine.c_str(); };
-   virtual const char *getTitle() const { return NULL; };
 
 	const char *getReview(review_type review);
    const char *getReview(const char *reviewstr);
@@ -58,6 +57,8 @@ public:
    const char *getReviewProcessed(const char *reviewstr, std::string &buf,
                                  Location::exitdirs dir=Location::Custom, const char *customdir=NULL);
 	void setReview(review_type review, const char *new_review);
+
+	const char *getTitle() const { return _title.c_str(); };
 
 	// Set and get dynamic attributes
    void setAttribute(org_attrib attr, int val);
@@ -119,6 +120,7 @@ protected:
 	int findBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
 
 private:
+	std::string _title;
 	std::string _examine;
 
 	std::vector<std::string> _reviews;

@@ -173,6 +173,7 @@ void UserMgr::checkNewUsers(libconfig::Config &mud_cfg){
 	
 		// Create a new Player object with this connection and a temp userid
 		std::shared_ptr<Player> new_plr(new Player(userid.c_str(), std::unique_ptr<TCPConn>{new_conn}));
+		new_plr->setSelfPtr(new_plr);
 
 		_db.insert(std::pair<std::string, std::shared_ptr<Player>>(userid, new_plr));
 

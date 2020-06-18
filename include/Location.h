@@ -40,6 +40,8 @@ public:
 	virtual const char *getTitle() const { return _title.c_str(); };
    virtual const char *listContents(std::string &buf, const Physical *exclude = NULL) const;
 
+	bool isLocFlagSet(lflags flag) { return _locflags[flag]; };
+
 	std::shared_ptr<Physical> getExit(const char *exitname);
    std::shared_ptr<Physical> getExitAbbrev(std::string &exitname, exitdirs *val = NULL);
 

@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<action id="action:kill" acttype="Hardcoded" parsetype="ActTarg" format="kill <target>" function="killcom">
+<flag name="Target1Loc" />
+</action> 

@@ -109,6 +109,11 @@ int gocom(MUD &engine, Action &act_used) {
 	exit_loc->sendMsg("\n");
 	actor->sendCurLocation();
 
+	if (exit_loc->isFlagSet("Death")) {
+		actor->sendMsg("You have died.\n");
+		actor->kill();
+	}
+
 	return 1;
 }
 
@@ -233,8 +238,8 @@ int getcom(MUD &engine, Action &act_used) {
 		actor->sendMsg(msg.str().c_str());
 		msg.str("");
 
-		msg << actor->getTitle() << " picks up the " << gptr->getGameName(buf) << ".";
-		cur_loc->sendMsg(msg.str().c_str());
+		msg << actor->getGameName(buf) << " picks up the " << gptr->getGameName(buf) << ".";
+		cur_loc->sendMsg(msg.str().c_str(), actor);
 
 		gptr->changeRoomDesc(Getable::Dropped);
 
@@ -280,7 +285,7 @@ int getcom(MUD &engine, Action &act_used) {
 
    gptr->movePhysical(actor, gptr);
 
-	msg << "You pull the " << gptr->getTitle() << " out of the " << sptr->getGameName(buf) << ".\n";
+	msg << "You pull the " << gptr->getGameName(buf) << " out of the " << sptr->getGameName(buf) << ".\n";
 	actor->sendMsg(msg.str().c_str());
 
 	if (!in_inventory) {
@@ -789,6 +794,7 @@ int gotocom(MUD &engine, Action &act_used) {
 
 	msg << actor->getGameName(buf) << " disappears suddenly with a loud pop.\n";
    cur_loc->sendMsg(msg.str().c_str(), actor);
+	msg.str("");
 
 	if (target != act_used.getTarget1())
 	{
@@ -809,3 +815,41 @@ int gotocom(MUD &engine, Action &act_used) {
 	return 1;	
 }
 
+/*******************************************************************************************
+ * killcom - start attacking a target
+ *******************************************************************************************/
+
+int killcom(MUD &engine, Action &act_used) {
+   (void) engine;
+
+   std::stringstream msg;
+   std::string buf;
+
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   std::shared_ptr<Physical> cur_loc = actor->getCurLoc();
+
+   std::shared_ptr<Organism> target = std::dynamic_pointer_cast<Organism>(act_used.getTarget1());
+
+	if (target == nullptr) {
+		actor->sendMsg("You can't kill inanimate objects.\n");
+		return 0;
+	}
+	
+	msg << "You extend your fingers towards " << target->getGameName(buf) << 
+													", incinerating them with blue lightning and leaving their stuff to loot.\n";
+	actor->sendMsg(msg.str().c_str());
+
+	msg.str("");
+
+	msg << actor->getGameName(buf) << " extends their fingers towards you and the last thing you see is &+Cblue"
+								" lightning&* flying at you.\n";
+	target->sendMsg(msg.str().c_str());
+
+	target->kill();		
+
+	msg.str("");
+	msg << actor->getGameName(buf) << " extends their fingers towards " << target->getGameName(buf) <<
+						". &+CBlue lightning&* flies from them, incinerating " << target->getGameName(buf) << "!\n";
+	cur_loc->sendMsg(msg.str().c_str(), actor);
+	return 1;
+}

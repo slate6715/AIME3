@@ -8,13 +8,15 @@
 #include "Trait.h"
 
 
-LoginHandler::LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_cfg):
+LoginHandler::LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_cfg, login_state start_state):
 								Handler(plr),
 								_mud_cfg(mud_cfg),
 								_username(""),
 								_new_passwd(""),
-								_cur_state(AskUser)
+								_cur_state(start_state)
 {
+	if (start_state == LoginMenu)
+		plr->getNameID(_username);
 }
 
 LoginHandler::LoginHandler(const LoginHandler &copy_from):

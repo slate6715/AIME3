@@ -148,10 +148,16 @@ int Organism::loadData(pugi::xml_node &entnode) {
    }
    _examine = node.child_value();
 
+   // Now populate organism data (none yet)
+   pugi::xml_attribute attr = entnode.attribute("title");
+   if (node != nullptr) {
+		_title = attr.value();
+   }
+
    for (pugi::xml_node review = entnode.child("reviewmsg"); review; review = 
 																					review.next_sibling("reviewmsg")) {
       try {
-         pugi::xml_attribute attr = review.attribute("type");
+         attr = review.attribute("type");
          if (attr == nullptr) {
             errmsg << getTypeName() << " '" << getID() << "' reviewmsg node missing mandatory type field.";
             mudlog->writeLog(errmsg.str().c_str());
@@ -180,7 +186,7 @@ int Organism::loadData(pugi::xml_node &entnode) {
    for (pugi::xml_node trait = entnode.child("trait"); trait; trait =
                                                                trait.next_sibling("trait")) {
       try {
-         pugi::xml_attribute attr = trait.attribute("id");
+         attr = trait.attribute("id");
          if (attr == nullptr) {
             errmsg << getTypeName() << "Organism '" << getID() << "' trait node missing mandatory id field.";
             mudlog->writeLog(errmsg.str().c_str());
@@ -335,7 +341,7 @@ const char *Organism::getReviewProcessed(review_type review, std::string &buf,
 			}
 			break;	
 		case 'n':
-			getNameID(name);
+			getGameName(name);
 			name[0] = toupper(name[0]);
 			buf += name;
 			break;
@@ -829,7 +835,11 @@ void Organism::sendTraits() {
  *********************************************************************************************/
 
 const char *Organism::getGameName(std::string &buf) const {
-	return getNameID(buf);
+	if (getTitle() == NULL)
+		return getNameID(buf);
+
+	buf = getTitle();
+	return buf.c_str();
 }
 
 /*********************************************************************************************
@@ -850,8 +860,14 @@ void Organism::listWhereWorn(std::shared_ptr<Physical> obj, std::list<std::strin
  *********************************************************************************************/
 
 void Organism::dropAll() {
+	// Unwear all
+	auto bpptr = _bodyparts.begin();
+	for ( ; bpptr != _bodyparts.end(); bpptr++)
+		bpptr->second.worn.clear();
+
+	// drop all
 	while (_contained.size() > 0) {
-		
+		_contained.front()->movePhysical(getCurLoc());			
 	}	
 }
 

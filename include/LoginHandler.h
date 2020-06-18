@@ -9,13 +9,13 @@
 class LoginHandler : public Handler 
 {
 public:
-	LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_cfg);
+   enum login_state {AskUser, AskPasswd, AskCreate, CreatePasswd1, CreatePasswd2, GetGender, GetRace, GetClass,
+                     LoginMenu };
+
+	LoginHandler(std::shared_ptr<Player> plr, libconfig::Config &mud_cfg, login_state start_state=AskUser);
 	LoginHandler(const LoginHandler &copy_from);
 
 	virtual ~LoginHandler();
-
-	enum login_state {AskUser, AskPasswd, AskCreate, CreatePasswd1, CreatePasswd2, GetGender, GetRace, GetClass, 
-							LoginMenu };
 
 	virtual int handleCommand(std::string &cmd);
 	virtual void getPrompt(std::string &buf);

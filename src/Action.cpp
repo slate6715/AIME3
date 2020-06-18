@@ -34,6 +34,7 @@ hardcoded_actions cmd_array[] = {
 		{"untiecom", untiecom},
 		{"failcom", failcom},
 		{"gotocom", gotocom},
+		{"killcom", killcom},
 		{"",0}
 };
 

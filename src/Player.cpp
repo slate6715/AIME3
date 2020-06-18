@@ -929,6 +929,13 @@ void Player::quit() {
  *********************************************************************************************/
 
 void Player::exitMUD() {
+	getCurLoc()->removePhysical(std::dynamic_pointer_cast<Physical>(_self));
+
+	LoginHandler *lhptr = new LoginHandler(std::dynamic_pointer_cast<Player>(_self),
+													*(engine.getConfig()), LoginHandler::LoginMenu);
+	_handler_stack.push(std::unique_ptr<Handler>(lhptr));
+	lhptr->sendLoginMenu();
+
 }
 
 /*********************************************************************************************
@@ -961,8 +968,6 @@ void Player::kill() {
 
    dropAll();
 
-   cur_loc->removePhysical(std::dynamic_pointer_cast<Physical>(_self));
-
-	// exitMUD();
+	exitMUD();
 }
 

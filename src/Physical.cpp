@@ -258,10 +258,23 @@ std::shared_ptr<Physical> Physical::getContainedByName(const char *name, bool al
 
 		// Get the Game name which might be Title or NameID
 		eit->get()->getGameName(ebuf);
+		lower(ebuf);
+
       if ((!allow_abbrev) && (namebuf.compare(ebuf) == 0))
          return *eit;
 		else if ((allow_abbrev) && equalAbbrev(namebuf, ebuf.c_str()))
 			return *eit;
+
+		// See if the game name starts with "the " and try without it
+		if (ebuf.find("the ") != std::string::npos) {
+			std::string nothe = ebuf.substr(4, ebuf.size()-4);
+
+	      if ((!allow_abbrev) && (namebuf.compare(nothe) == 0))
+		      return *eit;
+			else if ((allow_abbrev) && equalAbbrev(namebuf, nothe.c_str()))
+				return *eit;
+
+		}
    }
 
    // Search by altnames next

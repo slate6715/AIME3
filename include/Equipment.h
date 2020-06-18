@@ -27,8 +27,6 @@ public:
    // void setTitle(const char *newtitle);
 
 
-   // const char *getTitle() const { return _title.c_str(); };
-
    // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
    virtual void addLinks(EntityDB &edb, std::shared_ptr<Physical> self);
 
