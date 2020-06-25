@@ -7,6 +7,7 @@
 #include <map>
 #include "Physical.h"
 #include "Location.h"
+#include "StrFormatter.h"
 
 class Equipment;
 class Trait;
@@ -118,6 +119,8 @@ protected:
 	bool addBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
    int remBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
 	int findBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
+
+	StrFormatter _rformatter;
 
 private:
 	std::string _title;

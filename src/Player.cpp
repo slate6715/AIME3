@@ -595,6 +595,8 @@ int Player::loadUser(const char *userdir, const char *username) {
 		sendMsg("Your save file has been corrupted and cannot be loaded. Contact an admin.\n");
 		return -1; 
 	}
+
+	_rformatter.changeMap('n', username);
 	
    return 1;
 }

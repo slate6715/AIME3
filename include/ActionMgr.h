@@ -33,10 +33,11 @@ public:
 	// Initialize certain variables for this class from the config file
 	unsigned int initialize(libconfig::Config &cfg_info);
 
+	// Load the different groups of actions
 	unsigned int loadActions(const char *actiondir);
 
 	// Go through the action queue, executing those whose timer is < now()
-	void handleActions(MUD &engine);
+	void handleActions();
 
 	Action *preAction(const char *cmd, std::string &errmsg, 
 														std::shared_ptr<Organism> actor);
@@ -48,6 +49,8 @@ public:
 
 private:
 	int handleSpecials(Action *action, const char *trigger);
+
+	bool add(Action *new_act);
 
 	// The database of available actions and aliases 
 	std::map<std::string, std::shared_ptr<Action>> _action_db;

@@ -1,3 +1,10 @@
+06/25/2020
+- Added the Social class as a sub-class to Action
+- Added skeleton for the Talent class, sub to Action
+- Added the StrFormatter class to format %n-type review strings
+- Modified the parser to be a bit more modular
+- Added socials basic functionality and the wave command (not tested with targets yet)
+
 06/18/2020
 - Added the goto command
 - Added some container management specials functions

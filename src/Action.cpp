@@ -7,7 +7,7 @@
 #include "global.h"
 
 
-const char *ptype_list[] = {"undef", "single", "acttarg", "acttargcont", "acttargoptcont", "look", "chat", "tell", NULL};
+const char *ptype_list[] = {"undef", "single", "acttarg", "acttargcont", "acttargoptcont", "actopttarg", "socialstyle", "look", "chat", "tell", NULL};
 const char *aflag_list[] = {"target1mud", "target1loc", "target1inv", "target1org", "target2mud", "target2loc", 
 									 "target2inv", "target2org", "nolookup", "aliastarget", NULL};
 
@@ -232,7 +232,7 @@ int Action::loadData(pugi::xml_node &entnode) {
  *
  *********************************************************************************************/
 
-int Action::execute(MUD &engine) {
+int Action::execute() {
 
 	int results = 0;
 	if (_atype == Hardcoded) {
@@ -308,25 +308,6 @@ bool Action::isActFlagSet(act_flags atype) {
 
 
 /*********************************************************************************************
- * configAction - Prepares this action to be executed. Does some specific error checking on
- *                the action. 
- *		Params:	tokens - parsed user input of strings in vector format
- *					errmsg - to be populated if an error is found
- *
- *		Returns:	true if no errors, false otherwise
- *
- *********************************************************************************************/
-
-bool Action::configAction(std::vector<std::string> &tokens, std::string &errmsg) {
-	_tokens = tokens;
-
-	// Prob more to come here
-	(void) errmsg;
-
-	return true;	
-}
-
-/*********************************************************************************************
  * setFlagInternal - given the flag string, first checks the parent for the flag, then checks
  *                   this class' flags
  *
@@ -395,7 +376,7 @@ bool Action::isFlagSetInternal(const char *flagname, bool &results) {
  *
  *********************************************************************************************/
 
-std::shared_ptr<Physical> Action::findTarget(std::string &name, std::string &errmsg, int targetsel)
+std::shared_ptr<Physical> Action::findTarget(const std::string &name, std::string &errmsg, int targetsel)
 {
 	std::stringstream errmsgstr;
 
@@ -461,5 +442,163 @@ std::shared_ptr<Physical> Action::findTarget(std::string &name, std::string &err
 
 	return target;
  
+}
+
+
+/*********************************************************************************************
+ * parseToken - gets the next set of text
+ *
+ *    Params:	pos - the position in the buffer to start getting the token
+ *             buf - buffer containing tokens
+ *
+ *    Returns: pos at the end of the token parsed
+ *
+ *********************************************************************************************/
+
+size_t Action::parseToken(size_t pos, std::string &buf) {
+	if (buf.size() == 0)
+		return 0;
+
+	size_t start = pos;
+	pos = buf.find(" ", start);
+   if (pos == std::string::npos)
+		pos = buf.size();
+   addToken(buf.substr(start, pos-start));
+   return pos + 1;
+}
+
+
+/*********************************************************************************************
+ * parseCommand - parses out the command based on this action's settings and preps to execute
+ *
+ *    Params:  cmd - the part of the command string after the action name itself
+ *					errmsg - populated if an error is encountered
+ *
+ *    Returns: true if successful, false if an error was found
+ *
+ *********************************************************************************************/
+
+bool Action::parseCommand(const char *cmd, std::string &errmsg) {
+	size_t pos = 0;
+
+	std::string buf = (cmd == NULL) ? "" : cmd;
+
+	// Lone commands with these parse types are ok, exit early
+	if ((getParseType() == Action::Single) || 
+		 ((getParseType() == Action::ActOptTarg) && (buf.size() == 0)))
+		return true;
+
+   // Get target 1
+   if ((getParseType() == Action::ActTargOptCont) ||
+       (getParseType() == Action::ActTarg) ||
+       (getParseType() == Action::ActTargCont) ||
+		 (getParseType() == Action::ActOptTarg)) {
+
+		// If we're here, we should have at least one more token
+      if ((buf.size() == 0) && (numTokens() == 0)) {
+			errmsg = "Missing target. Format: ";
+         errmsg += getFormat();
+         return false;
+      }
+
+		// Get the rest of the tokens
+		while ((pos = parseToken(pos, buf)) < buf.size());
+		
+      // Get target 1
+      if (!isActFlagSet(Action::NoLookup)) {
+			// ActOptTarg may have a preposition before target
+			unsigned int targ_idx = 0;
+			if (getParseType() == Action::ActOptTarg) {
+				if (numTokens() >= 2) {
+					if (!isPreposition(getToken(1))) {
+						errmsg = "Invalid preposition. Format: ";
+						errmsg += getFormat();
+						return false;
+					}
+					targ_idx = 1;
+				}
+			}
+			
+			std::string targ1 = getToken(targ_idx);
+         setTarget1(findTarget(targ1, errmsg, 1));
+
+         if (getTarget1() == nullptr) {
+            return false;
+         }
+      }
+
+   }
+
+   // If we have more words to process
+   if ((getParseType() == Action::ActTargOptCont) || (getParseType() == Action::ActTargCont)) {
+
+      if (getParseType() == Action::ActTargCont) {
+         if (numTokens() < 2) {
+            errmsg = "Missing elements. Format: ";
+            errmsg += getFormat();
+            return false;
+         } else if (numTokens() == 2) {
+            if (isPreposition(getToken(1))) {
+               errmsg = "Missing target. Format: ";
+               errmsg += getFormat();
+               return false;
+            }
+
+         }
+      }
+
+      // Do we need to find target2?
+      if (!isActFlagSet(Action::NoLookup) && (numTokens() > 2)) {
+         std::string targ2;
+         if (numTokens() == 2)
+            targ2 = getToken(1);
+         else
+            targ2 = getToken(2);
+
+         setTarget2(findTarget(targ2, errmsg, 2));
+         if (getTarget2() == nullptr) {
+            return false;
+         }
+      }
+
+   }
+   else if ((getParseType() == Action::Tell) || (getParseType() == Action::Chat)) {
+		if (getParseType() == Action::Tell) {
+			// Get the next token - should be the target
+			if (buf.size() == 0) {
+				errmsg = "Missing elements. Format: ";
+				errmsg += getFormat();
+				return false;
+			}
+			pos = parseToken(0, buf);
+
+			// Get target 1
+			if (!isActFlagSet(Action::NoLookup)) {
+	         setTarget1(findTarget(getToken(0), errmsg, 1));
+
+		      if (getTarget1() == nullptr) {
+			      errmsg = "That does not appear to be around.";
+				   return false;
+				}
+
+			}
+
+		}
+		
+		if (pos == buf.size()) {
+         errmsg = "Invalid format. Should be: ";
+         errmsg += getFormat();
+         return false;
+      }
+
+      addToken(buf.substr(pos, buf.size() - pos));
+   }
+   // If it's not single, then we don't recognize this type
+   else if ((getParseType() != Action::ActTarg) && (getParseType() != Action::ActOptTarg)) {
+      errmsg = "Unrecognized/unsupported command type for command: ";
+      errmsg += getID();
+      throw std::runtime_error(errmsg.c_str());
+   }
+	return true;
 }
 

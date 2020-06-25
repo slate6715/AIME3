@@ -136,9 +136,9 @@ int Entity::loadData(pugi::xml_node &entnode) {
          setFlag(attr.value(), true);
       }
       catch (std::invalid_argument &e) {
-         errmsg << getTypeName() << " '" << getID() << "' flag error: " << e.what();
+         errmsg << "WARNING: " << getTypeName() << " '" << getID() << "' flag error: " << e.what();
          mudlog->writeLog(errmsg.str().c_str());
-         return 0;
+			continue; // Don't fail out, just keep getting flags
       }
    }
 

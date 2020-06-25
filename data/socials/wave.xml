@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<social id="social:wave" acttype="Trigger" parsetype="ActOptTarg" format="wave [<person>|<object>]">
+<flag name="Target1Inv" />
+<flag name="Target1Org" />
+<flag name="Target1Getable" />
+<message name="actor">You wave to the room. 
+</message>
+<message name="room">%n waves to the room. 
+</message>
+</social> 

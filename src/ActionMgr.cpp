@@ -7,6 +7,8 @@
 #include "ActionMgr.h"
 #include "misc.h"
 #include "global.h"
+#include "Talent.h"
+#include "Social.h"
 
 namespace lc = libconfig;
 
@@ -49,8 +51,10 @@ ActionMgr::~ActionMgr() {
 unsigned int ActionMgr::initialize(lc::Config &cfg_info) {
 	
 	// Load the actions from the Actions directory
-	std::string actiondir;
+	std::string actiondir, talentsdir, socialsdir;
 	cfg_info.lookupValue("datadir.actiondir", actiondir);
+	cfg_info.lookupValue("datadir.talentsdir", talentsdir);
+	cfg_info.lookupValue("datadir.socialsdir", socialsdir);
 
    // Initialize the fast lookup iterators
    for (unsigned int i=0; i<26; i++)
@@ -59,7 +63,59 @@ unsigned int ActionMgr::initialize(lc::Config &cfg_info) {
 	// Load our actions from the actiondir files	
 	unsigned int count = loadActions(actiondir.c_str());
 
+	// If the talent directory is different from our actions directory, load talents
+	if (talentsdir.compare(actiondir) != 0) 
+		count += loadActions(talentsdir.c_str());
+
+	// Same with socials
+	if ((socialsdir.compare(actiondir) != 0) && (socialsdir.compare(talentsdir) != 0))
+		count += loadActions(socialsdir.c_str());
+
 	return count;
+}
+
+
+/*********************************************************************************************
+ * add - adds an action to the database after first searching for duplicates
+ *
+ *    Params:  actiondir - path to the actions directory where the actions files are
+ *
+ *    REturns: the number read in
+ *
+ *********************************************************************************************/
+
+
+bool ActionMgr::add(Action *new_act) {
+	std::stringstream errmsg;
+	std::string namebuf;
+
+	// make sure it doesn't already exist first
+	auto newact_it = _action_db.find(new_act->getNameID(namebuf));
+	if (newact_it != _action_db.end()) {
+		errmsg << "Action " << new_act->getID() << " already exists in " << newact_it->second->getID() <<
+							" as either its name or alias.";
+		mudlog->writeLog(errmsg.str().c_str());
+		return false;
+	}
+
+	auto inserted = _action_db.insert(std::pair<std::string, std::shared_ptr<Action>>(namebuf,
+                                                   std::shared_ptr<Action>(new_act)));
+
+   // Add alias entries for this action
+	std::vector<std::string> aliases = new_act->getAliases();
+   for (unsigned int j=0; j<aliases.size(); j++) {
+
+		if ((newact_it = _action_db.find(aliases[j])) != _action_db.end()) {
+			errmsg << "Action " << new_act->getID() << " alias " << aliases[j] << " already exists in " << 
+							newact_it->second->getID() << " as either its name or alias. Not added.";
+			mudlog->writeLog(errmsg.str().c_str());
+			return false;
+
+		}
+			
+      _action_db.insert(std::pair<std::string, std::shared_ptr<Action>>(aliases[j], inserted.first->second));
+   }
+	return true;
 }
 
 /*********************************************************************************************
@@ -114,37 +170,58 @@ unsigned int ActionMgr::loadActions(const char *actiondir) {
 				continue;
 			}
 
-			auto newact_it = _action_db.insert(std::pair<std::string, std::shared_ptr<Action>>(new_act->getID(),
-                                                   std::shared_ptr<Action>(new_act)));
-
-			// Add alias entries for this action
-			std::vector<std::string> aliases = new_act->getAliases();
-			for (unsigned int j=0; j<aliases.size(); j++) {
-				std::string full_id("action:");
-				full_id += aliases[j];
-				
-				_action_db.insert(std::pair<std::string, std::shared_ptr<Action>>(
-										full_id.c_str(), newact_it.first->second));
-
-			}
-			count++;
+			if (!add(new_act))
+				delete new_act;
+			else
+				count++;
 		}
+      // Loop through all the talents in this file
+      for (pugi::xml_node talnode = actionfile.child("talent"); talnode; talnode = talnode.next_sibling("talent")) {
+
+         Talent *new_tal = new Talent("temp");
+         if (!new_tal->loadEntity(talnode)) {
+            std::string msg("Corrupted talent file for: ");
+            msg += new_tal->getID();
+            mudlog->writeLog(msg);
+            delete new_tal;
+            continue;
+         }
+
+
+         if (!add(new_tal))
+				delete new_tal;
+			else
+            count++;
+      }
+      // Loop through all the socials in this file
+      for (pugi::xml_node socnode = actionfile.child("social"); socnode; socnode = socnode.next_sibling("social")) {
+
+         Social *new_soc = new Social("temp");
+         if (!new_soc->loadEntity(socnode)) {
+            std::string msg("Corrupted social file for: ");
+            msg += new_soc->getID();
+            mudlog->writeLog(msg);
+            delete new_soc;
+            continue;
+         }
+
+
+         if (!add(new_soc))
+				delete new_soc;
+			else
+            count++;
+      }
+
 	}
 
 	// Now generate an abbreviation lookup lexical table
 	auto action_it = _action_db.begin();
 	char last_ltr = '.';
-	std::string id, name;
+	std::string name;
 
 	// Loop through all the actions
 	for (; action_it != _action_db.end(); action_it++) {
-		id = action_it->first;
-		size_t pos = id.find(":");
-		if (pos == std::string::npos) {
-			throw std::runtime_error("ActionMgr::loadActions - action in DB without : in index, "
-																								"should not have happened.");
-		}
-		name = id.substr(pos+1, id.size() - pos);
+		name = action_it->first;
 
 		// If this is the start of a new first letter, assign a lookup iterator
 		if (name[0] != last_ltr) {
@@ -158,6 +235,7 @@ unsigned int ActionMgr::loadActions(const char *actiondir) {
 }
 
 
+
 /*********************************************************************************************
  * handleActions - goes through the action queue, executing those actions whose timer is < now().
  *				This function basically handles the dyanmics of the game. All entities that are
@@ -168,7 +246,7 @@ unsigned int ActionMgr::loadActions(const char *actiondir) {
  *
  *********************************************************************************************/
 
-void ActionMgr::handleActions(MUD &engine) {
+void ActionMgr::handleActions() {
 
 	auto cur_time = std::chrono::system_clock::now();
 
@@ -177,7 +255,7 @@ void ActionMgr::handleActions(MUD &engine) {
 	while ((aptr != _action_queue.end()) && ((*aptr)->getExecTime() <= cur_time)) {
 
 
-		(*aptr)->execute(engine);
+		(*aptr)->execute();
 
 		// Check for post-action triggers
 		std::string posttrig = aptr->get()->getPostTrig();
@@ -219,177 +297,52 @@ Action *ActionMgr::preAction(const char *cmd, std::string &errmsg,
 		return NULL;
 	}
 
-	// Start building the list of elements for this parse
-	std::vector<std::string> elements;
-	
 	size_t pos = buf.find(" ");
 
+	std::string cmdstr;
 	// No space in this command, it's just a single word
 	if (pos == std::string::npos) {
 		pos = buf.size();
-		elements.push_back(buf);
+		cmdstr = cmd;
+		buf.clear();
 	} 
 	// Else grab the first word so we can look it up
 	else {
-		elements.push_back(buf.substr(0, pos));
+		cmdstr = buf.substr(0, pos);
+		buf.erase(0, pos);
 	}
 
-	lower(elements[0]);
-	std::shared_ptr<Action> actptr = findAction(elements[0].c_str());
+	lower(cmdstr);
+	std::shared_ptr<Action> actptr = findAction(cmdstr.c_str());
 
 	// Not found, return NULL
 	if (actptr == nullptr) {
 		errmsg = "I do not understand the command '";
-		errmsg += elements[0];
+		errmsg += cmdstr;
 		errmsg += "'";
 		return NULL;
 	}
 
 
-	Action *new_act = new Action(*actptr);
+	Action *new_act;
+	std::shared_ptr<Social> sptr = std::dynamic_pointer_cast<Social>(actptr);
+	std::shared_ptr<Talent> tptr = std::dynamic_pointer_cast<Talent>(actptr);
+
+	if (sptr != nullptr)
+		new_act = new Social(*sptr);
+	else if (tptr != nullptr)
+		new_act = new Talent(*tptr);
+	else
+		new_act = new Action(*actptr);
+
 	new_act->setActor(actor);
 
-	size_t start = pos+1;
-	// Get target 1
-	if ((new_act->getParseType() == Action::ActTargOptCont) || 
-		 (new_act->getParseType() == Action::ActTarg) ||
-		 (new_act->getParseType() == Action::ActTargCont) ||
-		 (new_act->getParseType() == Action::Tell)) {
-		
-		bool is_alias = false;
-		if (pos == buf.size()) {
-			if (new_act->isActFlagSet(Action::AliasTarget)) {
-				elements.push_back(elements[0]);
-				is_alias = true;
-			} else {
-	         errmsg = "Missing target. Format: ";
-		      errmsg += new_act->getFormat();
-			   delete new_act;
-				return NULL;
-			}
-		}
+	// if this is an aliastarget like using north instead of "go north", add the command as first token
+	if ((buf.size() == 0) && new_act->isActFlagSet(Action::AliasTarget))
+		new_act->addToken(cmdstr);
 
-		if (!is_alias) {
-			pos = buf.find(" ", start);
-			if (pos == std::string::npos)
-				pos = buf.size();
-			elements.push_back(buf.substr(start, pos-start));
-			start = pos + 1;
-		}
-
-		// Get target 1
-		if (!new_act->isActFlagSet(Action::NoLookup)) {
-			new_act->setTarget1(new_act->findTarget(elements[1], errmsg, 1));
-
-			if (new_act->getTarget1() == nullptr) {
-				delete new_act;
-				return NULL;
-			}
-		}
-
-		if (is_alias)
-			elements.pop_back();
-	} 
-
-	// If we have more words to get, get them
-	if ((new_act->getParseType() == Action::ActTargOptCont) || (new_act->getParseType() == Action::ActTargCont)) {
-      while ((pos = buf.find(" ", start)) != std::string::npos) {
-         elements.push_back(buf.substr(start, pos-start));
-         start = pos + 1;
-      }
-		if (start < buf.size())
-			elements.push_back(buf.substr(start, buf.size()-start));
-
-		if (new_act->getParseType() == Action::ActTargCont) {
-			if (elements.size() < 3) {
-				errmsg = "Missing elements. Format: ";
-				errmsg += new_act->getFormat();
-				delete new_act;
-				return NULL;
-			} else if (elements.size() == 3) {
-				if (isPreposition(elements[2].c_str())) {
-					errmsg = "Missing target. Format: ";
-					errmsg += new_act->getFormat();
-					delete new_act;
-					return NULL;
-				}
-
-			}
-		}
-
-		// Do we need to find target2?
-		if (!new_act->isActFlagSet(Action::NoLookup) && (elements.size() > 2)) {
-			std::string targ2;
-			if (elements.size() == 3)
-				targ2 = elements[2];
-			else
-				targ2 = elements[3];
-
-			new_act->setTarget2(new_act->findTarget(targ2, errmsg, 2));
-			if (new_act->getTarget2() == nullptr) {
-				delete new_act;
-				return NULL;
-			}
-		}
-
-	} else if (new_act->getParseType() == Action::Look) {
-		// First get the next token. If none exist, then we're done
-		if (start < buf.size()) {
-			if ((pos = buf.find(" ")) == std::string::npos)
-				pos = buf.size();
-
-			std::string token = buf.substr(start, pos-start);
-			start = pos + 1;
-
-			// Check for a preposition
-			lower(token);
-			if (isPreposition(token.c_str())) {
-				elements.push_back(token);
-
-				// Prepositions need to be followed by a target
-				if (start >= buf.size()) {
-					errmsg = "Missing target. Format: ";
-					errmsg += new_act->getFormat();
-					delete new_act;
-					return NULL;
-				}
-
-				if ((pos = buf.find(" ")) == std::string::npos)
-					pos = buf.size();
-				token = buf.substr(start, pos-start);
-			} 
-			// Now get the target
-			elements.push_back(token);
-
-			new_act->setTarget1(new_act->findTarget(token, errmsg, 1));
-			if (new_act->getTarget1() == nullptr) {
-				delete new_act;
-				return NULL;
-			}
-		}
-	}
-	else if ((new_act->getParseType() == Action::Tell) || (new_act->getParseType() == Action::Chat)) {
-	
-		// Get the string
-		if (start >= buf.size()) {
-         errmsg = "Invalid format. Should be: ";
-         errmsg += new_act->getFormat();
-			delete new_act;
-         return NULL;
-		}
-
-		elements.push_back(buf.substr(start, buf.size() - start));
-	}
-	// If it's not single, then we don't recognize this type 
-	else if ((new_act->getParseType() != Action::Single) && 
-				(new_act->getParseType() != Action::ActTarg)) {
-		errmsg = "Unrecognized command type for command: ";
-		errmsg += new_act->getID();
-		throw std::runtime_error(errmsg.c_str()); 
-	}
-
-	// Action does some custom error-checking on the parse structure and preps for execution
-	if (!new_act->configAction(elements, errmsg)) {
+	// Now parse the command
+	if (!new_act->parseCommand(buf.c_str(), errmsg)) {
 		delete new_act;
 		return NULL;
 	}
@@ -469,11 +422,8 @@ std::shared_ptr<Action> ActionMgr::findAction(const char *cmd) {
       return nullptr;
    }
 
-   std::string fullname("action:");
-   fullname += cmdstr;
-
    // Look for it using a literal search
-   auto mapptr = _action_db.find(fullname);
+   auto mapptr = _action_db.find(cmdstr);
 
 	// Found it, return!
    if (mapptr != _action_db.end()) {
@@ -552,4 +502,7 @@ int ActionMgr::handleSpecials(Action *action, const char *trigger) {
 
 	return results;
 }
+
+
+
 

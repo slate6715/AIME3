@@ -26,7 +26,7 @@ int infocom(MUD &engine, Action &act_used) {
 
 	// First, check to make sure the request uses only letters and/or numbers
 	std::regex fncheck("[a-z0-9]+");
-	std::string infoname = act_used.getToken(1);
+	std::string infoname = act_used.getToken(0);
 	lower(infoname);
 	
 	if (!std::regex_match(infoname, fncheck)) {
@@ -38,7 +38,7 @@ int infocom(MUD &engine, Action &act_used) {
 	mud_cfg.lookupValue("datadir.infodir", fullpath);
 
 	fullpath += "/";
-	fullpath += act_used.getToken(1);
+	fullpath += act_used.getToken(0);
 	fullpath += ".info";
 
 	if (!actor->sendFile(fullpath.c_str())) {
@@ -57,10 +57,7 @@ int gocom(MUD &engine, Action &act_used) {
 	std::string dir;
 	(void) engine;
 
-	if (act_used.numTokens() >= 2)
-		dir = act_used.getToken(1);
-	else
-		dir = act_used.getToken(0);
+	dir = act_used.getToken(0);
 
 	std::shared_ptr<Organism> actor = act_used.getActor();
 	std::shared_ptr<Location> cur_loc = std::dynamic_pointer_cast<Location>(actor->getCurLoc());
@@ -125,13 +122,13 @@ int lookcom(MUD &engine, Action &act_used) {
 	(void) engine; // Eliminate compile warnings
 
 	// If they just typed look or examine
-	if (act_used.numTokens() == 1) {	
+	if (act_used.numTokens() == 0) {	
 		actor->sendCurLocation();
 		return 1;
 	}
 
 	// They seem to want to look in something?
-	std::string preposition = act_used.getToken(1);
+	std::string preposition = act_used.getToken(0);
 	lower(preposition);
 
 	// If they didn't type a preposition, we assume "at"
@@ -223,7 +220,7 @@ int getcom(MUD &engine, Action &act_used) {
 	// Need to find the objects ourselves. If only two tokens, then no container involved
 	std::stringstream msg;
 	if (act_used.numTokens() == 2) {
-		if ((pptr = cur_loc->getContainedByName(act_used.getToken(1))) == nullptr) {
+		if ((pptr = cur_loc->getContainedByName(act_used.getToken(0))) == nullptr) {
 			actor->sendMsg("You cannot find that here.\n");
 			return 0;
 		} 
@@ -248,10 +245,10 @@ int getcom(MUD &engine, Action &act_used) {
 
 	// If we're dealing with a container, handle it
 	std::string container;
-	if (act_used.numTokens() == 3)
-		container = act_used.getToken(2);
+	if (act_used.numTokens() == 2)
+		container = act_used.getToken(1);
 	else
-		container = act_used.getToken(3);
+		container = act_used.getToken(2);
 
 	if ((pptr = actor->getContainedByName(container.c_str())) == nullptr) {
 		in_inventory = false;
@@ -276,9 +273,9 @@ int getcom(MUD &engine, Action &act_used) {
 		return 0;
 	}
 
-	std::shared_ptr<Physical> pptr2 = sptr->getContainedByName(act_used.getToken(1));
+	std::shared_ptr<Physical> pptr2 = sptr->getContainedByName(act_used.getToken(0));
 	if ((pptr2 == nullptr) || ((gptr = std::dynamic_pointer_cast<Getable>(pptr2)) == nullptr)) {
-		msg << "There is no getable object named '" << act_used.getToken(1) << "' in the " << sptr->getGameName(buf) << "\n";
+		msg << "There is no getable object named '" << act_used.getToken(0) << "' in the " << sptr->getGameName(buf) << "\n";
 		actor->sendMsg(msg.str().c_str());
 		return 0;
 	}
@@ -313,9 +310,9 @@ int putcom(MUD &engine, Action &act_used) {
    (void) engine; // Eliminate compile warnings
 
 	// First, get the item we want to put in a container
-	if ((pptr = actor->getContainedByName(act_used.getToken(1))) == nullptr) {
-		if ((pptr = cur_loc->getContainedByName(act_used.getToken(1))) == nullptr) {
-         msg << "You cannot find the " << act_used.getToken(1) << " here.\n";
+	if ((pptr = actor->getContainedByName(act_used.getToken(0))) == nullptr) {
+		if ((pptr = cur_loc->getContainedByName(act_used.getToken(0))) == nullptr) {
+         msg << "You cannot find the " << act_used.getToken(0) << " here.\n";
          actor->sendMsg(msg.str().c_str());
          return 0;
 		}
@@ -329,10 +326,10 @@ int putcom(MUD &engine, Action &act_used) {
 
    // If we're dealing with a container, handle it
    std::string container;
-   if (act_used.numTokens() == 3)
-      container = act_used.getToken(2);
+   if (act_used.numTokens() == 2)
+      container = act_used.getToken(1);
    else
-      container = act_used.getToken(3);
+      container = act_used.getToken(2);
 
    if ((pptr = actor->getContainedByName(container.c_str())) == nullptr) {
       in_inventory = false;
@@ -413,11 +410,11 @@ int saycom(MUD &engine, Action &act_used) {
 	actor->getNameID(name);
 	name[0] = toupper(name[0]);
 	
-	msg << name << " says '" << act_used.getToken(1) << "'\n";
+	msg << name << " says '" << act_used.getToken(0) << "'\n";
 	actor->getCurLoc()->sendMsg(msg.str().c_str(), actor);
 
 	msg.str("");
-	msg << "You say '" << act_used.getToken(1) << "'\n";
+	msg << "You say '" << act_used.getToken(0) << "'\n";
 	actor->sendMsg(msg.str().c_str());
 	return 1;
 }
@@ -437,13 +434,13 @@ int chatcom(MUD &engine, Action &act_used) {
 	std::vector<std::string> ex_flags;
 	ex_flags.push_back("nochat");
 
-   msg << name << " chats '" << act_used.getToken(1) << "'\n";
+   msg << name << " chats '" << act_used.getToken(0) << "'\n";
 
 	// Send this to everyone who does not have nochat set and is not the actor
 	umgr.sendMsg(msg.str().c_str(), &ex_flags, NULL, actor);
 
    msg.str("");
-   msg << "You chat '" << act_used.getToken(1) << "'\n";
+   msg << "You chat '" << act_used.getToken(0) << "'\n";
    actor->sendMsg(msg.str().c_str());
 
 	return 1;
@@ -463,13 +460,13 @@ int tellcom(MUD &engine, Action &act_used) {
 	act_used.getTarget1()->getNameID(tname);
 	pname[0] = toupper(pname[0]);
 	tname[0] = toupper(tname[0]);
-   msg << pname << " tells you '" << act_used.getToken(2) << "'\n";
+   msg << pname << " tells you '" << act_used.getToken(1) << "'\n";
 
    // Send this to everyone who does not have nochat set and is not the actor
    act_used.getTarget1()->sendMsg(msg.str().c_str());
 
    msg.str("");
-   msg << "You tell " << tname << " '" << act_used.getToken(2) << "'\n";
+   msg << "You tell " << tname << " '" << act_used.getToken(1) << "'\n";
    actor->sendMsg(msg.str().c_str());
 
 
@@ -690,12 +687,12 @@ int untiecom(MUD &engine, Action &act_used) {
 
 	// If there are more than two tokens, they specified an object
 	std::shared_ptr<Door> dptr = nullptr;
-	if (act_used.numTokens() > 2) {
+	if (act_used.numTokens() > 1) {
 		std::string doorname;
-		if (act_used.numTokens() == 3)
-			doorname = act_used.getToken(2);
+		if (act_used.numTokens() == 2)
+			doorname = act_used.getToken(1);
 		else
-			doorname = act_used.getToken(3);
+			doorname = act_used.getToken(2);
 		std::shared_ptr<Physical> pptr = cur_loc->getContainedByName(doorname.c_str());
 		if (pptr == nullptr) {
 			actor->sendMsg("I cannot locate the ");
@@ -717,7 +714,7 @@ int untiecom(MUD &engine, Action &act_used) {
 
 		if (dptr == nullptr) {
 			actor->sendMsg("I do not see a ");
-			actor->sendMsg(act_used.getToken(1));
+			actor->sendMsg(act_used.getToken(0));
 			actor->sendMsg(" that can be untied.\n");
 			return 0;
 		}

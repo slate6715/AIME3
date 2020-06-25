@@ -30,8 +30,8 @@ Organism::Organism(const char *id):
 {
 	// Review defaults
 	_reviews.push_back("%n is standing here.");				// Standing
-	_reviews.push_back("%n enters the room from %d3");	// Entering
-	_reviews.push_back("%n departs the room %d1.");		// Leaving
+	_reviews.push_back("%n enters the room from %3");	// Entering
+	_reviews.push_back("%n departs the room %1.");		// Leaving
 
 	// Hardcoded body parts for now, but later on, could customize for race/class
 	addBodyPart("head", "head");
@@ -65,6 +65,12 @@ Organism::Organism(const char *id):
 	// Damage
 	//_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
 	
+	// Add our review formatter entries
+	_rformatter.addMap('n', "temp");	// Name (title)
+	_rformatter.addMap('1', "temp"); // Exit format 1
+	_rformatter.addMap('2', "temp");	// Exit format 2
+	_rformatter.addMap('3', "temp");	// Exit format 3
+
 
 }
 
@@ -152,6 +158,7 @@ int Organism::loadData(pugi::xml_node &entnode) {
    pugi::xml_attribute attr = entnode.attribute("title");
    if (node != nullptr) {
 		_title = attr.value();
+		_rformatter.changeMap('n', _title.c_str());
    }
 
    for (pugi::xml_node review = entnode.child("reviewmsg"); review; review = 
@@ -297,65 +304,33 @@ const char *Organism::getReview(const char *reviewstr) {
 
 const char *Organism::getReviewProcessed(review_type review, std::string &buf, 
 											Location::exitdirs dir, const char *customdir) {
-	std::stringstream errmsg;
 	buf.clear();
 	
-	size_t pos;
-	size_t start = 0;
 	std::string name;
 
-	// Find the next %
-	while ((pos = _reviews[review].find("%", start)) != std::string::npos) {
-		// Add all before the % to the buffer		
-		buf += _reviews[review].substr(start, pos-start);
-		pos++;
-		if (pos >= _reviews[review].size()) {
-			errmsg << "Review '" << reviewlist[review] << "' for Organism '" << getID() << 
-																	"' has percent with invalid format type following it";
-			mudlog->writeLog(errmsg.str().c_str());
-			return NULL;
-		}
+	if ((dir != Location::Custom) || (customdir != NULL)) {
+		if (dir == Location::Custom) {
+			if (customdir == NULL)
+				throw std::invalid_argument("Custom exit defined but customdir parameter set to null.");
 
-		switch(_reviews[review][pos]) {
-		case 'd':
-			pos++;
-			if (pos >= _reviews[review].size()) {
-				errmsg << "Review '" << reviewlist[review] << "' for Organism '" << getID() <<
-                                                   "' has percent with invalid format type following it";
-				mudlog->writeLog(errmsg.str().c_str());
-				return NULL;
-			}
-			if (dir==Location::Custom) {
-				buf += customdir;
-			} else if (_reviews[review][pos] == '1') {
-				buf += dir1_list[dir];
-         } else if (_reviews[review][pos] == '2') {
-            buf += dir2_list[dir];
-         } else if (_reviews[review][pos] == '3') {
-            buf += dir3_list[dir];
-         } else {
-            errmsg << "Review '" << reviewlist[review] << "' for Organism '" << getID() <<
-                                                   "' has percent with invalid format type following it";
-            mudlog->writeLog(errmsg.str().c_str());
-            return NULL;
-			}
-			break;	
-		case 'n':
-			getGameName(name);
-			name[0] = toupper(name[0]);
-			buf += name;
-			break;
-		default:
-         errmsg << "Review '" << reviewlist[review] << "' for Organism '" << getID() <<
-                                                   "' has percent with invalid format type following it";
-         mudlog->writeLog(errmsg.str().c_str());
-         return NULL;
+			_rformatter.changeMap('1', customdir);
+			_rformatter.changeMap('2', customdir);
+			_rformatter.changeMap('3', customdir);
+		} else {
+			_rformatter.changeMap('1', dir1_list[dir]);
+			_rformatter.changeMap('2', dir2_list[dir]);
+			_rformatter.changeMap('3', dir3_list[dir]);
 		}
-		start = pos + 1;
 	}
-	if (start < _reviews[review].size()) {
-		buf += _reviews[review].substr(start, _reviews[review].size()-start);
+	
+	try {
+		_rformatter.formatStr(_reviews[review].c_str(), buf);
+	} catch (const format_error &e) {
+		// On errors, set review to the error message
+		buf = "Organism review error: ";
+		buf += e.what();
 	}
+	
 	return buf.c_str();
 }
 
@@ -835,7 +810,7 @@ void Organism::sendTraits() {
  *********************************************************************************************/
 
 const char *Organism::getGameName(std::string &buf) const {
-	if (getTitle() == NULL)
+	if ((getTitle() == NULL) || (strlen(getTitle()) == 0))
 		return getNameID(buf);
 
 	buf = getTitle();

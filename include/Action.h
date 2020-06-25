@@ -31,7 +31,8 @@ public:
 			ActTarg,	// <action> <target>
 			ActTargCont,	// <action> <target> <preposition> <target2>
 			ActTargOptCont,// <action> <target> [<preposition> <target2>
-			Look,		// <action> [<preposition>] <target>
+			ActOptTarg,		// <action> [[<preposition>] <target>]
+			SocialStyle,	// <action> [<target>] [<amplifier>]
 			Chat,		// <action> <string>
 			Tell		// <action> <target> <string>
 		 };
@@ -65,18 +66,20 @@ public:
 	void setTarget1(std::shared_ptr<Physical> target) { _target1 = target; };
    void setTarget2(std::shared_ptr<Physical> target) { _target2 = target; };
 
-	int execute(MUD &mud);
+	virtual int execute();
 
 	parse_type getParseType() const { return _ptype; };
 	const char *getFormat() const { return _format.c_str(); };
 	std::shared_ptr<Organism> getActor() { return _actor; };
 	bool isActFlagSet(act_flags atype);
 
+	virtual bool parseCommand(const char *cmd, std::string &errmsg);
+
 	// Gets the parsed input token at the given index
 	const char *getToken(unsigned int index) const;
 	unsigned int numTokens() const { return _tokens.size(); };
-
-	bool configAction(std::vector<std::string> &tokens, std::string &errmsg);	
+	void addToken(const char *str) { _tokens.push_back(str); };
+	void addToken(std::string str) { _tokens.push_back(str); };
 
 	// Copies the alias list into a new vector
 	std::vector<std::string> getAliases() { return _alias; };
@@ -86,7 +89,7 @@ public:
 
 	// Finds a target based on flags, location, etc--basic availability and populates
 	// errors in the errmsg string
-	std::shared_ptr<Physical> findTarget(std::string &name, std::string &errmsg, int targetsel = 1);
+	std::shared_ptr<Physical> findTarget(const std::string &name, std::string &errmsg, int targetsel = 1);
 
 	std::shared_ptr<Physical> getTarget1() { return _target1; };
 	std::shared_ptr<Physical> getTarget2() { return _target2; };
@@ -98,6 +101,8 @@ protected:
 
    virtual bool setFlagInternal(const char *flagname, bool newval);
    virtual bool isFlagSetInternal(const char *flagname, bool &results);
+
+	size_t parseToken(size_t pos, std::string &buf);
 
 private:
 
