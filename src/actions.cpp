@@ -217,9 +217,9 @@ int getcom(MUD &engine, Action &act_used) {
 	bool in_inventory = true;
    (void) engine; // Eliminate compile warnings
 
-	// Need to find the objects ourselves. If only two tokens, then no container involved
+	// Need to find the objects ourselves. If only one token, then no container involved
 	std::stringstream msg;
-	if (act_used.numTokens() == 2) {
+	if (act_used.numTokens() == 1) {
 		if ((pptr = cur_loc->getContainedByName(act_used.getToken(0))) == nullptr) {
 			actor->sendMsg("You cannot find that here.\n");
 			return 0;

@@ -7,7 +7,7 @@
 #include "global.h"
 
 
-const char *ptype_list[] = {"undef", "single", "acttarg", "acttargcont", "acttargoptcont", "actopttarg", "socialstyle", "look", "chat", "tell", NULL};
+const char *ptype_list[] = {"undef", "single", "acttarg", "acttargcont", "acttargoptcont", "actopttarg", "socialstyle", "chat", "tell", NULL};
 const char *aflag_list[] = {"target1mud", "target1loc", "target1inv", "target1org", "target2mud", "target2loc", 
 									 "target2inv", "target2org", "nolookup", "aliastarget", NULL};
 
@@ -459,8 +459,18 @@ size_t Action::parseToken(size_t pos, std::string &buf) {
 	if (buf.size() == 0)
 		return 0;
 
+	// Find the next space but skip leading spaces
 	size_t start = pos;
-	pos = buf.find(" ", start);
+	while ((start < buf.size()) && ((pos = buf.find(" ", start)) == 0))
+		start++;
+
+	// Oops, all that was left were spaces
+	if (start >= buf.size()) {
+		pos = buf.size();
+		return pos;
+	}
+
+	
    if (pos == std::string::npos)
 		pos = buf.size();
    addToken(buf.substr(start, pos-start));
