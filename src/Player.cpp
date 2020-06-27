@@ -61,6 +61,14 @@ Player::~Player() {
 
 }
 
+
+const char *Player::getGameName(std::string &buf) const {
+	getNameID(buf);
+	if (buf.size() > 0)
+		buf[0] = toupper(buf[0]);
+	return buf.c_str();
+}
+
 /*********************************************************************************************
  * sendFile - takes a filename and opens/sends the file to the user. Useful for things like 
  *			     the welcome message or motd, help files, info files, etc
@@ -161,7 +169,7 @@ void Player::handleConnection(time_t timeout) {
 	// Extract received data into a command queue
 	std::string buf, left, right;
 	if (_conn->getUserInput(buf) > 0) {
-	
+
 		// Lock down the commands queue so we can add to it
 		std::lock_guard<std::mutex> guard(_cmd_mutex);
 	
@@ -173,6 +181,7 @@ void Player::handleConnection(time_t timeout) {
 			_commands.push(left);
 			buf = right;
 		}
+		
 	}
 }
 
@@ -403,6 +412,11 @@ void Player::formatForTelnet(const std::string &unformatted, std::string &format
 					formatted.append(colorstr);
 				}
 				lastpos = i+4;
+			} else { // Unrecognized, skip
+				if (lastpos != i)
+					formatted.append(unformatted, lastpos, i-lastpos);
+
+				lastpos = i + 1;
 			}
 			i = lastpos-1;
 
@@ -419,14 +433,14 @@ void Player::formatForTelnet(const std::string &unformatted, std::string &format
  *
  *********************************************************************************************/
 
-void Player::sendPrompt() {
+ void Player::sendPrompt() {
 	std::string prompt;
 
 	Handler &cur_handler = *(_handler_stack.top());
 	cur_handler.getPrompt(prompt);
 
 	sendMsg(prompt);
-}
+} 
 
 /*********************************************************************************************
  * clearPrompt - Returns the cursor to the beginning of the line and wipes out the prompt, again
@@ -446,6 +460,30 @@ void Player::clearPrompt() {
 	clrprompt.insert(0, "\r");
 	clrprompt += "\r";
    sendMsg(clrprompt); 
+}
+
+/**********************************************************************************************
+ * updatePrompt - modifies dynamic prompts and updates the connection
+ *
+ **********************************************************************************************/
+
+void Player::updatePrompt() {
+	std::string prompt;
+
+	Handler &cur_handler = *(_handler_stack.top());
+
+	// Call the handler here to modify the prompt (todo)
+
+	// Get the new prompt
+	cur_handler.getPrompt(prompt);
+
+	std::string clrprompt;
+   clrprompt.assign(prompt.size(), ' ');
+   clrprompt[0] = '\r';
+	clrprompt += '\r';
+
+	_conn->setPreWrite(clrprompt.c_str());
+	_conn->setPostWrite(prompt.c_str());
 }
 
 
@@ -596,8 +634,6 @@ int Player::loadUser(const char *userdir, const char *username) {
 		return -1; 
 	}
 
-	_rformatter.changeMap('n', username);
-	
    return 1;
 }
 
@@ -973,3 +1009,13 @@ void Player::kill() {
 	exitMUD();
 }
 
+void Player::setReviews(const char *username) {
+	std::string capuser = username;
+	if (capuser.size() == 0)
+		return;
+
+	capuser[0] = toupper(capuser[0]);
+
+	_rformatter.changeMap('n', username);
+	_rformatter.changeMap('N', username);
+}

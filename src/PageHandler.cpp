@@ -55,7 +55,7 @@ int PageHandler::handleCommand(std::string &cmd) {
  *********************************************************************************************/
 
 void PageHandler::getPrompt(std::string &buf) {
-	buf = "Press enter to display another page, 'C' to Cancel> ";	
+	buf = "\rPress enter to display another page, 'C' to Cancel> ";	
 }
 
 /*********************************************************************************************
@@ -173,6 +173,6 @@ bool PageHandler::showNextPage() {
 	sendbuf = _to_display.substr(0, pos+1);
 	_to_display.erase(0, pos+1);
 	_plr->sendMsg(sendbuf);
-	_plr->sendPrompt();
+	// _plr->sendPrompt();
 	return false;
 }

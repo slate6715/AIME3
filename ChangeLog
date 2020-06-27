@@ -1,3 +1,10 @@
+06/27/2020
+- Made door examine2 and roomdesc2 use examine and roomdesc if the 2 version is empty
+- Added NoGet functionality
+- Made a version of review replacement that gets rid of "the" in front of things like "the golem"
+- Some other additional bugfixes and formatting fixes
+
+
 06/25/2020
 - Added the Social class as a sub-class to Action
 - Added skeleton for the Talent class, sub to Action

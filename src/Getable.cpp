@@ -7,7 +7,7 @@
 #include "global.h"
 
 const char *gflag_list[] = {"noget", "nodrop", "food", "rope", "luckfast", "thiefonly",  
-								"blockmagic", "fastheal", NULL};
+								"blockmagic", "fastheal", "enhancemagic", NULL};
 
 
 /*********************************************************************************************

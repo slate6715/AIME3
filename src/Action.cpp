@@ -601,7 +601,15 @@ bool Action::parseCommand(const char *cmd, std::string &errmsg) {
          return false;
       }
 
-      addToken(buf.substr(pos, buf.size() - pos));
+		while ((pos < buf.size()) && (buf[pos] == ' '))
+			pos++;
+
+		if (pos == buf.size()) {
+			errmsg = "Silence is golden. Format: ";
+			errmsg += getFormat();
+			return false;
+		}
+      addToken(buf.substr(pos, buf.size() - pos+1));
    }
    // If it's not single, then we don't recognize this type
    else if ((getParseType() != Action::ActTarg) && (getParseType() != Action::ActOptTarg)) {

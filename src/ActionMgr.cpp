@@ -263,9 +263,9 @@ void ActionMgr::handleActions() {
 			handleSpecials(aptr->get(), posttrig.c_str());
 		}
 
-		std::shared_ptr<Organism> actor = aptr->get()->getActor();
-		if (actor != nullptr)
-			actor->sendPrompt();
+		// std::shared_ptr<Organism> actor = aptr->get()->getActor();
+		//if (actor != nullptr)
+			//actor->sendPrompt();
 
 		aptr = _action_queue.erase(aptr);
 	}

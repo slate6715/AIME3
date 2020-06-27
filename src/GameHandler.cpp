@@ -39,13 +39,13 @@ int GameHandler::handleCommand(std::string &cmd) {
 	std::string errmsg;
 
 	// First, write over the prompt
-	_plr->clearPrompt();
+//	_plr->clearPrompt();
 
 	// Try to find the command to execute--if NULL, there was an error
 	if ((new_action = _actions.preAction(cmd.c_str(), errmsg, _plr)) == NULL) {
 		errmsg += "\n";
 		_plr->sendMsg(errmsg);
-		_plr->sendPrompt();
+		// _plr->sendPrompt();
 		return 0;
 	}
 
@@ -64,7 +64,7 @@ int GameHandler::handleCommand(std::string &cmd) {
  *********************************************************************************************/
 
 void GameHandler::getPrompt(std::string &buf) {
-	buf = "TempPrompt> ";	
+	buf = "\rTempPrompt> ";	
 }
 
 /*********************************************************************************************
@@ -90,4 +90,7 @@ void GameHandler::prePop(std::vector<std::string> &results) {
 
 
 void GameHandler::postPush() {
+	
 }
+
+

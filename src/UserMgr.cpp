@@ -204,6 +204,9 @@ void UserMgr::handleUsers(libconfig::Config &cfg_info, EntityDB &edb){
 			plr_it = _db.erase(plr_it);
 		}
 
+		// Update the player prompts
+		plr.updatePrompt();
+
 		std::string cmd;
 		if (plr.popCommand(cmd)) {
 			int results;
@@ -252,7 +255,7 @@ void UserMgr::handleUsers(libconfig::Config &cfg_info, EntityDB &edb){
 
 
 						plr.sendCurLocation();
-						plr.sendPrompt();
+//						plr.sendPrompt();
 						continue;	
 					}
 				}

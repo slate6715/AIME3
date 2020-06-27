@@ -19,7 +19,7 @@ public:
 
    virtual ~Equipment();
 
-	enum equipflags { TwoHanded, AntiMagic };
+	enum equipflags { TwoHanded, AntiMagic, OuterLayer };
 
 	// void setDesc(const char *newdesc);
 

@@ -241,6 +241,10 @@ int LoginHandler::handleCommand(std::string &cmd) {
 
 			_cur_state = LoginMenu;		
 			_plr->sendMsg("Successfully created your user!\n");	
+
+			_plr->setReviews(_username.c_str());
+			
+			
 			sendLoginMenu();
 			break;
 
@@ -283,6 +287,7 @@ int LoginHandler::handleCommand(std::string &cmd) {
 
 			break;
 	}
+
 	_plr->sendPrompt();
 
 	return 0;
@@ -298,39 +303,39 @@ int LoginHandler::handleCommand(std::string &cmd) {
 void LoginHandler::getPrompt(std::string &buf) {
    switch(_cur_state) {
       case AskUser:
-			buf = "What shall we call you? ";
+			buf = "\rWhat shall we call you? ";
          break;
 
       case AskPasswd:
-         buf = "Enter your password: ";
+         buf = "\rEnter your password: ";
          break;
 
       case AskCreate:
-			buf = "Would you like to create that username? (y/n) ";
+			buf = "\rWould you like to create that username? (y/n) ";
          break;
 
       case CreatePasswd1:
-			buf = "Enter your new password: ";
+			buf = "\rEnter your new password: ";
          break;
 
       case CreatePasswd2:
-			buf = "Re-enter your new password: ";
+			buf = "\rRe-enter your new password: ";
          break;
 
       case GetGender:
-			buf = "What is your gender (m/f/n)? ";
+			buf = "\rWhat is your gender (m/f/n)? ";
          break;
 
       case GetRace:
-         buf = "What is your race? ";
+         buf = "\rWhat is your race? ";
          break;
 
 		case GetClass:
-			buf = "What is your class? ";
+			buf = "\rWhat is your class? ";
 			break;
 
 		case LoginMenu:
-			buf = "What is your choice? ";
+			buf = "\rWhat is your choice? ";
 			break;
 
       default:
@@ -354,6 +359,7 @@ void LoginHandler::prePop(std::vector<std::string> &results) {
 
 	results.push_back("loggedin");
 	results.push_back(_username);
+	
 }
 
 /*********************************************************************************************

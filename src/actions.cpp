@@ -196,11 +196,15 @@ int dropcom(MUD &engine, Action &act_used) {
 		return 0;
 	}
 
+	std::stringstream msg;
+	std::string buf;
 	gptr->movePhysical(actor->getCurLoc(), act_used.getTarget1());
-	std::string msg("You drop the ");
-	msg += gptr->getTitle();
-	msg += "\n";
-	actor->sendMsg(msg.c_str());
+	msg << "You drop the " << gptr->getTitle() << "\n";
+	actor->sendMsg(msg.str().c_str());
+
+	msg.str("");
+   msg << actor->getGameName(buf) << " drops the " << gptr->getGameName(buf) << ".\n";
+   actor->getCurLoc()->sendMsg(msg.str().c_str(), actor);
 
    return 1;
 }
@@ -230,12 +234,17 @@ int getcom(MUD &engine, Action &act_used) {
 			return 0;
 		}
 
+		if (gptr->isGetableFlagSet(Getable::NoGet)) {
+			actor->sendMsg("You are unable to get it to budge.");
+			return 0;
+		}
+
 		gptr->movePhysical(actor, gptr);
 		msg << "You pick up the " << gptr->getGameName(buf) << ".\n";
 		actor->sendMsg(msg.str().c_str());
 		msg.str("");
 
-		msg << actor->getGameName(buf) << " picks up the " << gptr->getGameName(buf) << ".";
+		msg << actor->getGameName(buf) << " picks up the " << gptr->getGameName(buf) << ".\n";
 		cur_loc->sendMsg(msg.str().c_str(), actor);
 
 		gptr->changeRoomDesc(Getable::Dropped);
@@ -517,8 +526,9 @@ int opencom(MUD &engine, Action &act_used) {
 	msg << "You open the " << target->getTitle() << ".\n";
 	actor->sendMsg(msg.str().c_str());
 	msg.str("");
-	
-	msg << actor->getTitle() << " opens the " << target->getTitle() << ".\n";
+
+	std::string buf;	
+	msg << actor->getGameName(buf) << " opens the " << target->getTitle() << ".\n";
 	actor->getCurLoc()->sendMsg(msg.str().c_str(), actor);
 
    return 1;

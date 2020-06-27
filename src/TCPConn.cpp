@@ -68,6 +68,7 @@ int TCPConn::sendText(const char *msg) {
  **********************************************************************************************/
 
 void TCPConn::addOutput(const char *msg) {
+	std::lock_guard<std::mutex> guard(_conn_mutex);
 	_outputbuf += msg;
 }
 
@@ -84,6 +85,8 @@ void TCPConn::addOutput(const char *msg) {
  **********************************************************************************************/
 
 ssize_t TCPConn::handleConnection(time_t timeout) {
+
+	std::lock_guard<std::mutex> guard(_conn_mutex);
 
 	// If the connection is marked as closing, flush the buffers and mark as closed
 	if (_status == Closing) {
@@ -124,8 +127,12 @@ ssize_t TCPConn::handleConnection(time_t timeout) {
 	}
 
 	// Now write any data in the outputbuf to the connection
-	_connfd.writeFD(_outputbuf);
-	_outputbuf.clear();
+	if (hasOutput()) {
+		_connfd.writeFD(_prewrite);
+		_connfd.writeFD(_outputbuf);
+		_connfd.writeFD(_postwrite);
+		_outputbuf.clear();
+	}
 
 	return count;
 }
@@ -185,5 +192,28 @@ void TCPConn::lostLink(time_t timeout) {
 	_connfd.closeFD();
 	_status = LostLink;
 	_lostlink_timeout = time(NULL) + timeout;
+}
+
+/**********************************************************************************************
+ * setPreWrite - Sends this before eack block of output (to clear a prompt, for example)
+ *
+ **********************************************************************************************/
+
+void TCPConn::setPreWrite(const char *str) {
+	std::lock_guard<std::mutex> guard(_conn_mutex);
+
+	_prewrite = str;
+}
+
+
+/**********************************************************************************************
+ * setPostWrite - Sends this after each block of output (for a prompt?)
+ *
+ **********************************************************************************************/
+
+void TCPConn::setPostWrite(const char *str) {
+	std::lock_guard<std::mutex> guard(_conn_mutex);
+
+	_postwrite = str;
 }
 

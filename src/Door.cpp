@@ -8,7 +8,7 @@
 #include "Location.h"
 #include "Getable.h"
 
-const char *doorflag_list[] = {"hideclosedexit", "ropedoor", "pushtoggle", "specialsonly", NULL};
+const char *doorflag_list[] = {"hideclosedexit", "ropedoor", "specialsonly", NULL};
 
 
 /*********************************************************************************************
@@ -76,7 +76,7 @@ int Door::loadData(pugi::xml_node &entnode) {
    // Get the second location for this door to start in
    pugi::xml_attribute attr = entnode.attribute("startloc2");
    if (attr == nullptr) {
-      errmsg << "Door '" << getID() << "' missing mandatory startloc2 field.";
+      errmsg << "ERROR: Door '" << getID() << "' missing mandatory startloc2 field.";
       mudlog->writeLog(errmsg.str().c_str());
       return 0;
    }
@@ -84,12 +84,9 @@ int Door::loadData(pugi::xml_node &entnode) {
 
    // Get the acttype - must be either hardcoded or script
    pugi::xml_node node = entnode.child("examine2");
-   if (node == nullptr) {
-      errmsg << "Door '" << getID() << "' missing mandatory examine2 field.";
-      mudlog->writeLog(errmsg.str().c_str());
-      return 0;
-   }
-   setExamine2(node.child_value());
+   if (node != nullptr) {
+		setExamine2(node.child_value());
+	}
 
    // Get the RoomDesc
    for (pugi::xml_node anode = entnode.child("roomdesc");	anode; anode = 
@@ -98,7 +95,7 @@ int Door::loadData(pugi::xml_node &entnode) {
 		// Get the state for thid desc
       pugi::xml_attribute attr = anode.attribute("state");
       if (attr == nullptr) {
-         errmsg << "Door '" << getID() << "' roomdesc missing mandatory state field.";
+         errmsg << "ERROR: Door '" << getID() << "' roomdesc missing mandatory state field.";
          mudlog->writeLog(errmsg.str().c_str());
          return 0;
       }		
@@ -117,7 +114,7 @@ int Door::loadData(pugi::xml_node &entnode) {
       else if (state.compare("special") == 0)
          _roomdesc[Special] = rdstr;
       else {
-         errmsg << "Door '" << getID() << "' roomdesc state not a valid state.";
+         errmsg << "ERROR: Door '" << getID() << "' roomdesc state not a valid state.";
          mudlog->writeLog(errmsg.str().c_str());
          return 0;
 		} 
@@ -131,9 +128,9 @@ int Door::loadData(pugi::xml_node &entnode) {
       // Get the state for thid desc
       pugi::xml_attribute attr = anode.attribute("state");
       if (attr == nullptr) {
-         errmsg << "Door '" << getID() << "' roomdesc2 missing mandatory state field.";
+         errmsg << "WARNING: Door '" << getID() << "' roomdesc2 missing mandatory state field.";
          mudlog->writeLog(errmsg.str().c_str());
-         return 0;
+         continue;
       }
 
       std::string state = attr.value();
@@ -150,12 +147,19 @@ int Door::loadData(pugi::xml_node &entnode) {
       else if (state.compare("special") == 0)
          _roomdesc2[Special] = rdstr;
       else {
-         errmsg << "Door '" << getID() << "' roomdesc2 state not a valid state.";
+         errmsg << "WARNING: Door '" << getID() << "' roomdesc2 state not a valid state.";
          mudlog->writeLog(errmsg.str().c_str());
-         return 0;
+         continue; 
       }
 
    }
+
+	// If roomdesc2 and examine2 aren't defined, copy examine and roomdesc
+	if (_roomdesc2.size() == 0)
+		_roomdesc2 = _roomdesc;
+
+	if (_examine2.size() == 0)
+		_examine2 = getExamine();
 
 	return 1;
 }
@@ -240,7 +244,7 @@ void Door::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
 
 	// Check if the cur_loc is a Location--which it must be for doors
    if (std::dynamic_pointer_cast<Location>(getCurLoc()) == nullptr) {
-      msg << "Object '" << getID() << "' startloc '" << getStartLoc() << "' must be assigned to a Location object.";
+      msg << "WARNING: Object '" << getID() << "' startloc '" << getStartLoc() << "' must be assigned to a Location object.";
       mudlog->writeLog(msg.str().c_str());
       return;
    }
@@ -250,14 +254,14 @@ void Door::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
    std::shared_ptr<Physical> entptr = edb.getPhysical(_startloc2.c_str());
 
 	if (entptr == nullptr) {
-		msg << "Door '" << getID() << "' startloc2 '" << _startloc2 << "' doesn't appear to exist.";
+		msg << "WARNING: Door '" << getID() << "' startloc2 '" << _startloc2 << "' doesn't appear to exist.";
       mudlog->writeLog(msg.str().c_str());
 		return;
    } 
 
    // Static objects must be in a location object
    if (std::dynamic_pointer_cast<Location>(entptr) == nullptr) {
-      msg << "Object '" << getID() << "' startloc2 '" << _startloc2 << "' must be assigned to a Location object.";
+      msg << "WARNING: Object '" << getID() << "' startloc2 '" << _startloc2 << "' must be assigned to a Location object.";
       mudlog->writeLog(msg.str().c_str());
       return;
    }
@@ -328,7 +332,7 @@ const char *Door::getCurRoomdesc(const Location *cur_loc) {
 bool Door::open(std::string &errmsg) {
 
 	if ((isDoorFlagSet(RopeDoor)) || (isDoorFlagSet(SpecialsOnly))) {
-		errmsg = "You can't open that";
+		errmsg = "You can't open that\n";
 		return false;
 	}
 

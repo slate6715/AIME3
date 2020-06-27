@@ -30,6 +30,8 @@ public:
 
    virtual ~Player();
 
+	virtual const char *getGameName(std::string &buf) const;
+
 	virtual bool sendFile(const char *filename);
    // Send a message to this entity or its contents - class-specific behavior
    virtual void sendMsg(const char *msg, std::shared_ptr<Physical> exclude=nullptr); 
@@ -40,6 +42,9 @@ public:
 	
 	// Sends the player a blank the size of the prompt to clear it from a line
 	virtual void clearPrompt();
+
+	// Update dynamic prompts and send to the connection
+	void updatePrompt();
 
 	// Displays the current location to the user
 	virtual void sendCurLocation();
@@ -74,6 +79,9 @@ public:
    bool saveUser(const char *userdir) const;
    virtual void saveData(pugi::xml_node &entnode) const;
    virtual int loadData(pugi::xml_node &entnode);
+
+	// Set up config info for the reviews, mainly for a new player
+	void setReviews(const char *username);
 
 	void setWrapWidth(unsigned int new_width) { _wrap_width = new_width; };
 

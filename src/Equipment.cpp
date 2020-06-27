@@ -6,7 +6,7 @@
 #include "misc.h"
 #include "global.h"
 
-const char *equipflag_list[] = {"twohanded", "antimagic", NULL};
+const char *equipflag_list[] = {"twohanded", "antimagic", "outerlayer", NULL};
 
 
 /*********************************************************************************************

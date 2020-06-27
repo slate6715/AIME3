@@ -278,7 +278,7 @@ void Static::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
    std::shared_ptr<Physical> entptr = edb.getPhysical(_startloc.c_str());
 
 	if (entptr == nullptr) {
-		msg << "Object '" << getID() << "' startloc '" << _startloc << "' doesn't appear to exist.";
+		msg << "WARNING: Object '" << getID() << "' startloc '" << _startloc << "' doesn't appear to exist.";
       mudlog->writeLog(msg.str().c_str());
 		return;
    } 

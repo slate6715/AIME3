@@ -10,7 +10,7 @@
 #include "Door.h"
 
 const char *lflag_list[] = {"outdoors", "bright", "death", "realtime", "nomobiles", "dark", "nosummon", "private", 
-									 "oneperson", "noteleport", NULL};
+									 "oneperson", "noteleport", "peaceful", NULL};
 const char *eflag_list[] = {"hidden", "special", NULL};
 
 const char *exitlist[] = {"north", "south", "east", "west", "up", "down", "northeast", "northwest", 
@@ -92,7 +92,7 @@ int Location::loadData(pugi::xml_node &entnode) {
    // Get the acttype - must be either hardcoded or script
    pugi::xml_attribute attr = entnode.attribute("title");
    if (node == nullptr) {
-      errmsg << "Location '" << getID() << "' missing mandatory title field.";
+      errmsg << "ERROR: Location '" << getID() << "' missing mandatory title field.";
       mudlog->writeLog(errmsg.str().c_str());
       return 0;
    }
@@ -106,7 +106,7 @@ int Location::loadData(pugi::xml_node &entnode) {
 		// Get the direction name such as "east"
       pugi::xml_attribute attr = exitnode.attribute("name");
       if (attr == nullptr) {
-         errmsg << "Location '" << getID() << "' Exit node missing mandatory name field.";
+         errmsg << "ERROR: Location '" << getID() << "' Exit node missing mandatory name field.";
          mudlog->writeLog(errmsg.str().c_str());
          return 0;
       }		
@@ -115,7 +115,7 @@ int Location::loadData(pugi::xml_node &entnode) {
 		// Get the ID string of the location to link
       attr = exitnode.attribute("location");
       if (attr == nullptr) {
-         errmsg << "Location '" << getID() << "' Exit node missing mandatory location field.";
+         errmsg << "ERROR: Location '" << getID() << "' Exit node missing mandatory location field.";
          mudlog->writeLog(errmsg.str().c_str());
          return 0;
       }
@@ -125,9 +125,10 @@ int Location::loadData(pugi::xml_node &entnode) {
 		for (pugi::xml_node eflag = exitnode.child("flag"); eflag; eflag = eflag.next_sibling("flag")) {
 			attr = eflag.attribute("name");
 			if (attr == nullptr) {
-				errmsg << "Location '" << getID() << "' exit '" << new_exit.dir << "' flag missing mandatory name field.";
+				errmsg << "WARNING: Location '" << getID() << "' exit '" << new_exit.dir << 
+																			"' flag missing mandatory name field.";
 				mudlog->writeLog(errmsg.str().c_str());
-				return 0;
+				continue;
 			}
 			new_exit.dir = attr.value();
 
@@ -140,10 +141,10 @@ int Location::loadData(pugi::xml_node &entnode) {
 				i++;
 
 			if (eflag_list[i] == NULL) {
-            errmsg << "Location '" << getID() << "' exit '" << new_exit.dir << "' flag '" << flagstr << 
+            errmsg << "WARNING: Location '" << getID() << "' exit '" << new_exit.dir << "' flag '" << flagstr << 
 																		" is not a recognized exit flag.";
             mudlog->writeLog(errmsg.str().c_str());
-            return 0;
+            continue; 
 			}
 			new_exit.eflags[i] = true;
 		}
@@ -300,7 +301,8 @@ void Location::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
 		std::shared_ptr<Door> doorptr;
 
 		if (entptr == nullptr) {
-			msg << "Location '" << getID() << "' " << exit_it->dir << " exit '" << exit_it->link_id.c_str() << "' doesn't appear to exist.";
+			msg << "WARNING: Location '" << getID() << "' " << exit_it->dir << " exit '" << 
+										exit_it->link_id.c_str() << "' doesn't appear to exist.";
 			mudlog->writeLog(msg.str().c_str());
 			msg.str("");
 			exit_it = _exits.erase(exit_it);
@@ -314,7 +316,7 @@ void Location::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
 			exit_it->link_loc = doorptr;
 			exit_it++;
 		} else {
-         msg << "Location '" << getID() << "' exit '" << exit_it->dir << 
+         msg << "WARNING: Location '" << getID() << "' exit '" << exit_it->dir << 
 																		"' doesn't appear to be a Location or Door class.";
          mudlog->writeLog(msg.str().c_str());
          exit_it = _exits.erase(exit_it);

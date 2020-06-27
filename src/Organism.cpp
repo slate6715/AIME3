@@ -66,7 +66,8 @@ Organism::Organism(const char *id):
 	//_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
 	
 	// Add our review formatter entries
-	_rformatter.addMap('n', "temp");	// Name (title)
+	_rformatter.addMap('N', "temp");	// Name (title)
+	_rformatter.addMap('n', "temp"); // Name minus the or a
 	_rformatter.addMap('1', "temp"); // Exit format 1
 	_rformatter.addMap('2', "temp");	// Exit format 2
 	_rformatter.addMap('3', "temp");	// Exit format 3
@@ -158,7 +159,7 @@ int Organism::loadData(pugi::xml_node &entnode) {
    pugi::xml_attribute attr = entnode.attribute("title");
    if (node != nullptr) {
 		_title = attr.value();
-		_rformatter.changeMap('n', _title.c_str());
+		
    }
 
    for (pugi::xml_node review = entnode.child("reviewmsg"); review; review = 
@@ -218,6 +219,20 @@ int Organism::loadData(pugi::xml_node &entnode) {
          mudlog->writeLog(errmsg.str().c_str());
          return 0;
       }
+   }
+
+	// Set up our review information
+	std::string buf;
+	getGameName(buf);
+   _rformatter.changeMap('N', buf.c_str());
+   _rformatter.changeMap('n', buf.c_str());
+
+   size_t pos = buf.find(" ");
+   if (pos != std::string::npos) {
+      std::string prefix = buf.substr(0, pos);
+      lower(prefix);
+      if ((prefix.compare("the") == 0) || (prefix.compare("a") == 0))
+         _rformatter.changeMap('n', buf.substr(pos+1, buf.size()-pos).c_str());
    }
 
 	return 1;
