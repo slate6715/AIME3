@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
 <action id="action:dig" acttype="Hardcoded" parsetype="ActOptTarg" format="dig [[<at|in>] <target>]" function="failcom" pretrig="predig" posttrig="postdig" >
 <flag name="Target1Loc" />
+<flag name="VisibleOnly" />
 </action> 

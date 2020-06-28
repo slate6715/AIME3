@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
 <action id="action:remove" acttype="Hardcoded" parsetype="ActTarg" format="remove <object>" function="removecom">
 <flag name="Target1Inv" />
+<flag name="VisibleOnly" />
 </action> 

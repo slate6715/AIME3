@@ -20,7 +20,7 @@ public:
 
    virtual ~Static();
 
-	enum sflags { Container, Lockable, NotCloseable, Lightable, MagicLit, NoSummon, Extinguish, Lit };
+	enum sflags { Container, Lockable, NotCloseable, Lightable, MagicLit, NoSummon, Extinguish, Lit, CanLight };
 
    enum doorstate { Open, Closed, Locked, Special };
 
@@ -53,6 +53,10 @@ public:
    // Opens containers - non-overloaded functions raise an error here
    virtual bool open(std::string &errmsg);
    virtual bool close(std::string &errmsg);
+
+	// Messing with fire!
+	virtual bool light(std::string &errmsg);
+	virtual bool extinguish(std::string &errmsg);
 
 protected:
 

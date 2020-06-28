@@ -3,4 +3,5 @@
 <flag name="Target1Inv" />
 <flag name="Target1Loc" />
 <flag name="Target2Loc" />
+<flag name="VisibleOnly" />
 </action> 

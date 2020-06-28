@@ -9,7 +9,7 @@
 #include "Door.h"
 
 const char *sflag_list[] = {"container", "lockable", "notcloseable", "lightable", "magiclit", "nosummon", 
-							"extinguish", "lit", NULL};
+							"extinguish", "lit", "canlight", NULL};
 
 
 /*********************************************************************************************
@@ -341,15 +341,14 @@ bool Static::setDoorState(const char *new_state) {
 }
 
 /*********************************************************************************************
- * open - does some checks and, if allowed, opens the container so it can be viewed and items
- *        exchanged
+ * ** game manipulation functions for Static objects and error message
  *
  *    Params: errmsg - error text is stored here if the function fails its checks
  *
  *    Returns: true if successful, false if an error happened
  *
  *********************************************************************************************/
-
+// open doors/containers
 bool Static::open(std::string &errmsg) {
 	
 	// First, it must be a container (overloaded for doors)
@@ -373,15 +372,7 @@ bool Static::open(std::string &errmsg) {
 	return true;
 }
 
-/*********************************************************************************************
- * close - does some checks and, if allowed, closes the container
- *
- *    Params: errmsg - error text is stored here if the function fails its checks
- *
- *    Returns: true if successful, false if an error happened
- *
- *********************************************************************************************/
-
+// Close doors/containers
 bool Static::close(std::string &errmsg) {
 
    // First, it must be a container or a door
@@ -405,6 +396,39 @@ bool Static::close(std::string &errmsg) {
    setDoorState(Closed);
    return true;
 }
+
+// Messing with fire!
+bool Static::light(std::string &errmsg) {
+	if (isStaticFlagSet(Lit)) {
+		errmsg = "That is already lit.\n";
+		return false;
+	}
+
+	if (!isStaticFlagSet(Lightable)) {
+		errmsg = "That cannot be lit.\n";
+		return false;
+	}
+
+	_staticflags[Lit] = true;
+	return true;	
+}
+
+// Get rid of that fire!
+bool Static::extinguish(std::string &errmsg) {
+	if (!isStaticFlagSet(Lit)) {
+		errmsg = "That is not lit.\n";
+		return false;
+	}
+
+	if (!isStaticFlagSet(Extinguish)) {
+		errmsg = "That cannot be extinguished.\n";
+		return false;
+	}
+
+	_staticflags[Lit] = false;
+	return true;
+}
+
 
 /*********************************************************************************************
  * getGameName - fills the buffer with the primary name that the game refers to this entity.

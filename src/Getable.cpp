@@ -7,7 +7,7 @@
 #include "global.h"
 
 const char *gflag_list[] = {"noget", "nodrop", "food", "rope", "luckfast", "thiefonly",  
-								"blockmagic", "fastheal", "enhancemagic", NULL};
+								"blockmagic", "fastheal", "enhancemagic", "canlight", NULL};
 
 
 /*********************************************************************************************
@@ -94,8 +94,12 @@ int Getable::loadData(pugi::xml_node &entnode) {
          setRoomDesc(Dropped, anode.child_value());
       } else if (label.compare("lit") == 0) {
          setRoomDesc(Lit, anode.child_value());
-      } else if (label.compare("depleted") == 0) {
-         setRoomDesc(Depleted, anode.child_value());
+      } else if (label.compare("extinguished") == 0) {
+         setRoomDesc(Extinguished, anode.child_value());
+		} else if (label.compare("open") == 0) {
+			setRoomDesc(Open, anode.child_value());	
+		} else if (label.compare("closed") == 0) {
+			setRoomDesc(Closed, anode.child_value());	
       } else if (label.compare("custom") == 0) {
 			if ((attr = anode.attribute("customname")) == nullptr) {
 	         errmsg << "Getable Object '" << getID() << "' custom roomdesc missing mandatory customname attribute.";
@@ -214,32 +218,30 @@ void Getable::setRoomDesc(descstates new_state, const char *new_desc, const char
  *
  *********************************************************************************************/
 
-void Getable::changeRoomDesc(descstates new_state, const char *customname) {
-   if (new_state == Custom) {
-      if (customname == NULL)
-         throw std::invalid_argument("Attempt to change to a Custom roomDesc but no customname is set");
+bool Getable::changeRoomDesc(descstates new_state, const char *customname) {
 
-      std::string cname(customname);
+	if ((new_state == Custom) && (customname == NULL))
+		throw std::invalid_argument("Attempt to change to a Custom roomDesc but no customname is set");
 
-      // First see if it already exists
-      for (unsigned int i=Custom; i<_roomdesc.size(); i++) {
-         if (cname.compare(_roomdesc[i].second.c_str()) == 0) {
-				_dstate = i;
-            return;
-         }
-      }
+   std::string cname;
+	if (new_state == Custom)
+		cname = customname;
 
-		throw std::invalid_argument("Attempt to change to a Custom roomDesc but the customname doesn't exist");
+   // Try to find it
+   for (unsigned int i=0; i<_roomdesc.size(); i++) {
+		if (i == (unsigned int) new_state) {
+			if (new_state == Custom) {
+				if (cname.compare(_roomdesc[i].second.c_str()) == 0) {
+					_dstate = i;
+					return true;
+				}
+				continue;
+			}
+			_dstate = i;
+			return true;
+		}
    }
-
-   // A little more logic--if no review is set in Dropped
-   if ((new_state == Lit) && (_roomdesc[new_state].first.size() == 0))
-      new_state = Dropped;
-
-   if ((new_state == Dropped) && (_roomdesc[new_state].first.size() == 0))
-      new_state = Pristine;
-
-	_dstate = new_state; 
+	return false;
 }
 
 /*********************************************************************************************
@@ -279,6 +281,39 @@ const char *Getable::listContents(std::string &buf, const Physical *exclude) con
    }
 
    return buf.c_str();
+}
+
+/*********************************************************************************************
+ * ** game manipulation functions for Getable objects and error message
+ *
+ *    Params: errmsg - error text is stored here if the function fails its checks
+ *
+ *    Returns: true if successful, false if an error happened
+ *
+ *********************************************************************************************/
+
+// Messing with fire!
+bool Getable::light(std::string &errmsg) {
+	// Let the static code do it's thing first
+	if (!Static::light(errmsg))
+		return false;
+
+	// Changes it if available
+	changeRoomDesc(Lit);
+		
+   return true;
+}
+
+// Get rid of that fire!
+bool Getable::extinguish(std::string &errmsg) {
+	// Let the static code do its thing first
+	if (!Static::extinguish(errmsg))
+		return false;
+
+	if (!changeRoomDesc(Extinguished))
+		changeRoomDesc(Dropped);
+
+   return true;
 }
 
 

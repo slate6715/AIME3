@@ -300,6 +300,12 @@ int getcom(MUD &engine, Action &act_used) {
 		cur_loc->sendMsg(msg.str().c_str(), actor);
 	}
 
+	// If it is lit, we might want the lit review
+   if (gptr->isStaticFlagSet(Static::Lit)) {
+      if (gptr->changeRoomDesc(Getable::Lit))
+         return 1;
+   }
+
    gptr->changeRoomDesc(Getable::Dropped);
 
    return 1;
@@ -860,3 +866,169 @@ int killcom(MUD &engine, Action &act_used) {
 	cur_loc->sendMsg(msg.str().c_str(), actor);
 	return 1;
 }
+
+
+/*******************************************************************************************
+ * lightcom - ignite a target that is lightable
+ *******************************************************************************************/
+
+int lightcom(MUD &engine, Action &act_used) {
+   (void) engine;
+
+   std::stringstream msg;
+   std::string buf;
+
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   std::shared_ptr<Physical> cur_loc = actor->getCurLoc();
+
+	std::shared_ptr<Static> sptr = std::dynamic_pointer_cast<Static>(act_used.getTarget1());
+
+	std::shared_ptr<Physical> light_from = act_used.getTarget2();
+
+	// If the user didn't specify what to light from, find something in inventory or the room
+	if (light_from == nullptr) {
+		if (sptr == nullptr) { 
+			actor->sendMsg("That cannot be lit.\n");
+			return 0;
+		}
+
+		std::vector<std::string> flags;
+		flags.push_back("canlight");
+		flags.push_back("lit");
+
+		// The player needs to have something capable of lighting in their inventory or be lighting
+		// something in their inventory and have something in the room
+		if ((!actor->containsPhysical(sptr)) && ((light_from = actor->containsFlags(flags)) == nullptr)) {
+			actor->sendMsg("You need to be holding either the item to be lit or something to light it from (or both).\n");
+			return 0;
+		}
+
+		if (light_from == nullptr) {
+			if ((light_from = cur_loc->containsFlags(flags)) == nullptr) {
+				actor->sendMsg("I see nothing to light it from.\n");
+				return 0;
+			}
+		}
+	}
+
+	// Do a quick check to make sure at least one is carried
+	if (!actor->containsPhysical(sptr) || (!actor->containsPhysical(light_from))) {
+		actor->sendMsg("You need to be holding either the item to be lit or something to light it from (or both).\n");
+		return 0;
+	}
+	
+	std::string errmsg;
+	if (!sptr->light(errmsg)) {
+		actor->sendMsg(errmsg.c_str());
+		return 0;
+	}
+	
+	msg << "You ignite the " << sptr->getGameName(buf) << " with the " << light_from->getGameName(buf) << ".\n";
+	actor->sendMsg(msg.str().c_str());
+
+	msg.str("");
+	msg << actor->getGameName(buf) << " ignites the " << sptr->getGameName(buf) << " with the " << light_from->getGameName(buf) << ".\n";
+	cur_loc->sendMsg(msg.str().c_str(), actor);
+
+	return 1;
+}
+
+/*******************************************************************************************
+ * extinguishcom - puts out a lit object
+ *******************************************************************************************/
+
+int extinguishcom(MUD &engine, Action &act_used) {
+   (void) engine;
+
+   std::stringstream msg;
+   std::string buf;
+
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   std::shared_ptr<Physical> cur_loc = actor->getCurLoc();
+
+   std::shared_ptr<Static> sptr = std::dynamic_pointer_cast<Static>(act_used.getTarget1());
+
+   if (sptr == nullptr) {
+      actor->sendMsg("That is not lit.\n");
+      return 0;
+   }
+
+	std::string errmsg;
+   if (!sptr->extinguish(errmsg)) {
+		actor->sendMsg(errmsg);
+	}
+
+   msg << "You extinguish the " << sptr->getGameName(buf) << ".\n";
+   actor->sendMsg(msg.str().c_str());
+
+   msg.str("");
+   msg << actor->getGameName(buf) << " extinguishes the " << sptr->getGameName(buf) << ".\n";
+   cur_loc->sendMsg(msg.str().c_str(), actor);
+   return 1;
+}
+
+/*******************************************************************************************
+ * summoncom - wizard-level function to summon an object or organism
+ *******************************************************************************************/
+
+int summoncom(MUD &engine, Action &act_used) {
+   (void) engine;
+
+   std::stringstream msg;
+   std::string buf;
+
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   std::shared_ptr<Location> cur_loc;
+
+   std::shared_ptr<Physical> target = act_used.getTarget1();
+	std::shared_ptr<Physical> target_cont = target->getCurLoc();
+
+   cur_loc = std::dynamic_pointer_cast<Location>(actor->getCurLoc());
+
+	// First, take care of moving the object and cur_loc messages
+	// If it is a getable object, place it in the actor's inventory
+	if (std::dynamic_pointer_cast<Getable>(target) != nullptr) {
+		target->movePhysical(actor);
+		msg << "The " << target->getGameName(buf) << " soars through air, landing in your open hand.\n";
+		actor->sendMsg(msg.str().c_str());
+		
+		msg.str("");
+		msg << "The " << target->getGameName(buf) << " soars through the air, landing in the open palm of " << 
+																							actor->getGameName(buf) << ".\n";
+		cur_loc->sendMsg(msg.str().c_str(), actor);
+
+	// Statics go in the location
+	} else if (std::dynamic_pointer_cast<Static>(target) != nullptr) {
+      target->movePhysical(actor);
+      msg << "The " << target->getGameName(buf) << " soars through the air, landing on the ground with a loud thump.\n";
+      cur_loc->sendMsg(msg.str().c_str());
+
+	// Organisms also go in the location, but treat them a bit different
+	} else if (std::dynamic_pointer_cast<Organism>(target) != nullptr) {
+      msg.str("");
+      msg << target->getGameName(buf) << " soars through the air, landing on the ground with a thump "
+																		"and a surprised look.\n";
+      cur_loc->sendMsg(msg.str().c_str());
+      target->movePhysical(actor);
+
+		target->sendMsg("You suddenly soar through the air, landing in a new location!\n");
+	}
+
+	// Now take care of some destination messages	
+	std::shared_ptr<Location> target_loc = std::dynamic_pointer_cast<Location>(target_cont);
+
+	if (target_loc == nullptr) {
+		std::shared_ptr<Organism> target_org = std::dynamic_pointer_cast<Organism>(target_cont);
+		if (target_org == nullptr)
+			return 1;	// No messages to send if not in the loc or carried by someone
+
+		msg << "The " << target->getGameName(buf) << " flies out of your hands, soaring away into the distance.\n";
+		target_org->sendMsg(msg.str().c_str());
+		return 1;
+	}
+
+	msg << "The " << target->getGameName(buf) << " suddenly soars away into the distance.\n";
+	target_loc->sendMsg(msg.str().c_str());
+	return 1;
+}
+

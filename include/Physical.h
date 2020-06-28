@@ -5,6 +5,7 @@
 #include <list>
 #include <memory>
 #include <vector>
+#include <climits>
 #include "../external/pugixml.hpp"
 #include "Attribute.h"
 #include "Entity.h"
@@ -58,6 +59,11 @@ public:
 
    // Checks if this physity contains the parameter physity
    bool containsPhysical(std::shared_ptr<Physical> phys_ptr);
+
+	// Does this physical contain something with the Static::Lit flag set
+	std::shared_ptr<Physical> containsLit(int recursive_lvl = INT_MAX);
+	std::shared_ptr<Physical> containsFlag(const char *flagname, int recursive_lvl = INT_MAX);
+	std::shared_ptr<Physical> containsFlags(std::vector<std::string> &flaglist, int recursive_lvl = INT_MAX);
 
    // Retrieved the shared pointer matching the parameter information
    std::shared_ptr<Physical> getContainedByPtr(Physical *pptr);

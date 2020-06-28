@@ -1,0 +1,4 @@
+<?xml version="1.0"?>
+<action id="action:summon" acttype="Hardcoded" parsetype="ActTarg" format="summon <zone:name>" function="summoncom">
+<flag name="Target1MUD" />
+</action> 

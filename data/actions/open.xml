@@ -2,4 +2,5 @@
 <action id="action:open" acttype="Hardcoded" parsetype="ActTarg" format="open <object>" function="opencom">
 <flag name="Target1Loc" />
 <flag name="Target1Inv" />
+<flag name="VisibleOnly" />
 </action> 

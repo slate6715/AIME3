@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<action id="action:light" acttype="Hardcoded" parsetype="ActTargOptCont" format="light <object>" function="lightcom" 
+		  pretrig="prelight" posttrig="postlight">
+<alias name="burn"/>
+<flag name="Target1Loc" />
+<flag name="Target1Inv" />
+<flag name="Target2Loc" />
+<flag name="Target2Inv" />
+<flag name="VisibleOnly" />
+</action> 

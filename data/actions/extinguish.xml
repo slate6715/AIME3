@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<action id="action:extinguish" acttype="Hardcoded" parsetype="ActTarg" format="extinguish <object>" function="extinguishcom" 
+		  pretrig="preextinguish" posttrig="postextinguish">
+<flag name="Target1Loc" />
+<flag name="Target1Inv" />
+<flag name="VisibleOnly" />
+</action> 

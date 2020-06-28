@@ -1,3 +1,9 @@
+06/28/2020
+- Added the light and extinguish commands
+- Added the summon command
+- Added the VisibleOnly flag to Actions, marking some as only working if the player can see
+- Made dark rooms appear dark if the player does not have a light
+
 06/27/2020
 - Made door examine2 and roomdesc2 use examine and roomdesc if the 2 version is empty
 - Added NoGet functionality

@@ -501,9 +501,13 @@ void Player::sendCurLocation() {
 		return;
 	}
 
+	if (!canSee()) {
+		sendMsg("Darkness\n\nYou are unable to see anything.\n\n");
+		return;
+	}
 	sendMsg("\n");
 	sendMsg(locptr->getTitle());
-	sendMsg("\n\n");
+	sendMsg("\n");
 	sendMsg(locptr->getDesc());
 
 	sendLocContents();
@@ -899,6 +903,7 @@ const char *Player::listContents(std::string &buf, const Physical *exclude) cons
 		return buf.c_str();
 	}
 
+	std::string namebuf;
    // Show getables first
    for (cit = _contained.begin(); cit != _contained.end(); cit++) {
       std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(*cit);
@@ -906,7 +911,9 @@ const char *Player::listContents(std::string &buf, const Physical *exclude) cons
       if (gptr == nullptr)
          continue;
 
-      buf += gptr->getTitle();
+      buf += gptr->getGameName(namebuf);
+		if (gptr->isStaticFlagSet(Static::Lit))
+			buf += " (lit)";
 
 		// If it is a worn item, list where it is worn. This gets a bit complicated though so we look
 		// for patterns

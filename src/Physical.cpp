@@ -7,6 +7,7 @@
 #include "Attribute.h"
 #include "misc.h"
 #include "ScriptEngine.h"
+#include "Static.h"
 
 /*********************************************************************************************
  * PhysicalDB (constructor) - Called by a child class to initialize any Physical elemphyss
@@ -287,6 +288,111 @@ std::shared_ptr<Physical> Physical::getContainedByName(const char *name, bool al
    return nullptr;
 
 }
+
+/*********************************************************************************************
+ * containsLit - searches the contents of this Physical for anything with the Static::Lit flag.
+ *
+ *		Params:	recursive_lvl - how far deep to call recursive searches (INT_MAX for unlimited)
+ *
+ *		Returns:	pointer to the lit object if found, nullptr otherwise
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Physical> Physical::containsLit(int recursive_lvl) {
+	if (recursive_lvl < 0)
+		return nullptr;
+
+	std::shared_ptr<Physical> use_item;
+	std::shared_ptr<Static> sptr;
+
+	auto phyit = _contained.begin();
+	for ( ; phyit != _contained.end(); phyit++) {
+		if ((use_item = (*phyit)->containsLit(recursive_lvl-1)) != nullptr)
+			return use_item;
+
+		if ((sptr = std::dynamic_pointer_cast<Static>(*phyit)) == nullptr)
+			continue;
+
+		if (sptr->isStaticFlagSet(Static::Lit))
+			return sptr;	
+	}
+	return nullptr;
+}
+
+/*********************************************************************************************
+ * containsFlag - searches the contents of this Physical for anything with the indicated flag set.
+ *
+ *    Params:  recursive_lvl - how far deep to call recursive searches (INT_MAX for unlimited)
+ *
+ *		Returns:	pointer to the flagged object if found, nullptr otherwise
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Physical> Physical::containsFlag(const char *flagname, int recursive_lvl) {
+   if (recursive_lvl < 0)
+      return nullptr;
+
+	std::shared_ptr<Physical> use_item;
+
+	std::string flagstr = flagname;
+	lower(flagstr);
+
+   auto phyit = _contained.begin();
+   for ( ; phyit != _contained.end(); phyit++) {
+      if ((use_item = (*phyit)->containsFlag(flagstr.c_str(), recursive_lvl-1)) != nullptr)
+         return use_item;
+
+		// Check if the flag is set, but catch invalid_argument exceptions if flag doesn't exist
+		try {
+			if ((*phyit)->isFlagSet(flagstr.c_str()))
+				return *phyit;
+		} catch (std::invalid_argument &e) {
+			continue;
+		}
+   }
+   return nullptr;
+
+}
+
+
+/*********************************************************************************************
+ * containsFlags - searches the contents of this Physical for anything with all the flags listed set
+ *
+ *    Params:	flags - vector of flag strings - must be lowercase
+ *					recursive_lvl - how far deep to call recursive searches (INT_MAX for unlimited)
+ *
+ *    Returns: pointer to the flagged object if found, nullptr otherwise
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Physical> Physical::containsFlags(std::vector<std::string> &flags, int recursive_lvl) {
+   if (recursive_lvl < 0)
+      return nullptr;
+
+   std::shared_ptr<Physical> use_item;
+
+   auto phyit = _contained.begin();
+   for ( ; phyit != _contained.end(); phyit++) {
+      if ((use_item = (*phyit)->containsFlags(flags, recursive_lvl-1)) != nullptr)
+         return use_item;
+
+      // Check if the flag is set, but catch invalid_argument exceptions if flag doesn't exist
+		unsigned int i;
+		for (i=0; i<flags.size(); i++) {
+			try {
+				if (!(*phyit)->isFlagSet(flags[i].c_str()))
+					break;	
+			} catch (std::invalid_argument &e) {
+				break;
+			}
+		}
+		if (i == flags.size())
+			return *phyit;
+   }
+   return nullptr;
+
+}
+
 
 /*********************************************************************************************
  * setFlagInternal - given the flag string, sets the flag or returns false if not found.

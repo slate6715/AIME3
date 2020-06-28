@@ -3,4 +3,5 @@
 		  pretrig="prepush" posttrig="postpush">
 <alias name="move"/>
 <flag name="Target1Loc" />
+<flag name="VisibleOnly" />
 </action> 

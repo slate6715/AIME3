@@ -49,7 +49,8 @@ public:
          Target2Inv,   // Look in the actor's inventory for the target2
          Target2Org,   // Target2 must be an organism (mobile or player)
 			NoLookup,	 // Action class will not lookup the target object but simply pass in the string
-			AliasTarget  // Aliases can act as the target (such as with "go east" and "east")
+			AliasTarget, // Aliases can act as the target (such as with "go east" and "east")
+			VisibleOnly  // Command only works if the actor can see in the room 
 	};
 
 	// Constructors

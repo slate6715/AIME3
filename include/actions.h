@@ -27,5 +27,8 @@ int untiecom(MUD &engine, Action &act_used);
 int failcom(MUD &engine, Action &act_used);
 int gotocom(MUD &engine, Action &act_used);
 int killcom(MUD &engine, Action &act_used);
+int lightcom(MUD &engine, Action &act_used);
+int extinguishcom(MUD &engine, Action &act_used);
+int summoncom(MUD &engine, Action &act_used);
 
 #endif // ifndef ACTIONS

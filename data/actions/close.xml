@@ -2,4 +2,5 @@
 <action id="action:close" acttype="Hardcoded" parsetype="ActTarg" format="close <object>" function="closecom">
 <flag name="Target1Loc" />
 <flag name="Target1Inv" />
+<flag name="VisibleOnly" />
 </action> 

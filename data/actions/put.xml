@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
 <action id="action:put" acttype="Hardcoded" parsetype="ActTargCont" format="put <object> [in <container>]" function="putcom">
 <flag name="NoLookup" />
+<flag name="VisibleOnly" />
 </action> 

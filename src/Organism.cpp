@@ -862,3 +862,27 @@ void Organism::dropAll() {
 }
 
 
+/*********************************************************************************************
+ * canSee - does a bunch of checks to see if this organism can see in the room
+ *
+ *********************************************************************************************/
+
+bool Organism::canSee() {
+	std::shared_ptr<Location> cur_loc = std::dynamic_pointer_cast<Location>(getCurLoc());
+
+	if (cur_loc == nullptr)
+		throw std::runtime_error("canSee Organism cur_loc is not a Location entity.");
+
+	if (!cur_loc->isLocFlagSet(Location::Dark))
+		return true;
+
+	if (containsLit(0))
+		return true;
+
+	if (cur_loc->containsLit(0))
+		return true;
+
+	return false;
+}
+
+

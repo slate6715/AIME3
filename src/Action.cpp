@@ -9,7 +9,7 @@
 
 const char *ptype_list[] = {"undef", "single", "acttarg", "acttargcont", "acttargoptcont", "actopttarg", "socialstyle", "chat", "tell", NULL};
 const char *aflag_list[] = {"target1mud", "target1loc", "target1inv", "target1org", "target2mud", "target2loc", 
-									 "target2inv", "target2org", "nolookup", "aliastarget", NULL};
+									 "target2inv", "target2org", "nolookup", "aliastarget", "visibleonly", NULL};
 
 hardcoded_actions cmd_array[] = {
 		{"infocom", infocom},
@@ -35,6 +35,9 @@ hardcoded_actions cmd_array[] = {
 		{"failcom", failcom},
 		{"gotocom", gotocom},
 		{"killcom", killcom},
+		{"lightcom", lightcom},
+		{"extinguishcom", extinguishcom},
+		{"summoncom", summoncom},
 		{"",0}
 };
 
@@ -492,6 +495,12 @@ bool Action::parseCommand(const char *cmd, std::string &errmsg) {
 	size_t pos = 0;
 
 	std::string buf = (cmd == NULL) ? "" : cmd;
+
+	// Some commands require the actor to be able to see
+	if ((isActFlagSet(VisibleOnly)) && !getActor()->canSee()) {
+		errmsg = "You need to be able to see to use that command.\n";
+		return false;
+	}
 
 	// Lone commands with these parse types are ok, exit early
 	if ((getParseType() == Action::Single) || 

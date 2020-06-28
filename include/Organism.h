@@ -82,6 +82,9 @@ public:
 	bool hasTrait(const char *trait_id);
 	bool removeTrait(const char *trait_id);
 
+	// Is the organism able to see in this room
+	bool canSee();
+
 	// Equip a piece of equipment (should already be in the organism's inventory
 	bool equip(std::shared_ptr<Physical> equip_ptr, std::string &errmsg);
    bool remove(std::shared_ptr<Physical> equip_ptr, std::string &errmsg);

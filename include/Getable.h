@@ -20,21 +20,26 @@ public:
 
    virtual ~Getable();
 
-	enum gflags { NoGet, NoDrop, Food, Rope, LuckFast, ThiefOnly, BlockMagic, FastHeal, EnhanceMagic };
+	enum gflags { NoGet, NoDrop, Food, Rope, LuckFast, ThiefOnly, BlockMagic, FastHeal, EnhanceMagic, 
+					CanLight };
 
-	enum descstates { Pristine, Dropped, Lit, Depleted, Custom };
+	enum descstates { Pristine, Dropped, Lit, Extinguished, Open, Closed, Custom };
 
 
 	// void setDesc(const char *newdesc);
 
 	// Manages the roomdesc--the description one sees when they look in the room
 	void setRoomDesc(descstates new_state, const char *new_desc, const char *customname = NULL);
-	void changeRoomDesc(descstates, const char *customname = NULL);
+	bool changeRoomDesc(descstates, const char *customname = NULL);
 	const char *getRoomDesc();
 
    virtual const char *listContents(std::string &buf, const Physical *exclude = NULL) const;
 
    bool isGetableFlagSet(gflags flag) { return _getflags[flag]; };
+
+   // Messing with fire!
+   virtual bool light(std::string &errmsg);
+   virtual bool extinguish(std::string &errmsg);
 
 protected:
 
