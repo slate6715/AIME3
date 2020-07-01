@@ -6,7 +6,8 @@
 
 const char *NPC_attriblist[] = {"aggression", "speed", NULL};
 
-const char *nflag_list[] = {"nosummon", "cross", "canblind", "canfrost", "drainscr", "canfireball", NULL};
+const char *nflag_list[] = {"nosummon", "cross", "canblind", "canfrost", "drainscr", "canfireball", "fearholy",
+									NULL};
 
 /*********************************************************************************************
  * NPC (constructor) - Called by a child class to initialize any NPC elements

@@ -55,16 +55,15 @@ Organism::Organism(const char *id):
 	setBodyPartFlag("leftarm", "hand", CanWield, true);
 
 	// Set up our attribute list (Strength, Constitution, Dexterity, Intelligence, Wisdom, Charisma, Experience, Damage)
-	for (unsigned int i=0; i<Last; i++) {
-		_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
-	}
+	addAttribute("strength", 0);
+	addAttribute("constitution", 0);
+	addAttribute("dexterity", 0);
+	addAttribute("intelligence", 0);
+	addAttribute("wisdom", 0);
+	addAttribute("charisma", 0);
+	addAttribute("experience", 0);
+	addAttribute("damage", 0);
 
-	// Strength
-	//_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
-
-	// Damage
-	//_org_attrib.push_back(std::unique_ptr<Attribute>(new IntAttribute()));
-	
 	// Add our review formatter entries
 	_rformatter.addMap('N', "temp");	// Name (title)
 	_rformatter.addMap('n', "temp"); // Name minus the or a
@@ -364,174 +363,6 @@ const char *Organism::getReviewProcessed(const char *reviewstr, std::string &buf
    throw std::runtime_error(msg.c_str());
 }
 
-/*********************************************************************************************
- * set/getAttribute - given the attribute, assigns the value. Different versionf rod ifferent
- *					variable types. 
- *
- *
- *********************************************************************************************/
-
-void Organism::setAttribute(org_attrib attr, int val) {
-	*(_org_attrib[attr]) = val;	
-}
-
-void Organism::setAttribute(org_attrib attr, float val) {
-   *(_org_attrib[attr]) = val;
-}
-
-void Organism::setAttribute(org_attrib attr, const char *val) {
-   *(_org_attrib[attr]) = val;
-}
-
-void Organism::setAttribute(org_attrib attr, Attribute &val) {
-   *(_org_attrib[attr]) = val;
-}
-
-int Organism::getAttributeInt(org_attrib attr) {
-	return _org_attrib[attr]->getInt();
-}
-
-float Organism::getAttributeFloat(org_attrib attr) {
-	return _org_attrib[attr]->getFloat();
-}
-
-const char *Organism::getAttributeStr(org_attrib attr) {
-	return _org_attrib[attr]->getStr();
-}
-
-bool Organism::setAttribInternal(const char *attrib, int value) {
-   if (Physical::setAttribInternal(attrib, value))
-      return true;
-
-   unsigned int i = locateInTable(attrib, org_attriblist);
-   if (i == UINT_MAX)
-      return false;
-	
-	(*_org_attrib[i]) = value;
-	return true;
-}
-
-bool Organism::setAttribInternal(const char *attrib, float value) {
-   if (Physical::setAttribInternal(attrib, value))
-      return true;
-
-   unsigned int i = locateInTable(attrib, org_attriblist);
-   if (i == UINT_MAX)
-      return false;
-
-   *(_org_attrib[i]) = value;
-   return true;
-}
-
-bool Organism::setAttribInternal(const char *attrib, const char *value) {
-   if (Physical::setAttribInternal(attrib, value))
-      return true;
-
-   unsigned int i = locateInTable(attrib, org_attriblist);
-   if (i == UINT_MAX)
-      return false;
-
-   *(_org_attrib[i]) = value;
-   return true;
-}
-
-bool Organism::setAttribInternal(const char *attrib, Attribute &value) {
-   if (Physical::setAttribInternal(attrib, value))
-      return true;
-
-   unsigned int i = locateInTable(attrib, org_attriblist);
-   if (i == UINT_MAX)
-      return false;
-
-   *(_org_attrib[i]) = value;
-   return true;
-}
-
-bool Organism::getAttribInternal(const char *attrib, int &value) {
-   if (Physical::getAttribInternal(attrib, value))
-      return true;
-
-   unsigned int i = locateInTable(attrib, org_attriblist);
-   if (i == UINT_MAX)
-      return false;
-
-   value = _org_attrib[i]->getInt();
-   return true;
-
-}
-
-bool Organism::getAttribInternal(const char *attrib, float &value) {
-   if (Physical::getAttribInternal(attrib, value))
-      return true;
-
-   unsigned int i = locateInTable(attrib, org_attriblist);
-   if (i == UINT_MAX)
-      return false;
-
-   value = _org_attrib[i]->getFloat();
-   return true;
-}
-
-bool Organism::getAttribInternal(const char *attrib, std::string &value) {
-   if (Physical::getAttribInternal(attrib, value))
-      return true;
-
-   unsigned int i = locateInTable(attrib, org_attriblist);
-   if (i == UINT_MAX)
-      return false;
-
-   value = _org_attrib[i]->getStr();
-   return true;
-}
-
-/*********************************************************************************************
- * getAttribTypeInternal - polymorphic function locates the attribute by its string and returns the type.
- *
- *    Returns: attr_type of Int, Float, Str, or Undefined if not found
- *
- *********************************************************************************************/
-
-Attribute::attr_type Organism::getAttribTypeInternal(const char *attrib) const {
-
-	// First, check the parent
-	Attribute::attr_type atype = Physical::getAttribTypeInternal(attrib);
-
-	if (atype != Attribute::Undefined)
-		return atype;
-
-	// Now check Organism attributes
-	unsigned int i = locateInTable(attrib, org_attriblist);
-	if (i == UINT_MAX)
-		return Attribute::Undefined;
-
-	return _org_attrib[i]->getType();
-}
-
-/*********************************************************************************************
- * fillAttrXMLNode - populates the parameter XML node with data from this entity's attributes.
- *                   polymorphic
- *
- *    Returns: true if the same, false otherwise
- *
- *********************************************************************************************/
-
-void Organism::fillAttrXMLNode(pugi::xml_node &anode) const {
-	// First call the parent
-	Physical::fillAttrXMLNode(anode);
-
-	// Populate with all the attributes
-	pugi::xml_node nextnode;
-	pugi::xml_attribute nextattr;
-
-	for (unsigned int i=0; i < (int) Last; i++) {
-		nextnode = anode.append_child("attribute");
-		nextattr = nextnode.append_attribute("name");
-		nextattr.set_value(org_attriblist[i]);
-		_org_attrib[i]->fillXMLNode(nextnode);
-	}
-
-	
-}
 
 /*********************************************************************************************
  * setReview - assigns the passed in string to the appropriate review

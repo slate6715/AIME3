@@ -13,6 +13,7 @@
 #include "NPC.h"
 #include "Door.h"
 #include "Trait.h"
+#include "Script.h"
 
 
 /*********************************************************************************************
@@ -190,7 +191,9 @@ int EntityDB::loadPhysicals(libconfig::Config &mud_cfg) {
 	// Now go through linking entities together
 	auto ent_it = _db.begin();
 	for (; ent_it != _db.end(); ent_it++) {
-		ent_it->second->addLinks(*this, ent_it->second);
+		std::shared_ptr<Physical> pptr = std::dynamic_pointer_cast<Physical>(ent_it->second);
+		if (pptr != nullptr)
+			pptr->addLinks(*this, pptr);
 	}
 
 	return count;
@@ -261,7 +264,7 @@ int EntityDB::loadTraits(libconfig::Config &mud_cfg) {
 }
 
 /*********************************************************************************************
- * getPhysical - retrieves the entity with the given id
+ * getPhysical - retrieves the physical with the given id
  *
  *		Returns: shared_ptr to the entity, or set to null if not found
  *
@@ -270,9 +273,26 @@ int EntityDB::loadTraits(libconfig::Config &mud_cfg) {
 std::shared_ptr<Physical> EntityDB::getPhysical(const char *id) {
 	auto eptr = _db.find(id);
 	
-	if (eptr == _db.end())
+	std::shared_ptr<Physical> phyptr;
+	if ((eptr == _db.end()) || ((phyptr = std::dynamic_pointer_cast<Physical>(eptr->second)) == nullptr))
 		return std::shared_ptr<Physical>(nullptr);
-	return eptr->second;
+	return phyptr;
+}
+
+/*********************************************************************************************
+ * getScript - retrieves the script with the given id
+ *
+ *    Returns: shared_ptr to the script, or set to null if not found
+ *
+ *********************************************************************************************/
+
+std::shared_ptr<Script> EntityDB::getScript(const char *id) {
+   auto eptr = _db.find(id);
+
+   std::shared_ptr<Script> scrptr;
+   if ((eptr == _db.end()) || ((scrptr = std::dynamic_pointer_cast<Script>(eptr->second)) == nullptr))
+      return std::shared_ptr<Script>(nullptr);
+   return scrptr;
 }
 
 /*********************************************************************************************

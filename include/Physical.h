@@ -4,6 +4,7 @@
 #include <string>
 #include <list>
 #include <memory>
+#include <map>
 #include <vector>
 #include <climits>
 #include "../external/pugixml.hpp"
@@ -37,6 +38,14 @@ public:
 	virtual bool open(std::string &errmsg);
 	virtual bool close(std::string &errmsg);
 
+	// add attributes of certain types to the list
+   bool addAttribute(const char *attrib, int value);
+   bool addAttribute(const char *attrib, float value);
+   bool addAttribute(const char *attrib, const char *value);
+
+	// Remove an attribute from the list
+	bool remAttribute(const char *attrib);
+
 	// Setting and getting attribute values. These are less-efficiphys versions of the class
 	// versions that use enum index as they have to lookup string to enums
 	bool setAttribute(const char *attrib, int value);
@@ -49,6 +58,8 @@ public:
 	const char *getAttribStr(const char *attrib, std::string &buf);
 
 	Attribute::attr_type getAttribType(const char *attrib) const;
+
+	bool hasAttribute(const char *attrib);
 
    // Move an physity to a new container (removes from the old)
    bool movePhysical(std::shared_ptr<Physical> new_loc, std::shared_ptr<Physical> self = nullptr);
@@ -103,17 +114,6 @@ protected:
 	virtual bool setFlagInternal(const char *flagname, bool newval);
 	virtual bool isFlagSetInternal(const char *flagname, bool &results);
 
-	virtual bool setAttribInternal(const char *attrib, int value);
-	virtual bool setAttribInternal(const char *attrib, float value);
-	virtual bool setAttribInternal(const char *attrib, const char *value);
-   virtual bool setAttribInternal(const char *attrib, Attribute &value);
-
-	virtual bool getAttribInternal(const char *attrib, int &value);
-	virtual bool getAttribInternal(const char *attrib, float &value);
-	virtual bool getAttribInternal(const char *attrib, std::string &value);
-
-	virtual Attribute::attr_type getAttribTypeInternal(const char *attrib) const;
-
    virtual void fillAttrXMLNode(pugi::xml_node &anode) const;
 	
    // All physicals can possibly contain objects
@@ -125,6 +125,8 @@ private:
 	std::shared_ptr<Physical> _cur_loc;
 	
 	std::vector<std::pair<std::string, std::string>> _specials;
+
+	std::map<std::string, std::shared_ptr<Attribute>> _attributes;
 };
 
 

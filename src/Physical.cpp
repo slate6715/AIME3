@@ -449,6 +449,45 @@ size_t Physical::purgePhysical(std::shared_ptr<Physical> item) {
 	}
 	return count;
 }
+/*********************************************************************************************
+ * addAttribute, remAttribute - add and remove attributes from the list
+ *
+ *		Params: attrib - id for the new attribute or one to be removed
+ *				  value - initial value - must be a decimal (e.g. 1.0)  to add a float attribute
+ *		
+ *    Returns: true if added/removed, false if already there (for add) or not found (for rem)
+ *
+ *********************************************************************************************/
+
+bool Physical::addAttribute(const char *attrib, int value) {
+	std::shared_ptr<Attribute> new_attr(new IntAttribute(value));
+
+   auto m_it = _attributes.insert(std::pair<std::string, std::shared_ptr<Attribute>>(attrib, new_attr));
+
+	return m_it.second;
+}
+
+bool Physical::addAttribute(const char *attrib, float value) {
+   std::shared_ptr<Attribute> new_attr(new FloatAttribute(value));
+
+   auto m_it = _attributes.insert(std::pair<std::string, std::shared_ptr<Attribute>>(attrib, new_attr));
+
+   return m_it.second;
+}
+
+bool Physical::addAttribute(const char *attrib, const char *value) {
+   std::shared_ptr<Attribute> new_attr(new StrAttribute(value));
+
+   auto m_it = _attributes.insert(std::pair<std::string, std::shared_ptr<Attribute>>(attrib, new_attr));
+
+   return m_it.second;
+}
+
+bool Physical::remAttribute(const char *attrib) {
+	std::string attrstr(attrib);
+	return _attributes.erase(attrstr);	
+}
+
 
 /*********************************************************************************************
  *	setAttribute, getAttribute - Setting and getting attribute values. These are less-efficiphys 
@@ -460,99 +499,82 @@ size_t Physical::purgePhysical(std::shared_ptr<Physical> item) {
  *
  *********************************************************************************************/
 bool Physical::setAttribute(const char *attrib, int value) {
-	return setAttribInternal(attrib, value);	
+	auto m_it = _attributes.find(attrib);
+	if (m_it == _attributes.end())
+		return false;
+
+	*(m_it->second) = value;
+	return true;
 }
 
 bool Physical::setAttribute(const char *attrib, float value) {
-   return setAttribInternal(attrib, value);
+   auto m_it = _attributes.find(attrib);
+   if (m_it == _attributes.end())
+      return false;
+
+   *(m_it->second) = value;
+   return true;
 }
 
 // Special function also allows for string int and floats (converts internally)
 bool Physical::setAttribute(const char *attrib, const char *value) {
-   return setAttribInternal(attrib, value);
+   auto m_it = _attributes.find(attrib);
+   if (m_it == _attributes.end())
+      return false;
+
+   *(m_it->second) = value;
+   return true;
 }
 
 // Special function also allows for string int and floats (converts internally)
 bool Physical::setAttribute(const char *attrib, Attribute &value) {
-   return setAttribInternal(attrib, value);
+   auto m_it = _attributes.find(attrib);
+   if (m_it == _attributes.end())
+      return false;
+
+   *(m_it->second) = value;
+   return true;
 }
 
 int Physical::getAttribInt(const char *attrib) {
-	int value;
-	if (!getAttribInternal(attrib, value)) {
-		std::stringstream msg;
-		msg << "Unknown attribute requested '" << attrib << "' in Physical '" << getID() << "'";
-		throw std::invalid_argument(msg.str().c_str());
+   auto m_it = _attributes.find(attrib);
+   if (m_it == _attributes.end()) {
+		throw std::invalid_argument("Request for attribute that doesn't exist.\n");
 	}
-	return value;
+   return m_it->second->getInt(); 
 }
 
 float Physical::getAttribFloat(const char *attrib) {
-   float value;
-   if (!getAttribInternal(attrib, value)) {
-      std::stringstream msg;
-      msg << "Unknown attribute requested '" << attrib << "' in Physical '" << getID() << "'";
-      throw std::invalid_argument(msg.str().c_str());
+   auto m_it = _attributes.find(attrib);
+   if (m_it == _attributes.end()) {
+      throw std::invalid_argument("Request for attribute that doesn't exist.\n");
    }
-   return value;
+   return m_it->second->getFloat();
 }
 
 
 const char *Physical::getAttribStr(const char *attrib, std::string &buf) {
-   if (!getAttribInternal(attrib, buf)) {
-      std::stringstream msg;
-      msg << "Unknown attribute requested '" << attrib << "' in Physical '" << getID() << "'";
-      throw std::invalid_argument(msg.str().c_str());
+   auto m_it = _attributes.find(attrib);
+   if (m_it == _attributes.end()) {
+      throw std::invalid_argument("Request for attribute that doesn't exist.\n");
    }
-   return buf.c_str();
+   buf = m_it->second->getStr();
+	return buf.c_str();
 }
 
-/*********************************************************************************************          
- * set/getAttributeInternal - polymorphic version of the get/setAttribute function
+/*********************************************************************************************
+ * hasAttribute/hasAttributeInternal - simple boolean check to see if an attribute exists
  *
  *    Returns: true if found and set, false otherwise
  *
- *********************************************************************************************/        
-bool Physical::setAttribInternal(const char *attrib, int value) {
-	(void) attrib;
-	(void) value;
-	return false;
-}
+ *********************************************************************************************/
 
-bool Physical::setAttribInternal(const char *attrib, float value) {
-   (void) attrib;
-   (void) value;
-   return false;
-}
-
-bool Physical::setAttribInternal(const char *attrib, const char *value) {
-   (void) attrib;
-   (void) value;
-   return false;
-}
-
-bool Physical::setAttribInternal(const char *attrib, Attribute &value) {
-   (void) attrib;
-   (void) value;
-   return false;
-}
-
-bool Physical::getAttribInternal(const char *attrib, int &value) {
-   (void) attrib;
-   (void) value;
-   return false;
-}
-
-bool Physical::getAttribInternal(const char *attrib, float &value) {
-   (void) attrib;
-   (void) value;
-   return false;
-}
-
-bool Physical::getAttribInternal(const char *attrib, std::string &value) {
-   (void) attrib;
-   (void) value;
-   return false;
+bool Physical::hasAttribute(const char *attrib) {
+   auto m_it = _attributes.find(attrib);
+   if (m_it == _attributes.end()) {
+		return false;
+   }
+	return true;
 }
 
 /*********************************************************************************************
@@ -564,16 +586,13 @@ bool Physical::getAttribInternal(const char *attrib, std::string &value) {
  *********************************************************************************************/
 
 Attribute::attr_type Physical::getAttribType(const char *attrib) const {
-   return getAttribTypeInternal(attrib);
+   auto m_it = _attributes.find(attrib);
+   if (m_it == _attributes.end()) {
+      throw std::invalid_argument("Request for attribute that doesn't exist.\n");
+   }
+
+	return m_it->second->getType();
 }
-
-Attribute::attr_type Physical::getAttribTypeInternal(const char *attrib) const {
-	(void) attrib;
-
-   // No Physical-level attributes yet
-   return Attribute::Undefined;
-}
-
 
 /*********************************************************************************************
  * fillAttrXMLNode - populates the parameter XML node with data from this physical's attributes. 
@@ -584,8 +603,18 @@ Attribute::attr_type Physical::getAttribTypeInternal(const char *attrib) const {
  *********************************************************************************************/
 
 void Physical::fillAttrXMLNode(pugi::xml_node &anode) const {
-	// Currphysly nothing in the Physical parphys class but might add cur_loc and contained
-	(void) anode;	
+
+   // Populate with all the attributes
+   pugi::xml_node nextnode;
+   pugi::xml_attribute nextattr;
+
+	auto m_it = _attributes.begin();
+	for ( ; m_it != _attributes.end(); m_it++) {
+      nextnode = anode.append_child("attribute");
+      nextattr = nextnode.append_attribute("name");
+      nextattr.set_value(m_it->first.c_str());
+		m_it->second->fillXMLNode(nextnode);
+   }
 }
 
 

@@ -106,19 +106,6 @@ protected:
    virtual bool setFlagInternal(const char *flagname, bool newval);
    virtual bool isFlagSetInternal(const char *flagname, bool &results);
 
-   virtual bool setAttribInternal(const char *attrib, int value);
-   virtual bool setAttribInternal(const char *attrib, float value);
-   virtual bool setAttribInternal(const char *attrib, const char *value);
-	virtual bool setAttribInternal(const char *attrib, Attribute &value);
-
-   virtual bool getAttribInternal(const char *attrib, int &value);
-   virtual bool getAttribInternal(const char *attrib, float &value);
-   virtual bool getAttribInternal(const char *attrib, std::string &value);
-
-	virtual void fillAttrXMLNode(pugi::xml_node &anode) const;
-
-	Attribute::attr_type getAttribTypeInternal(const char *attrib) const;
-
 	bool addBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
    int remBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
 	int findBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
@@ -131,7 +118,6 @@ private:
 
 	std::vector<std::string> _reviews;
 
-	std::vector<std::unique_ptr<Attribute>> _org_attrib;	
 	std::bitset<32> _orgflags;
 
 	std::map<std::pair<std::string, std::string>, body_part> _bodyparts;

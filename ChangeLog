@@ -1,3 +1,8 @@
+07/01/2020
+- Added the skeleton of the Script object for in-zone stand-alone specials scripts
+- Added a few flags
+- Redid the Attributes to be maintained only at the Physical level
+
 06/28/2020
 - Added the light and extinguish commands
 - Added the summon command

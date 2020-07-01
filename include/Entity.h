@@ -8,6 +8,8 @@
 #include "../external/pugixml.hpp"
 #include "Attribute.h"
 
+class Physical;
+
 /***************************************************************************************
  * Entity - the most abstract class of interactable MUD objects. This is a generic class
  *				so you would never create an Entity object. Hence, constructors are protected
@@ -38,6 +40,10 @@ public:
 
 	std::shared_ptr<Entity> getSelfPtr() const { return _self; };
 	void setSelfPtr(std::shared_ptr<Entity> self);
+
+   // Removes all references to the parameter from the Entities in the database so
+   // it can be safely removed
+   virtual size_t purgePhysical(std::shared_ptr<Physical> item) { (void) item; return 0; };
 
 protected:
 	Entity(const char *id);	// Must be called from the child constructor

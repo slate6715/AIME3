@@ -6,6 +6,7 @@
 #include "Physical.h"
 
 class Trait;
+class Script;
 
 /***************************************************************************************
  * EntityDB - class that stores and manages the game entities. Entities are stored based
@@ -24,6 +25,7 @@ public:
 	int loadTraits(libconfig::Config &mud_cfg);
 
 	std::shared_ptr<Physical> getPhysical(const char *id);
+	std::shared_ptr<Script> getScript(const char *id);
 
 	std::shared_ptr<Trait> getTrait(const char *id);
 
@@ -31,7 +33,7 @@ public:
 	size_t purgePhysical(std::shared_ptr<Physical> item);
  
 private:
-	std::map<std::string, std::shared_ptr<Physical>> _db;
+	std::map<std::string, std::shared_ptr<Entity>> _db;
 
 	std::map<std::string, std::shared_ptr<Trait>> _traits;
 };
