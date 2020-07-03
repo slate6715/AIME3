@@ -6,7 +6,6 @@
 #include <memory>
 #include <vector>
 #include "../external/pugixml.hpp"
-#include "Attribute.h"
 
 class Physical;
 
@@ -44,6 +43,7 @@ public:
    // Removes all references to the parameter from the Entities in the database so
    // it can be safely removed
    virtual size_t purgePhysical(std::shared_ptr<Physical> item) { (void) item; return 0; };
+
 
 protected:
 	Entity(const char *id);	// Must be called from the child constructor

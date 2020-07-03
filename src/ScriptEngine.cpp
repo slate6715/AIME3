@@ -16,17 +16,28 @@ ScriptEngine::ScriptEngine() {
    (*_main_namespace) = (*_main_module).attr("__dict__");
 
    (*_main_namespace)["IMUD"] = class_<IMUD>("IMUD")
-                                 .def("getPhysical", &IMUD::getPhysical);
+                                 .def("getPhysical", &IMUD::getPhysical)
+											.def("getScript", &IMUD::getScript)
+											.def("sendMsgAll", &IMUD::sendMsgAll)
+											.def("sendMsgExc", &IMUD::sendMsgExc)
+											.def("addScript", &IMUD::addScript);
    (*_main_namespace)["Physical"] = class_<IPhysical>("Physical", init<const IPhysical &>())
                                  .def("sendMsg", &IPhysical::sendMsg)
-                                 .def("sendMsgLoc", &IPhysical::sendMsgLoc)
+                                 .def("sendMsgExc", &IPhysical::sendMsgExc)
                                  .def("moveTo", &IPhysical::moveTo)
                                  .def("getCurLocID", &IPhysical::getCurLocID)
                                  .def("getCurLoc", &IPhysical::getCurLoc)
                                  .def("getCurLoc2", &IPhysical::getCurLoc2)
                                  .def("getDoorState", &IPhysical::getDoorState)
                                  .def("setDoorState", &IPhysical::setDoorState)
+                                 .def("addIntAttribute", &IPhysical::addIntAttribute)
+                                 .def("addFloatAttribute", &IPhysical::addFloatAttribute)
+                                 .def("addStrAttribute", &IPhysical::addStrAttribute)
+                                 .def("hasAttribute", &IPhysical::hasAttribute)
                                  .def("getTitle", &IPhysical::getTitle);
+
+   (*_main_namespace)["IScript"] = class_<IScript>("IScript", init<const IScript &>())
+                                 .def("loadVariable", &IScript::loadVariable);
 
 }
 
@@ -72,16 +83,22 @@ int ScriptEngine::execute(std::string &script) {
 	initialize();
 
 	// Initialize some specific elements to this call 
-	IPhysical actor(_actor);
-	IPhysical target1(_target1);
-	IPhysical target2(_target2);
 
-	if (_actor != nullptr)
-		(*_main_namespace)["actor"] = ptr(&actor);
-	if (_target1 != nullptr)
-		(*_main_namespace)["target1"] = ptr(&target1);
-	if (_target2 != nullptr)
-		(*_main_namespace)["target2"] = ptr(&target2);
+	for (unsigned int i=0; i<_variables.size(); i++) {
+		(*_main_namespace)[_variables[i].first.c_str()] = ptr(&(_variables[i].second));
+	}
+
+   for (unsigned int i=0; i<_variable_ints.size(); i++) {
+      (*_main_namespace)[_variable_ints[i].first.c_str()] = _variable_ints[i].second;
+   }
+
+   for (unsigned int i=0; i<_variable_floats.size(); i++) {
+      (*_main_namespace)[_variable_floats[i].first.c_str()] = _variable_floats[i].second;
+   }
+
+   for (unsigned int i=0; i<_variable_strs.size(); i++) {
+      (*_main_namespace)[_variable_strs[i].first.c_str()] = _variable_strs[i].second;
+   }
 
 	// Execute the script and handle any exceptions
 	try {
@@ -110,17 +127,52 @@ int ScriptEngine::execute(std::string &script) {
 
 		// An exit telling the command to stop executing. I'm sure there's a better way
 		// to catch this exception. Unfortunately don't know it yet.
-		if (_errmsg.find("SystemExit: 1") != std::string::npos)
+		if (_errmsg.find("SystemExit: 1") != std::string::npos) {
+			clearVariables();
 			return 1;
+		}
 
 		std::cout << "Err2: " << _errmsg << "\n";
 		
 		PyErr_Restore(type, value, traceback);
+		clearVariables();
 		return -1;
 	}
-	
+
+	clearVariables();
 	
 	return 0;
 }
 
 
+/*********************************************************************************************
+ * setVariable - sets up the variable string to physical entity mapping for execution
+ *
+ *
+ *********************************************************************************************/
+
+void ScriptEngine::setVariable(const char *varname, std::shared_ptr<Physical> variable) {
+	_variables.push_back(std::pair<std::string, IPhysical>(varname, IPhysical(variable)));
+}
+
+void ScriptEngine::setVariableConst(const char *varname, int variable) {
+
+	_variable_ints.push_back(std::pair<std::string, int>(varname, variable));
+}
+
+void ScriptEngine::setVariableConst(const char *varname, float variable) {
+
+	_variable_floats.push_back(std::pair<std::string, float>(varname, variable));
+}
+
+void ScriptEngine::setVariableConst(const char *varname, const char *variable) {
+
+	_variable_strs.push_back(std::pair<std::string, std::string>(varname, variable));
+}
+
+void ScriptEngine::clearVariables() {
+	_variables.clear();
+	_variable_ints.clear();
+	_variable_floats.clear();
+	_variable_strs.clear();
+}

@@ -6,10 +6,11 @@
 #include <thread>
 #include <libconfig.h++>
 #include <set>
-#include "Player.h"
 #include "Action.h"
 
-// Set up a compare function for the multiset
+class Player;
+class Script;
+
 struct compare_msa {
 	bool operator()(const std::shared_ptr<Action> &lhs,
 						 const std::shared_ptr<Action> &rhs) const {
@@ -46,6 +47,8 @@ public:
 	
 	std::shared_ptr<Action> findAction(const char *cmd);
 
+	// Adds a script to the queue to be executed	
+	bool addScript(std::shared_ptr<Script> new_script);
 
 private:
 	int handleSpecials(Action *action, const char *trigger);

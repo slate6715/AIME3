@@ -10,6 +10,7 @@
 class MUD;
 class UserMgr;
 class Player;
+class Attribute;
 
 /***************************************************************************************
  * Trait - A trait is something that can be assigned to an organism and is mutally-exclusive

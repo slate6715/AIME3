@@ -638,7 +638,7 @@ bool Physical::close(std::string &errmsg) {
  * execSpecial - looks for the given trigger attached to this physical and executes it if found.
  *               
  *		Params:	trigger - the trigger string to match
- *					actor - the organism executing this action
+ *					variables - variables to use in the special, like actor, target1, etc
  *
  *		Returns: -1 for error
  *					0 indicates the trigger was not found attached to this physical
@@ -647,7 +647,8 @@ bool Physical::close(std::string &errmsg) {
  *
  *********************************************************************************************/
 
-int Physical::execSpecial(const char *trigger, std::shared_ptr<Organism> actor) {
+int Physical::execSpecial(const char *trigger, 
+								std::vector<std::pair<std::string, std::shared_ptr<Physical>>> &variables) {
 
 	ScriptEngine &se = *engine.getScriptEngine();
 
@@ -657,7 +658,8 @@ int Physical::execSpecial(const char *trigger, std::shared_ptr<Organism> actor) 
 		// Compare special against trigger
 		if (_specials[i].first.compare(trigger) == 0)
 		{
-			se.setActor(actor);
+			for (unsigned int i=0; i<variables.size(); i++)
+				se.setVariable(variables[i].first.c_str(), variables[i].second);
 
 			int results = se.execute(_specials[i].second);
 			if (results == 1)

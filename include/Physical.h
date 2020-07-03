@@ -8,8 +8,8 @@
 #include <vector>
 #include <climits>
 #include "../external/pugixml.hpp"
-#include "Attribute.h"
 #include "Entity.h"
+#include "Attribute.h"
 
 class EntityDB;
 class Organism;
@@ -99,7 +99,7 @@ public:
 	// it can be safely removed
 	virtual size_t purgePhysical(std::shared_ptr<Physical> item);
 
-	int execSpecial(const char *trigger, std::shared_ptr<Organism> actor);
+	int execSpecial(const char *trigger, std::vector<std::pair<std::string, std::shared_ptr<Physical>>> &variables);
 
 	std::list<std::shared_ptr<Physical>>::const_iterator beginContained(){ return _contained.begin(); };
 	std::list<std::shared_ptr<Physical>>::const_iterator endContained(){ return _contained.end(); };

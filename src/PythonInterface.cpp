@@ -5,6 +5,7 @@
 #include "global.h"
 #include "Static.h"
 #include "Door.h"
+#include "Script.h"
 
 IMUD::IMUD() {
 
@@ -33,6 +34,60 @@ IPhysical IMUD::getPhysical(const char *id) {
 	}
 
 	return IPhysical(eptr);
+}
+
+/*********************************************************************************************
+ * getScript - Given an id, gets an IScript that points to the Script Entity
+ *
+ * Throws: script_error if the entity is not found
+ *
+ *********************************************************************************************/
+
+IScript IMUD::getScript(const char *id) {
+   EntityDB &edb = *(engine.getEntityDB());
+   std::shared_ptr<Script> sptr = edb.getScript(id);
+
+   if (sptr == nullptr) {
+      std::stringstream errmsg;
+
+      errmsg << "getScript could not retrieve '" << id << "'. It may not exist.";
+      throw script_error(errmsg.str().c_str());
+   }
+
+   return IScript(sptr);
+}
+
+/*********************************************************************************************
+ * sendMsgAll - sends the given message to everyone in the MUD
+ *	sendMsgExc - sends given message to the MUD, excluding the second parameter
+ *
+ * Throws: 
+ *
+ *********************************************************************************************/
+
+int IMUD::sendMsgAll(const char *msg) {
+	return engine.getUserMgr()->sendMsg(msg, NULL, NULL, nullptr);
+}
+
+int IMUD::sendMsgExc(const char *msg, IPhysical exclude) {
+   return engine.getUserMgr()->sendMsg(msg, NULL, NULL, exclude._eptr);
+}
+
+/*********************************************************************************************
+ * addScript - Copies the script and adds it to the execution queue for the MUD
+ *
+ * Throws:
+ *
+ *********************************************************************************************/
+
+int IMUD::addScript(IScript the_script) {
+	// Make a copy as this will be destroyed when complete
+	std::shared_ptr<Script> new_script(new Script(*the_script._sptr));
+
+	// Clear the old copy of things specific to this instance
+	the_script._sptr->clearVariables();
+
+	return engine.getActionMgr()->addScript(new_script);
 }
 
 IPhysical::IPhysical(std::shared_ptr<Physical> eptr):
@@ -111,7 +166,7 @@ void IPhysical::sendMsg(const char *msg) {
 	throw script_error("sendMsg special function called on a non-organism or location.");
 }
 
-void IPhysical::sendMsgLoc(const char *msg, IPhysical exclude) {
+void IPhysical::sendMsgExc(const char *msg, IPhysical exclude) {
    std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(_eptr);
 
 	// This function only works for location, hence the exclude function
@@ -194,6 +249,60 @@ bool IPhysical::isContainedID(const char *id) {
 
 	return _eptr->containsPhysical(eptr);
 
+}
+
+/*********************************************************************************************
+ * addInt/Float/StrAttribute - Adds the specified type of attribute by the given name to the
+ *						physical entity
+ *
+ *********************************************************************************************/
+
+bool IPhysical::addIntAttribute(const char *attr, int value) {
+	return _eptr->addAttribute(attr, value);
+}
+
+bool IPhysical::addFloatAttribute(const char *attr, float value) {
+   return _eptr->addAttribute(attr, value);
+}
+
+bool IPhysical::addStrAttribute(const char *attr, const char *value) {
+   return _eptr->addAttribute(attr, value);
+}
+
+/*********************************************************************************************
+ * hasAttribute - returns true if the attribute is attached to the physical entity, false otherwise
+ *
+ *********************************************************************************************/
+
+bool IPhysical::hasAttribute(const char *attr) {
+   return _eptr->hasAttribute(attr);
+}
+
+
+IScript::IScript(std::shared_ptr<Script> sptr):
+                                 _sptr(sptr)
+{
+
+}
+
+IScript::IScript(const IScript &copy_from):
+                        _sptr(copy_from._sptr)
+{
+
+}
+
+/*********************************************************************************************
+ * loadVariable - adds a variable to a script so it will be available when executed
+ *
+ *		Params:	varname - string that the script will use to refer to the variable
+ *					variable - IPhysical of the variable
+ *
+ *********************************************************************************************/
+
+void IScript::loadVariable(const char *varname, IPhysical variable) {
+	if (!_sptr->addVariable(varname, variable._eptr)) {
+		throw script_error("Attempt to add variable to script that is already there.");		
+	}
 }
 
 

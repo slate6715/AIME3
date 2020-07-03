@@ -9,6 +9,8 @@
 #include "global.h"
 #include "Talent.h"
 #include "Social.h"
+#include "Player.h"
+#include "Script.h"
 
 namespace lc = libconfig;
 
@@ -255,7 +257,7 @@ void ActionMgr::handleActions() {
 	while ((aptr != _action_queue.end()) && ((*aptr)->getExecTime() <= cur_time)) {
 
 
-		(*aptr)->execute();
+		int results = aptr->get()->execute();
 
 		// Check for post-action triggers
 		std::string posttrig = aptr->get()->getPostTrig();
@@ -267,7 +269,14 @@ void ActionMgr::handleActions() {
 		//if (actor != nullptr)
 			//actor->sendPrompt();
 
-		aptr = _action_queue.erase(aptr);
+		// The action may repeat itself at an interval (like Scripts do)
+		if (results == 2) {
+			std::shared_ptr<Action> cont_ptr = *aptr;
+			aptr = _action_queue.erase(aptr);
+			_action_queue.insert(cont_ptr);
+		} else {
+			aptr = _action_queue.erase(aptr);
+		}
 	}
 
 }
@@ -479,10 +488,20 @@ std::shared_ptr<Action> ActionMgr::findAction(const char *cmd) {
 int ActionMgr::handleSpecials(Action *action, const char *trigger) {
 	int results = 0;
 
+	std::vector<std::pair<std::string, std::shared_ptr<Physical>>> variables;
+
+	if (action->getActor() != nullptr)
+		variables.push_back(std::pair<std::string, std::shared_ptr<Physical>>("actor", action->getActor()));
+   if (action->getTarget1() != nullptr)
+      variables.push_back(std::pair<std::string, std::shared_ptr<Physical>>("target1", action->getTarget1()));
+   if (action->getTarget2() != nullptr)
+      variables.push_back(std::pair<std::string, std::shared_ptr<Physical>>("target2", action->getTarget2()));
+
+
    // Look for specials on target1 if applicable
    if (action->getTarget1() != nullptr) {
       // If the special ran and said to terminate, don't continue
-      if ((results = action->getTarget1()->execSpecial(trigger, action->getActor())) == 2) {
+      if ((results = action->getTarget1()->execSpecial(trigger, variables)) == 2) {
          return 2;
       }
    }
@@ -490,13 +509,13 @@ int ActionMgr::handleSpecials(Action *action, const char *trigger) {
    // Look for specials on target2
    if (action->getTarget2() != nullptr) {
       // If the special ran and said to terminate, don't continue
-      if ((results = action->getTarget2()->execSpecial(trigger, action->getActor())) == 2) {
+      if ((results = action->getTarget2()->execSpecial(trigger, variables)) == 2) {
          return 2;
       }
    }
 
    // Look for specials in the location
-   if ((results = action->getActor()->getCurLoc()->execSpecial(trigger, action->getActor())) == 2) {
+   if ((results = action->getActor()->getCurLoc()->execSpecial(trigger, variables)) == 2) {
       return 2;
    }
 
@@ -504,5 +523,18 @@ int ActionMgr::handleSpecials(Action *action, const char *trigger) {
 }
 
 
+/*********************************************************************************************
+ * addScript - adds a script entity to the queue to be executed
+ *
+ *
+ *********************************************************************************************/
+
+bool ActionMgr::addScript(std::shared_ptr<Script> new_script) {
+	// Set the execute time to now plus interval
+	new_script->setExecute(new_script->getInterval());
+
+   _action_queue.insert(new_script);	
+	return true;
+}
 
 

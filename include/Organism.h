@@ -6,8 +6,8 @@
 #include <bitset>
 #include <map>
 #include "Physical.h"
-#include "Location.h"
 #include "StrFormatter.h"
+#include "Location.h"
 
 class Equipment;
 class Trait;

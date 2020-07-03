@@ -185,6 +185,22 @@ int EntityDB::loadPhysicals(libconfig::Config &mud_cfg) {
 
       }
 
+      // GEt all Scripts
+      for (pugi::xml_node get_x = zonefile.child("script"); get_x; get_x = get_x.next_sibling("script")) {
+         Script *new_ent = new Script("temp");
+         if (!new_ent->loadEntity(get_x)) {
+            std::stringstream msg;
+            msg << "Bad format for Script '" << new_ent->getID() << "', file '" << files[i] << "'";
+            mudlog->writeLog(msg.str().c_str());
+            delete new_ent;
+            continue;
+         }
+         std::shared_ptr<Entity> newptr(new_ent);
+         _db.insert(std::pair<std::string, std::shared_ptr<Entity>>(new_ent->getID(), newptr));
+         count++;
+
+      }
+
 	}
 
 

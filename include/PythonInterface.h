@@ -5,15 +5,19 @@
 
 class Physical;
 class Organism;
+class Script;
+class IMUD;
 
 class IPhysical {
 public:
    IPhysical(std::shared_ptr<Physical> eptr);
    IPhysical(const IPhysical &copy_from);
 
+	~IPhysical() {};
+
 	// Send a message to this entity - for locations, exclude can limit people
    void sendMsg(const char *msg);
-	void sendMsgLoc(const char *msg, IPhysical exclude);
+	void sendMsgExc(const char *msg, IPhysical exclude);
 
 	void moveTo(IPhysical new_loc);
 
@@ -30,8 +34,32 @@ public:
 	bool isContained(IPhysical target);
 	bool isContainedID(const char *id);
 
+	bool addIntAttribute(const char *attr, int value);
+	bool addFloatAttribute(const char *attr, float value);
+	bool addStrAttribute(const char *attr, const char *value);
+
+	bool hasAttribute(const char *attr);
+
+	friend class IScript;
+	friend class IMUD;
+
 private:
    std::shared_ptr<Physical> _eptr;
+};
+
+class IScript {
+public:
+   IScript(std::shared_ptr<Script> sptr);
+   IScript(const IScript &copy_from);
+
+   ~IScript() {};
+
+	void loadVariable(const char *varname, IPhysical variable);
+
+	friend class IMUD;
+
+private:
+   std::shared_ptr<Script> _sptr;
 };
 
 
@@ -41,11 +69,16 @@ public:
    ~IMUD();
 
 	IPhysical getPhysical(const char *id);
+	IScript getScript(const char *id);
+
+	int sendMsgAll(const char *msg);
+	int sendMsgExc(const char *msg, IPhysical exclude);
+
+	int addScript(IScript the_script);
 
 private:
 
 };
-
 
 
 #endif	// Ifndef

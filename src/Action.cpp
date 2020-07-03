@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include "Action.h"
+#include "Script.h"
 #include "MUD.h"
 #include "actions.h"
 #include "misc.h"
@@ -75,7 +76,9 @@ Action::Action(const Action &copy_from):
 								_actflags(copy_from._actflags),
 								_alias(copy_from._alias),
 								_pretrig(copy_from._pretrig),
-								_posttrig(copy_from._posttrig)
+								_posttrig(copy_from._posttrig),
+								_target1(copy_from._target1),
+								_target2(copy_from._target2)
 {
 
 }
@@ -124,56 +127,65 @@ int Action::loadData(pugi::xml_node &entnode) {
 		return results;
 
 	std::stringstream errmsg;
+	std::string attstr;
 
-	// Get the acttype - must be either hardcoded or script
-   pugi::xml_attribute attr = entnode.attribute("acttype");
-   if (attr == nullptr) {
-		errmsg << "Action '" << getID() << "' missing mandatory acttype field."; 
-		mudlog->writeLog(errmsg.str().c_str());
-		return 0;
-	}
+	pugi::xml_attribute attr;
 
-	std::string attstr = attr.value();
-	lower(attstr);
-	if (attstr.compare("hardcoded") == 0)
-		_atype = Hardcoded;
-	else if (attstr.compare("script") == 0)
-		_atype = Script;
-   else if (attstr.compare("trigger") == 0)
-      _atype = Trigger;
-	else {
-		errmsg << "Action '" << getID() << "' acttype field has invalid value: " << attstr;
-		mudlog->writeLog(errmsg.str().c_str());
-		return 0;
-	}
+	// These are only mandatory for non-Script entities
+	if (dynamic_cast<Script *>(this) != NULL) {
+		_atype = ScriptOnly;
+		_ptype = Undef;
+	} else {
+		// Get the acttype - must be either hardcoded or script
+		attr = entnode.attribute("acttype");
+		if (attr == nullptr) {
+			errmsg << "Action '" << getID() << "' missing mandatory acttype field."; 
+			mudlog->writeLog(errmsg.str().c_str());
+			return 0;
+		}
 
-	// Get the parse type
-   attr = entnode.attribute("parsetype");
-   if (attr == nullptr) {
-      errmsg << "Action '" << getID() << "' missing mandatory parsetype field.";
-      mudlog->writeLog(errmsg.str().c_str());
-      return 0;
-   }
+		attstr = attr.value();
+		lower(attstr);
+		if (attstr.compare("hardcoded") == 0)
+			_atype = Hardcoded;
+		else if (attstr.compare("scriptonly") == 0)
+			_atype = ScriptOnly;
+		else if (attstr.compare("trigger") == 0)
+			_atype = Trigger;
+		else {
+			errmsg << "Action '" << getID() << "' acttype field has invalid value: " << attstr;
+			mudlog->writeLog(errmsg.str().c_str());
+			return 0;
+		}
+
+		// Get the parse type
+		attr = entnode.attribute("parsetype");
+		if (attr == nullptr) {
+			errmsg << "Action '" << getID() << "' missing mandatory parsetype field.";
+			mudlog->writeLog(errmsg.str().c_str());
+			return 0;
+		}
 	
-   attstr = attr.value();
-   lower(attstr);
+		attstr = attr.value();
+		lower(attstr);
 
-	unsigned int i=0;
-	while ((ptype_list[i] != NULL) && (attstr.compare(ptype_list[i]) != 0))
-		i++;
-
-   if ((i == 0) || (ptype_list[i] == NULL)) {
-      errmsg << "Action '" << getID() << "' parsetype field has invalid value: " << attstr;
-      mudlog->writeLog(errmsg.str().c_str());
-      return 0;
-   }
-	_ptype = (parse_type) i;
+		unsigned int i=0;
+		while ((ptype_list[i] != NULL) && (attstr.compare(ptype_list[i]) != 0))
+			i++;
+	
+		if ((i == 0) || (ptype_list[i] == NULL)) {
+			errmsg << "Action '" << getID() << "' parsetype field has invalid value: " << attstr;
+			mudlog->writeLog(errmsg.str().c_str());
+			return 0;
+		}
+		_ptype = (parse_type) i;
+	}
 
    // If it's a hardcoded action, get the mandatory function mapping
 	if (_atype == Hardcoded) {
 		attr = entnode.attribute("function");
 		if (attr == nullptr) {
-			errmsg << "Hardcoded Action '" << getID() << "' missing mandatory tunction field.";
+			errmsg << "Hardcoded Action '" << getID() << "' missing mandatory function field.";
 			mudlog->writeLog(errmsg.str().c_str());
 			return 0;
 		}
@@ -241,7 +253,7 @@ int Action::execute() {
 	if (_atype == Hardcoded) {
 		results = (*_act_ptr)(engine, *this);
 	}
-	else if (_atype == Script) {
+	else if (_atype == ScriptOnly) {
 		// TODO
 
 	} else {
@@ -259,6 +271,17 @@ int Action::execute() {
 void Action::setExecuteNow()
 {
 	_exec_time = std::chrono::system_clock::now();
+}
+
+/*********************************************************************************************
+ * setExecute - Sets the execution time to the current time plus the parameter number of seconds
+ *
+ *		params:	future_secs - decimal value of the number of seconds in the future to place this
+ *
+ *********************************************************************************************/
+
+void Action::setExecute(float future_secs) {
+	_exec_time = std::chrono::system_clock::now() + std::chrono::milliseconds((int) (future_secs * 1000));
 }
 
 /*********************************************************************************************

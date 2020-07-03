@@ -6,7 +6,6 @@
 #include <bitset>
 #include <vector>
 #include "Entity.h"
-#include "Physical.h"
 #include "actions.h"
 
 class MUD;
@@ -37,7 +36,7 @@ public:
 			Tell		// <action> <target> <string>
 		 };
 
-	enum act_types { Hardcoded, Script, Trigger };
+	enum act_types { Hardcoded, ScriptOnly, Trigger };
 
 	enum act_flags {
 			Target1MUD,	 // Target1 might be in the broader MUD (not in current loc)
@@ -61,7 +60,12 @@ public:
 
 	std::chrono::system_clock::time_point getExecTime() const { return _exec_time; };
 	
+	// Set this to execute right away
 	void setExecuteNow();
+
+	// Set this to execute x seconds in the future
+	void setExecute(float future_secs);
+
 	void setActor(std::shared_ptr<Organism> actor);
 	void setFormat(const char *format);
 	void setTarget1(std::shared_ptr<Physical> target) { _target1 = target; };

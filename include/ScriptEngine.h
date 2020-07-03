@@ -4,6 +4,7 @@
 #include <string>
 #include <memory>
 #include <boost/python.hpp>
+#include <vector>
 
 #include "PythonInterface.h"
 
@@ -19,20 +20,24 @@ public:
 	int execute(const char *script);
 	int execute(std::string &script);
 
-	void setActor(std::shared_ptr<Physical> actor) { _actor = actor; };
-   void setTarget1(std::shared_ptr<Physical> target) { _target1 = target; };
-   void setTarget2(std::shared_ptr<Physical> target) { _target2 = target; };
+	void setVariable(const char *varname, std::shared_ptr<Physical> variable);
+	void setVariableConst(const char *varname, int variable);
+	void setVariableConst(const char *varname, float variable);
+	void setVariableConst(const char *varname, const char *variable);
+
+	void clearVariables();	
 
 	const char *getErrMsg() { return _errmsg.c_str(); };
 
 private:
 
 	IMUD _access;
-	
-	std::shared_ptr<Physical> _actor;
-	std::shared_ptr<Physical> _target1;
-	std::shared_ptr<Physical> _target2;
 
+	std::vector<std::pair<std::string, IPhysical>> _variables;
+	std::vector<std::pair<std::string, int>> _variable_ints;
+	std::vector<std::pair<std::string, float>> _variable_floats;
+	std::vector<std::pair<std::string, std::string>> _variable_strs;
+	
 	std::string _script;
 
 	std::string _errmsg;
