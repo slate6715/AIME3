@@ -22,6 +22,8 @@ ScriptEngine::ScriptEngine() {
 											.def("sendMsgExc", &IMUD::sendMsgExc)
 											.def("addScript", &IMUD::addScript);
    (*_main_namespace)["Physical"] = class_<IPhysical>("Physical", init<const IPhysical &>())
+											.def("__eq__", &IPhysical::operator ==)
+											.def("__ne__", &IPhysical::operator !=)
                                  .def("sendMsg", &IPhysical::sendMsg)
                                  .def("sendMsgExc", &IPhysical::sendMsgExc)
                                  .def("moveTo", &IPhysical::moveTo)
@@ -34,7 +36,9 @@ ScriptEngine::ScriptEngine() {
                                  .def("addFloatAttribute", &IPhysical::addFloatAttribute)
                                  .def("addStrAttribute", &IPhysical::addStrAttribute)
                                  .def("hasAttribute", &IPhysical::hasAttribute)
-                                 .def("getTitle", &IPhysical::getTitle);
+                                 .def("getTitle", &IPhysical::getTitle)
+											.def("setExit", &IPhysical::setExit)
+											.def("clrExit", &IPhysical::clrExit);
 
    (*_main_namespace)["IScript"] = class_<IScript>("IScript", init<const IScript &>())
                                  .def("loadVariable", &IScript::loadVariable);

@@ -45,6 +45,9 @@ public:
 	std::shared_ptr<Physical> getExit(const char *exitname);
    std::shared_ptr<Physical> getExitAbbrev(std::string &exitname, exitdirs *val = NULL);
 
+	bool setExit(const char *exitname, std::shared_ptr<Physical> new_exit);
+	bool clrExit(const char *exitname);
+
    // Adds shared_ptr links between this object and others in the EntityDB. Polymorphic
    virtual void addLinks(EntityDB &edb, std::shared_ptr<Physical> self);
 

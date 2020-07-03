@@ -2,6 +2,7 @@
 - Integrated full Script functionality into the ActionMgr execution queue
 - Added hasAttribute, addAttribute functionality to specials scripting
 - Added Script management functions (getScript, loadVariable, addScript) to specials scripting
+- Added the ability to set/clr exits in specials code and a few other functions
 
 07/01/2020
 - Added the skeleton of the Script object for in-zone stand-alone specials scripts

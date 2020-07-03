@@ -15,6 +15,9 @@ public:
 
 	~IPhysical() {};
 
+	bool operator == (const IPhysical &comp);
+	bool operator != (const IPhysical &comp);
+
 	// Send a message to this entity - for locations, exclude can limit people
    void sendMsg(const char *msg);
 	void sendMsgExc(const char *msg, IPhysical exclude);
@@ -39,6 +42,9 @@ public:
 	bool addStrAttribute(const char *attr, const char *value);
 
 	bool hasAttribute(const char *attr);
+
+	bool setExit(const char *exit, IPhysical new_exit);
+	bool clrExit(const char *exit);
 
 	friend class IScript;
 	friend class IMUD;

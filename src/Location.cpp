@@ -469,3 +469,49 @@ Location::exitdirs Location::getOppositeDir(Location::exitdirs dir) {
 	return opposite[dir];
 }
 
+/*********************************************************************************************
+ * setExit - sets the exit to the parameter passed in (assuming it's a loc or door)
+ *
+ *********************************************************************************************/
+
+bool Location::setExit(const char *exitname, std::shared_ptr<Physical> new_exit) {
+	locexit new_le;
+
+	if ((std::dynamic_pointer_cast<Location>(new_exit) == nullptr) && 
+		 (std::dynamic_pointer_cast<Door>(new_exit) == nullptr))
+		return false;
+
+	new_le.dir = exitname;
+	new_le.link_id = new_exit->getID();
+	new_le.link_loc = new_exit;
+	
+   // Get the exit value
+   unsigned int i=0;
+   new_le.exitval = Custom;
+   while (exitlist[i] != NULL) {
+      if (new_le.dir.compare(exitlist[i]) == 0) {
+         new_le.exitval = (exitdirs) i;
+         break;
+      }
+      i++;
+   }
+
+   _exits.push_back(new_le);
+	return true;
+}
+
+
+/*********************************************************************************************
+ * clrExit - removes the specified exit - returns true for success, false if the exit is not found
+ *
+ *********************************************************************************************/
+
+bool Location::clrExit(const char *exitname) {
+	for (unsigned int i=0; i<_exits.size(); i++) {
+		if (_exits[i].dir.compare(exitname) == 0) {
+			_exits.erase(_exits.begin() + i);
+			return true;
+		}
+	}
+	return false;
+}

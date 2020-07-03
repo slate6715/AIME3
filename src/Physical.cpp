@@ -661,6 +661,8 @@ int Physical::execSpecial(const char *trigger,
 			for (unsigned int i=0; i<variables.size(); i++)
 				se.setVariable(variables[i].first.c_str(), variables[i].second);
 
+			se.setVariable("this", std::dynamic_pointer_cast<Physical>(_self));
+
 			int results = se.execute(_specials[i].second);
 			if (results == 1)
 				return 2;

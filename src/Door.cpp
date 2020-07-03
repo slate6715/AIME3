@@ -243,7 +243,7 @@ void Door::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
 	Static::addLinks(edb, self);
 
 	// Check if the cur_loc is a Location--which it must be for doors
-   if (std::dynamic_pointer_cast<Location>(getCurLoc()) == nullptr) {
+   if ((getCurLoc() != nullptr) && (std::dynamic_pointer_cast<Location>(getCurLoc()) == nullptr)) {
       msg << "WARNING: Object '" << getID() << "' startloc '" << getStartLoc() << "' must be assigned to a Location object.";
       mudlog->writeLog(msg.str().c_str());
       return;
@@ -251,26 +251,27 @@ void Door::addLinks(EntityDB &edb, std::shared_ptr<Physical> self) {
 
 
 	// Now add this door to startloc2
-   std::shared_ptr<Physical> entptr = edb.getPhysical(_startloc2.c_str());
+	if (_startloc2.compare("none") != 0) {
+		std::shared_ptr<Physical> entptr = edb.getPhysical(_startloc2.c_str());
 
-	if (entptr == nullptr) {
-		msg << "WARNING: Door '" << getID() << "' startloc2 '" << _startloc2 << "' doesn't appear to exist.";
-      mudlog->writeLog(msg.str().c_str());
-		return;
-   } 
+		if (entptr == nullptr) {
+			msg << "WARNING: Door '" << getID() << "' startloc2 '" << _startloc2 << "' doesn't appear to exist.";
+			mudlog->writeLog(msg.str().c_str());
+			return;
+		} 
 
-   // Static objects must be in a location object
-   if (std::dynamic_pointer_cast<Location>(entptr) == nullptr) {
-      msg << "WARNING: Object '" << getID() << "' startloc2 '" << _startloc2 << "' must be assigned to a Location object.";
-      mudlog->writeLog(msg.str().c_str());
-      return;
-   }
+		// Static objects must be in a location object
+		if (std::dynamic_pointer_cast<Location>(entptr) == nullptr) {
+			msg << "WARNING: Object '" << getID() << "' startloc2 '" << _startloc2 << "' must be assigned to a Location object.";
+			mudlog->writeLog(msg.str().c_str());
+			return;
+		}
 
-	// Add this door to the second room 
-   _cur_loc2 = entptr;
+		// Add this door to the second room 
+		_cur_loc2 = entptr;
 
-   entptr->addPhysical(self);
-
+		entptr->addPhysical(self);
+	}
 
 }
 

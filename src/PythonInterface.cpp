@@ -167,17 +167,15 @@ void IPhysical::sendMsg(const char *msg) {
 }
 
 void IPhysical::sendMsgExc(const char *msg, IPhysical exclude) {
-   std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(_eptr);
 
 	// This function only works for location, hence the exclude function
    std::shared_ptr<Location> lptr = std::dynamic_pointer_cast<Location>(_eptr);
-   if (lptr != NULL) {
-      lptr->sendMsg(msg, exclude._eptr);
-      return;
+
+   if (lptr == nullptr) {
+		throw script_error("sendMsg special function with exclude called on a non-location.");
    }
 
-   std::stringstream errmsg;
-   throw script_error("sendMsg special function with exclude called on a non-location.");
+   lptr->sendMsg(msg, exclude._eptr);
 }
 
 /*********************************************************************************************
@@ -276,6 +274,50 @@ bool IPhysical::addStrAttribute(const char *attr, const char *value) {
 
 bool IPhysical::hasAttribute(const char *attr) {
    return _eptr->hasAttribute(attr);
+}
+
+
+/*********************************************************************************************
+ * set/clrExit - Links a location exit to a new entity or removes an exit
+ *
+ *********************************************************************************************/
+
+bool IPhysical::setExit(const char *exit, IPhysical new_exit) {
+   std::shared_ptr<Location> locptr = std::dynamic_pointer_cast<Location>(_eptr);
+
+   if (locptr == nullptr) {
+      throw script_error("addExit special function called on non-Location.");
+   }
+
+	if ((std::dynamic_pointer_cast<Location>(new_exit._eptr) == nullptr) && 
+		 (std::dynamic_pointer_cast<Door>(new_exit._eptr) == nullptr)) {
+		throw script_error("addExit new_exit parameter is not a Location or Door. Cannot set exit.");
+	}
+
+	return locptr->setExit(exit, new_exit._eptr);
+}
+
+bool IPhysical::clrExit(const char *exit) {
+   std::shared_ptr<Location> locptr = std::dynamic_pointer_cast<Location>(_eptr);
+
+   if (locptr == nullptr) {
+      throw script_error("addExit special function called on non-Location.");
+   }
+
+	return locptr->clrExit(exit);
+}
+
+/*********************************************************************************************
+ * operator == - compare two IPhysicals for equivalency
+ *
+ *********************************************************************************************/
+
+bool IPhysical::operator == (const IPhysical &comp) {
+	return (_eptr == comp._eptr);
+}
+
+bool IPhysical::operator != (const IPhysical &comp) {
+   return !(_eptr == comp._eptr);
 }
 
 
