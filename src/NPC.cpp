@@ -17,6 +17,9 @@ NPC::NPC(const char *id):
 								Organism(id) 
 {
 	_typename = "NPC";
+
+	addAttribute("aggression", 0);
+	addAttribute("speed", 0);
 }
 
 // Called by child class

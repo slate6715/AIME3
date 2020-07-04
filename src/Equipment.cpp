@@ -18,6 +18,7 @@ Equipment::Equipment(const char *id):
 {
 	_typename = "Equipment";
 
+	addAttribute("damage", 0);
 }
 
 // Copy constructor

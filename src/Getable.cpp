@@ -22,13 +22,14 @@ Getable::Getable(const char *id):
    // Make sure we have at least the bare minimum roomdesc
    _roomdesc.assign(Custom, std::pair<std::string, std::string>("", ""));
 
+	addAttribute("weight", 0);
+	addAttribute("size", 0);
 }
 
 // Copy constructor
 Getable::Getable(const Getable &copy_from):
 								Static(copy_from)
 {
-
 }
 
 

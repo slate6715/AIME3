@@ -6,6 +6,7 @@
 #include "Static.h"
 #include "Door.h"
 #include "Script.h"
+#include "Equipment.h"
 
 IMUD::IMUD() {
 
@@ -69,7 +70,7 @@ int IMUD::sendMsgAll(const char *msg) {
 	return engine.getUserMgr()->sendMsg(msg, NULL, NULL, nullptr);
 }
 
-int IMUD::sendMsgExc(const char *msg, IPhysical exclude) {
+int IMUD::sendMsgExc(const char *msg, IPhysical &exclude) {
    return engine.getUserMgr()->sendMsg(msg, NULL, NULL, exclude._eptr);
 }
 
@@ -80,7 +81,7 @@ int IMUD::sendMsgExc(const char *msg, IPhysical exclude) {
  *
  *********************************************************************************************/
 
-int IMUD::addScript(IScript the_script) {
+int IMUD::addScript(IScript &the_script) {
 	// Make a copy as this will be destroyed when complete
 	std::shared_ptr<Script> new_script(new Script(*the_script._sptr));
 
@@ -166,7 +167,7 @@ void IPhysical::sendMsg(const char *msg) {
 	throw script_error("sendMsg special function called on a non-organism or location.");
 }
 
-void IPhysical::sendMsgExc(const char *msg, IPhysical exclude) {
+void IPhysical::sendMsgExc(const char *msg, IPhysical &exclude) {
 
 	// This function only works for location, hence the exclude function
    std::shared_ptr<Location> lptr = std::dynamic_pointer_cast<Location>(_eptr);
@@ -183,7 +184,7 @@ void IPhysical::sendMsgExc(const char *msg, IPhysical exclude) {
  *
  *********************************************************************************************/
 
-void IPhysical::moveTo(IPhysical new_loc) {
+void IPhysical::moveTo(IPhysical &new_loc) {
 	if (!_eptr->movePhysical(new_loc._eptr, _eptr)) {
       std::stringstream errmsg;
 
@@ -228,7 +229,7 @@ void IPhysical::setDoorState(const char *state) {
  *
  *********************************************************************************************/
 
-bool IPhysical::isContained(IPhysical target) {
+bool IPhysical::isContained(IPhysical &target) {
 	return _eptr->containsPhysical(target._eptr);	
 }
 	
@@ -268,6 +269,25 @@ bool IPhysical::addStrAttribute(const char *attr, const char *value) {
 }
 
 /*********************************************************************************************
+ * getInt/Float/StrAttribute - Returns the specified type of attribute by the given name to the
+ *                physical entity
+ *
+ *********************************************************************************************/
+
+int IPhysical::getIntAttribute(const char *attr) {
+   return _eptr->getAttribInt(attr);
+}
+
+float IPhysical::getFloatAttribute(const char *attr) {
+   return _eptr->getAttribFloat(attr);
+}
+
+std::string IPhysical::getStrAttribute(const char *attr) {
+	std::string buf;
+   return std::string(_eptr->getAttribStr(attr, buf));
+}
+
+/*********************************************************************************************
  * hasAttribute - returns true if the attribute is attached to the physical entity, false otherwise
  *
  *********************************************************************************************/
@@ -276,13 +296,52 @@ bool IPhysical::hasAttribute(const char *attr) {
    return _eptr->hasAttribute(attr);
 }
 
+/*********************************************************************************************
+ * isEquipped - returns true if the attribute is equipped in the given body part
+ *
+ *********************************************************************************************/
+
+bool IPhysical::isEquipped(const char *name, const char *group, IPhysical &equip_ptr) {
+	if ((group == NULL) && (name == NULL)) {
+		throw script_error("isEquipped body part group and name both null not supported yet.");
+	}
+
+   // Just return false if this is not equipment
+   std::shared_ptr<Equipment> eqptr = std::dynamic_pointer_cast<Equipment>(equip_ptr._eptr);
+   if (eqptr == nullptr)
+      return false;
+
+	std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(_eptr);
+	if (optr == nullptr)
+		throw script_error("isEquipped called on a non-Organism");
+
+	return optr->findBodyPartContained(name, group, eqptr);
+}
+
+bool IPhysical::isEquippedContained(const char *name, const char *group, IContained &equip_ptr) {
+   if ((group == NULL) && (name == NULL)) {
+      throw script_error("isCEquipped body part group and name both null not supported yet.");
+   }
+
+	// Just return false if this is not equipment
+	std::shared_ptr<Equipment> eqptr = std::dynamic_pointer_cast<Equipment>(equip_ptr._eptr);
+	if (eqptr == nullptr)
+		return false;
+
+   std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(_eptr);
+   if (optr == nullptr)
+      throw script_error("isCEquipped called on a non-Organism");
+
+   return optr->findBodyPartContained(name, group, eqptr);
+}
+
 
 /*********************************************************************************************
  * set/clrExit - Links a location exit to a new entity or removes an exit
  *
  *********************************************************************************************/
 
-bool IPhysical::setExit(const char *exit, IPhysical new_exit) {
+bool IPhysical::setExit(const char *exit, IPhysical &new_exit) {
    std::shared_ptr<Location> locptr = std::dynamic_pointer_cast<Location>(_eptr);
 
    if (locptr == nullptr) {
@@ -320,6 +379,101 @@ bool IPhysical::operator != (const IPhysical &comp) {
    return !(_eptr == comp._eptr);
 }
 
+IPhysical::iterator IPhysical::begin() 
+{ 
+	return IPhysical::iterator(_eptr->begin()); 
+}
+
+IPhysical::iterator IPhysical::end() 
+{ 
+	return IPhysical::iterator(_eptr->end()); 
+}
+
+IPhysical::iterator::iterator(std::list<std::shared_ptr<Physical>>::iterator ptr):
+																			_iptr(ptr),
+																			_cptr(nullptr)
+{
+}
+
+IPhysical::iterator::iterator(const IPhysical::iterator &copy_from):
+                                                         _iptr(copy_from._iptr),
+                                                         _cptr(copy_from._cptr)
+{
+}
+
+IPhysical::iterator IPhysical::iterator::operator++()
+{ 
+	_iptr++; 
+	return *this; 
+};
+
+IPhysical::iterator IPhysical::iterator::operator++(int junk) 
+{ 
+	(void) junk; 
+	iterator i = *this;
+	_iptr++; 
+	return i; 
+};
+
+IContained &IPhysical::iterator::operator*() 
+{ 
+	return (_cptr = IContained(*_iptr)); 
+};
+
+IContained *IPhysical::iterator::operator->() 
+{ 
+	return &(_cptr = IContained(*_iptr)); 
+};
+
+bool IPhysical::iterator::operator == (const iterator &rhs) 
+{ 
+	return _iptr == rhs._iptr; 
+};
+
+bool IPhysical::iterator::operator != (const iterator &rhs) 
+{ 
+	return _iptr != rhs._iptr; 
+};
+
+
+/*********************************************************************************************
+ * getInt/Float/StrAttribute - Returns the specified type of attribute by the given name to the
+ *                physical entity
+ *
+ *********************************************************************************************/
+
+int IContained::getIntAttribute(const char *attr) {
+   return _eptr->getAttribInt(attr);
+}
+
+float IContained::getFloatAttribute(const char *attr) {
+   return _eptr->getAttribFloat(attr);
+}
+
+std::string IContained::getStrAttribute(const char *attr) {
+	std::string buf;
+   return std::string(_eptr->getAttribStr(attr, buf));
+}
+
+/*********************************************************************************************
+ * getTitle - Gets the Title of this Physical (Title form varies by type)
+ *
+ *********************************************************************************************/
+
+std::string IContained::getTitle() {
+   std::string buf;
+   _eptr->getGameName(buf);
+   return buf;
+}
+
+/*********************************************************************************************
+ * hasAttribute - returns true if the attribute is attached to the physical entity, false otherwise
+ *
+ *********************************************************************************************/
+
+bool IContained::hasAttribute(const char *attr) {
+   return _eptr->hasAttribute(attr);
+}
 
 IScript::IScript(std::shared_ptr<Script> sptr):
                                  _sptr(sptr)
@@ -341,7 +495,7 @@ IScript::IScript(const IScript &copy_from):
  *
  *********************************************************************************************/
 
-void IScript::loadVariable(const char *varname, IPhysical variable) {
+void IScript::loadVariable(const char *varname, IPhysical &variable) {
 	if (!_sptr->addVariable(varname, variable._eptr)) {
 		throw script_error("Attempt to add variable to script that is already there.");		
 	}

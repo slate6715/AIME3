@@ -24,6 +24,7 @@ ScriptEngine::ScriptEngine() {
    (*_main_namespace)["Physical"] = class_<IPhysical>("Physical", init<const IPhysical &>())
 											.def("__eq__", &IPhysical::operator ==)
 											.def("__ne__", &IPhysical::operator !=)
+											.def("__iter__", range(&IPhysical::begin, &IPhysical::end))
                                  .def("sendMsg", &IPhysical::sendMsg)
                                  .def("sendMsgExc", &IPhysical::sendMsgExc)
                                  .def("moveTo", &IPhysical::moveTo)
@@ -35,12 +36,24 @@ ScriptEngine::ScriptEngine() {
                                  .def("addIntAttribute", &IPhysical::addIntAttribute)
                                  .def("addFloatAttribute", &IPhysical::addFloatAttribute)
                                  .def("addStrAttribute", &IPhysical::addStrAttribute)
+											.def("getIntAttribute", &IPhysical::getIntAttribute)
+											.def("getFloatAttribute", &IPhysical::getFloatAttribute)
+											.def("getStrAttribute", &IPhysical::getStrAttribute)
                                  .def("hasAttribute", &IPhysical::hasAttribute)
                                  .def("getTitle", &IPhysical::getTitle)
 											.def("setExit", &IPhysical::setExit)
-											.def("clrExit", &IPhysical::clrExit);
+											.def("clrExit", &IPhysical::clrExit)
+											.def("isEquipped", &IPhysical::isEquipped)
+											.def("isEquippedContained", &IPhysical::isEquippedContained);
+											
+	(*_main_namespace)["Contained"] = class_<IContained>("IContained", init<const IContained &>())
+                                 .def("getIntAttribute", &IContained::getIntAttribute)
+                                 .def("getFloatAttribute", &IContained::getFloatAttribute)
+                                 .def("getStrAttribute", &IContained::getStrAttribute)
+                                 .def("hasAttribute", &IContained::hasAttribute)
+                                 .def("getTitle", &IContained::getTitle);
 
-   (*_main_namespace)["IScript"] = class_<IScript>("IScript", init<const IScript &>())
+   (*_main_namespace)["Script"] = class_<IScript>("IScript", init<const IScript &>())
                                  .def("loadVariable", &IScript::loadVariable);
 
 }

@@ -496,23 +496,63 @@ bool Organism::remove(std::shared_ptr<Physical> equip_ptr, std::string &errmsg) 
 /*********************************************************************************************
  * findBodyPartContained - checks if the given equipment is contained by the body part
  *
+ *		Params:	name - the name of the bodypart - can be null to search all by a group
+ *					
  *    Returns: 1 for contained, 0 for not, -1 for missing body part
  *
  *********************************************************************************************/
 
 int Organism::findBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr) {
-   std::pair<std::string, std::string> epair(name, group);
+	if ((name == NULL) && (group == NULL))
+		throw std::runtime_error("findBodyPartContained both name and group were null. Only one is allowed.");
 
-   auto bpptr = _bodyparts.find(epair);
-   if (bpptr == _bodyparts.end())
-      return -1;
+	// Simplest, fastest way is where both name and group are specified
+	if ((name != NULL) && (group != NULL)) {
+		std::pair<std::string, std::string> epair(name, group);
 
-	auto wornptr = bpptr->second.worn.begin();
-	for ( ; wornptr != bpptr->second.worn.end(); bpptr++) {
-		if (*wornptr == equip_ptr)
-			return 1;
+		auto bpptr = _bodyparts.find(epair);
+		if (bpptr == _bodyparts.end())
+			return -1;
+
+		auto wornptr = bpptr->second.worn.begin();
+		for ( ; wornptr != bpptr->second.worn.end(); wornptr++) {
+			if (*wornptr == equip_ptr)
+				return 1;
+		}
+
+	// another possibility is they want to search by group, so that'll be alphabetical in the map
+	} else if (name == NULL) {
+		auto m_it = _bodyparts.begin();
+		while ((m_it != _bodyparts.end()) && (m_it->first.first.compare(group) == 0))
+			m_it++;
+
+		if (m_it == _bodyparts.end())
+			return -1;
+
+		while ((m_it != _bodyparts.end()) && (m_it->first.first.compare(group) == 0)) {
+			auto wornptr = m_it->second.worn.begin();
+			for ( ; wornptr != m_it->second.worn.end(); wornptr++) {
+				if (*wornptr == equip_ptr)
+					return 1;
+			}
+			m_it++;
+		}
+	// Slowest search, have to compare every single body part
+	} else if (group == NULL) {
+		auto m_it = _bodyparts.begin();
+		while (m_it != _bodyparts.end()) {
+			if (m_it->first.second.compare(name) == 0) {
+
+				// search the bodyparts
+				auto wornptr = m_it->second.worn.begin();
+				for ( ; wornptr != m_it->second.worn.end(); wornptr++) {
+					if (*wornptr == equip_ptr)
+						return 1;
+				}
+			}
+			m_it++;
+		}
 	}
-
    return 0;
 }
 

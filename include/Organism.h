@@ -33,7 +33,6 @@ public:
    virtual ~Organism();
 	
 	enum review_type { Standing, Entering, Leaving };
-	enum org_attrib { Strength, Constitution, Dexterity, Intelligence, Wisdom, Charisma, Experience, Damage, Last };
 
 	// Gets the primary reference name the game refers to this organism by
    virtual const char *getGameName(std::string &buf) const;
@@ -61,22 +60,13 @@ public:
 
 	const char *getTitle() const { return _title.c_str(); };
 
-	// Set and get dynamic attributes
-   void setAttribute(org_attrib attr, int val);
-   void setAttribute(org_attrib attr, float val);
-   void setAttribute(org_attrib attr, const char *val);
-	void setAttribute(org_attrib attr, Attribute &value);
-
-   int getAttributeInt(org_attrib attr);
-   float getAttributeFloat(org_attrib attr);
-   const char *getAttributeStr(org_attrib attr);
-
 	// Manage body parts for wearing and wielding equipment
 	void addBodyPart(const char *group, const char *name);
 	void setBodyPartFlag(const char *group, const char *name, bpart_flags flag, bool value);
 	bool getBodyPartFlag(const char *group, const char *name, bpart_flags flag);
 
-	
+	int findBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
+
 	// Manage traits
 	void addTrait(std::shared_ptr<Trait> new_trait);
 	bool hasTrait(const char *trait_id);
@@ -88,6 +78,9 @@ public:
 	// Equip a piece of equipment (should already be in the organism's inventory
 	bool equip(std::shared_ptr<Physical> equip_ptr, std::string &errmsg);
    bool remove(std::shared_ptr<Physical> equip_ptr, std::string &errmsg);
+
+	std::shared_ptr<Physical> getEquipped(const char *group, const char *name);
+	bool isEquipped(const char *group, const char *name);
 
 	virtual void kill() = 0;
 	virtual void dropAll();
@@ -108,7 +101,6 @@ protected:
 
 	bool addBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
    int remBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
-	int findBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
 
 	StrFormatter _rformatter;
 

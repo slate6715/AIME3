@@ -42,6 +42,7 @@ public:
    bool addAttribute(const char *attrib, int value);
    bool addAttribute(const char *attrib, float value);
    bool addAttribute(const char *attrib, const char *value);
+   bool addAttributeUnk(const char *attrib, const char *value);
 
 	// Remove an attribute from the list
 	bool remAttribute(const char *attrib);
@@ -103,6 +104,9 @@ public:
 
 	std::list<std::shared_ptr<Physical>>::const_iterator beginContained(){ return _contained.begin(); };
 	std::list<std::shared_ptr<Physical>>::const_iterator endContained(){ return _contained.end(); };
+
+	std::list<std::shared_ptr<Physical>>::iterator begin() { return _contained.begin(); };
+	std::list<std::shared_ptr<Physical>>::iterator end() { return _contained.end(); };
 
 protected:
 	Physical(const char *id);	// Must be called from the child constructor

@@ -76,11 +76,15 @@ int Physical::loadData(pugi::xml_node &entnode) {
 
 			attr = flag.attribute("value");
          if (attr == nullptr) {
-            errmsg << getTypeName() << " '" << getID() << "' attribute node missing mandatory value field.";
+            errmsg << getTypeName() << " '" << getID() << "' attribute '" << name << "' node missing mandatory value field.";
             mudlog->writeLog(errmsg.str().c_str());
             return 0;
          }
-			setAttribute(name.c_str(), attr.value());
+
+			// Try to set an existing attribute and, if not found, create it
+			if (!setAttribute(name.c_str(), attr.value())) {
+				addAttributeUnk(name.c_str(), attr.value());	
+			}
       }
       catch (std::invalid_argument &e) {
          errmsg << getTypeName() << " '" << getID() << "' attribute error: " << e.what();
@@ -451,6 +455,7 @@ size_t Physical::purgePhysical(std::shared_ptr<Physical> item) {
 }
 /*********************************************************************************************
  * addAttribute, remAttribute - add and remove attributes from the list
+ *	addAttributeUnk - not sure what type to add, guesses from the string contents
  *
  *		Params: attrib - id for the new attribute or one to be removed
  *				  value - initial value - must be a decimal (e.g. 1.0)  to add a float attribute
@@ -477,6 +482,16 @@ bool Physical::addAttribute(const char *attrib, float value) {
 
 bool Physical::addAttribute(const char *attrib, const char *value) {
    std::shared_ptr<Attribute> new_attr(new StrAttribute(value));
+
+   auto m_it = _attributes.insert(std::pair<std::string, std::shared_ptr<Attribute>>(attrib, new_attr));
+
+   return m_it.second;
+}
+
+bool Physical::addAttributeUnk(const char *attrib, const char *value) {
+	Attribute *attptr = genAttrFromStr(value);
+
+   std::shared_ptr<Attribute> new_attr(attptr);
 
    auto m_it = _attributes.insert(std::pair<std::string, std::shared_ptr<Attribute>>(attrib, new_attr));
 
