@@ -30,5 +30,6 @@ int killcom(MUD &engine, Action &act_used);
 int lightcom(MUD &engine, Action &act_used);
 int extinguishcom(MUD &engine, Action &act_used);
 int summoncom(MUD &engine, Action &act_used);
+int eatcom(MUD &engine, Action &act_used);
 
 #endif // ifndef ACTIONS

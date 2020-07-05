@@ -551,6 +551,17 @@ bool Physical::setAttribute(const char *attrib, Attribute &value) {
    return true;
 }
 
+bool Physical::incrAttribute(const char *attrib, int increase, int max) {
+	auto m_it = _attributes.find(attrib);
+   if (m_it == _attributes.end()) {
+		return false;
+   }
+	
+	int value = m_it->second->getInt();
+	value = ((max > 0) && (value + increase > max)) ? max : value + increase;
+	return true;
+}
+
 int Physical::getAttribInt(const char *attrib) {
    auto m_it = _attributes.find(attrib);
    if (m_it == _attributes.end()) {

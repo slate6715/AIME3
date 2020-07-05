@@ -53,6 +53,7 @@ public:
 	bool setAttribute(const char *attrib, float value);
 	bool setAttribute(const char *attrib, const char *value);
    bool setAttribute(const char *attrib, Attribute &value);
+	bool incrAttribute(const char *attrib, int increase, int max=0);
 
 	int getAttribInt(const char *attrib);
 	float getAttribFloat(const char *attrib);

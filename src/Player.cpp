@@ -42,6 +42,9 @@ Player::Player(const char *id, std::unique_ptr<TCPConn> conn):
 																_passwd_hash()
 {
 	_typename = "Player";
+
+	addAttribute("experience", 0);
+	
 }
 
 // Called by child class

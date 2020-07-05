@@ -210,6 +210,45 @@ int dropcom(MUD &engine, Action &act_used) {
 }
 
 /*******************************************************************************************
+ * eatcom - consume something in the player's inventory
+ *******************************************************************************************/
+
+int eatcom(MUD &engine, Action &act_used) {
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   (void) engine; // Eliminate compile warnings
+
+   std::shared_ptr<Getable> gptr = std::dynamic_pointer_cast<Getable>(act_used.getTarget1());
+
+   if (gptr == nullptr) {
+      actor->sendMsg("You don't seem to have that.\n");
+      return 0;
+   } 
+
+	if (!gptr->isFlagSet("Food")) {
+      actor->sendMsg("That is not edible.\n");
+      return 0;
+   }
+
+	if (gptr->hasAttribute("heal")) {
+		int heal = gptr->getAttribInt("heal");
+		actor->incrAttribute("health", heal);
+	}
+
+	std::stringstream msg;
+	std::string buf;
+	msg << "You greedily consume the " << gptr->getGameName(buf) << ".\n";
+	actor->sendMsg(msg.str().c_str());
+
+	msg.str("");
+	msg << actor->getGameName(buf) << " greedily consumes the " << gptr->getGameName(buf) << ".\n";
+	actor->getCurLoc()->sendMsg(msg.str().c_str(), actor);
+
+	actor->removePhysical(gptr);
+
+   return 1;
+}
+
+/*******************************************************************************************
  * getcom - get something from the ground or a container
  *******************************************************************************************/
 int getcom(MUD &engine, Action &act_used) {

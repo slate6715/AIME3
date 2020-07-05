@@ -63,6 +63,7 @@ Organism::Organism(const char *id):
 	addAttribute("charisma", 0);
 	addAttribute("experience", 0);
 	addAttribute("damage", 0);
+	addAttribute("health", 100);
 
 	// Add our review formatter entries
 	_rformatter.addMap('N', "temp");	// Name (title)

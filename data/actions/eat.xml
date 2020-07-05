@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<action id="action:eat" acttype="Hardcoded" parsetype="ActTarg" format="eat <object>" function="eatcom" pretrig="preeat" posttrig="posteat">
+<flag name="Target1Inv" />
+<altname name="consume" />
+<altname name="drink" />
+</action> 

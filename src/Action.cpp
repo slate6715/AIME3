@@ -23,6 +23,7 @@ hardcoded_actions cmd_array[] = {
 		{"inventorycom", inventorycom},
 		{"userscom", userscom},
 		{"saycom", saycom},
+		{"eatcom", eatcom},
 		{"chatcom", chatcom},
 		{"tellcom", tellcom},
 		{"quitcom", quitcom},
