@@ -1,5 +1,6 @@
 07/05/2020
-- Added the eat command
+- Added the eat and hit command
+- Made worn items appear as such in inventory
 
 07/04/2020
 - Added the IContainer class for python iteration of objects contained in a physical

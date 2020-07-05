@@ -1071,3 +1071,40 @@ int summoncom(MUD &engine, Action &act_used) {
 	return 1;
 }
 
+
+/*******************************************************************************************
+ * hitcom - strike an object or organism
+ *******************************************************************************************/
+int hitcom(MUD &engine, Action &act_used) {
+   std::stringstream msg;
+	std::string buf;
+
+   std::shared_ptr<Organism> actor = act_used.getActor();
+   (void) engine; // Eliminate compile warnings
+
+   std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(act_used.getTarget1());
+
+	if (optr != nullptr) {
+		if (act_used.getTarget2() != nullptr) {
+			msg << "You strike " << optr->getGameName(buf) << " hard with the " << act_used.getTarget2()->getGameName(buf) << "! They look like they're about to attack, but then realize combat isn't coded yet. They sigh and shrug.\n";
+			actor->sendMsg(msg.str().c_str());
+		} else { 
+         msg << "You strike " << optr->getGameName(buf) << " hard with your fists! They look like they're about to attack, but then realize combat isn't coded yet. They sigh and shrug.\n";
+         actor->sendMsg(msg.str().c_str());
+
+		}
+		return 1;
+	}
+
+	if (act_used.getTarget2() != nullptr) {
+		msg << "You strike the " << act_used.getTarget1()->getGameName(buf) << " hard with the " <<
+							act_used.getTarget2()->getGameName(buf) << " but nothing happens.\n";
+		actor->sendMsg(msg.str().c_str());
+	} else {
+      msg << "You strike the " << act_used.getTarget1()->getGameName(buf) << 
+															" hard with your fists but nothing happens.\n";
+      actor->sendMsg(msg.str().c_str());
+	}
+	return 1;
+}
+

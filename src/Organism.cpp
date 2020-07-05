@@ -503,7 +503,9 @@ bool Organism::remove(std::shared_ptr<Physical> equip_ptr, std::string &errmsg) 
  *
  *********************************************************************************************/
 
-int Organism::findBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr) {
+int Organism::findBodyPartContained(const char *name, const char *group, 
+																		std::shared_ptr<Equipment> equip_ptr) const
+{
 	if ((name == NULL) && (group == NULL))
 		throw std::runtime_error("findBodyPartContained both name and group were null. Only one is allowed.");
 
@@ -705,13 +707,38 @@ const char *Organism::getGameName(std::string &buf) const {
 }
 
 /*********************************************************************************************
- * listWhereWorn - Populates the bodyparts list with the parts that are wearing the item
+ * listWhereWorn - Populates the string with the tags for where items are worn
  *
  *
  *********************************************************************************************/
 
-void Organism::listWhereWorn(std::shared_ptr<Physical> obj, std::list<std::string> &bodyparts) {
-	
+void Organism::listWhereWorn(std::shared_ptr<Physical> obj, std::string &buf) const {
+
+	std::shared_ptr<Equipment> eptr = std::dynamic_pointer_cast<Equipment>(obj);
+
+	if (eptr == nullptr)
+		return;
+
+	// Hardcode in hands
+	if (findBodyPartContained("hand", NULL, eptr) == 1) {
+		buf += " (wielded)";	
+	}
+
+	if (findBodyPartContained(NULL, "head", eptr) == 1) {
+		buf += " (worn on head)";
+	}
+
+	if (findBodyPartContained(NULL, "torso", eptr) == 1) {
+		buf += " (worn on torso)";
+	}
+
+   if ((findBodyPartContained(NULL, "leftleg", eptr) == 1) && (findBodyPartContained(NULL, "rightleg", eptr) == 1)) {
+      buf += " (worn on legs)";
+   }
+
+	if ((findBodyPartContained("foot", "rightleg", eptr) == 1) && (findBodyPartContained("foot", "rightleg", eptr) == 1)) {
+		buf += " (worn on feet)";
+	}
 }
 
 

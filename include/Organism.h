@@ -65,7 +65,7 @@ public:
 	void setBodyPartFlag(const char *group, const char *name, bpart_flags flag, bool value);
 	bool getBodyPartFlag(const char *group, const char *name, bpart_flags flag);
 
-	int findBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr);
+	int findBodyPartContained(const char *name, const char *group, std::shared_ptr<Equipment> equip_ptr) const;
 
 	// Manage traits
 	void addTrait(std::shared_ptr<Trait> new_trait);
@@ -87,7 +87,7 @@ public:
 
 	virtual const char *listContents(std::string &buf, const Physical *exclude = NULL) const;	
 	
-	void listWhereWorn(std::shared_ptr<Physical> obj, std::list<std::string> &bodyparts);
+	void listWhereWorn(std::shared_ptr<Physical> obj, std::string &buf) const;
 
 protected:
 	Organism(const char *id);	// Must be called from the child constructor

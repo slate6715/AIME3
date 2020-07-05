@@ -922,7 +922,9 @@ const char *Player::listContents(std::string &buf, const Physical *exclude) cons
 		// for patterns
 		std::shared_ptr<Equipment> eptr = std::dynamic_pointer_cast<Equipment>(gptr);
 		if (eptr != nullptr) {
-				
+			std::string wornstr;
+			listWhereWorn(eptr, wornstr);
+			buf += wornstr;			
 		}
 	
       buf += "\n";

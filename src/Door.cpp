@@ -314,7 +314,7 @@ const char *Door::getCurRoomdesc(const Location *cur_loc) {
 	if (getCurLoc().get() == cur_loc)
 		return _roomdesc[getDoorState()].c_str();
 	else if (_cur_loc2.get() == cur_loc)
-		return _roomdesc[getDoorState()].c_str();
+		return _roomdesc2[getDoorState()].c_str();
 	else {
 		throw std::invalid_argument("getCurRoomdesc cur_loc does not match a door location.");
 	}

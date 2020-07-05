@@ -40,6 +40,7 @@ hardcoded_actions cmd_array[] = {
 		{"lightcom", lightcom},
 		{"extinguishcom", extinguishcom},
 		{"summoncom", summoncom},
+		{"hitcom", hitcom},
 		{"",0}
 };
 

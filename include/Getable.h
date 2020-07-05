@@ -21,7 +21,7 @@ public:
    virtual ~Getable();
 
 	enum gflags { NoGet, NoDrop, Food, Rope, LuckFast, ThiefOnly, BlockMagic, FastHeal, EnhanceMagic, 
-					CanLight, Holy, Key };
+					CanLight, Holy, Key, Booze };
 
 	enum descstates { Pristine, Dropped, Lit, Extinguished, Open, Closed, Custom };
 
