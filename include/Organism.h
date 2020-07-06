@@ -39,9 +39,7 @@ public:
 
 	// Virtual functions that do nothing for NPCs
    virtual bool sendFile(const char *filename) { (void) filename; return true; };
-   // Send a message to this entity or its contents - class-specific behavior
-   virtual void sendMsg(const char *msg, std::shared_ptr<Physical> exclude=nullptr)                                                                                      { (void) msg; (void) exclude; };
-   virtual void sendMsg(std::string &msg, std::shared_ptr<Physical> exclude=nullptr)                                                                                     { (void) msg; (void) exclude; };
+
  	virtual void sendPrompt() {};
 	virtual void sendCurLocation() {};
 	virtual void sendExits() {};
@@ -81,6 +79,8 @@ public:
 
 	std::shared_ptr<Physical> getEquipped(const char *group, const char *name);
 	bool isEquipped(const char *group, const char *name);
+
+	bool damage(unsigned int amount);
 
 	virtual void kill() = 0;
 	virtual void dropAll();

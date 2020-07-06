@@ -10,6 +10,8 @@ class Script;
 class IMUD;
 class IPhysical;
 
+void checkNull(std::shared_ptr<Physical> ptr);
+
 /**********************************************************************************
  * IContained - Wraps a Physical object that is contained in  
  * 
@@ -25,6 +27,7 @@ public:
    float getFloatAttribute(const char *attr);
    std::string getStrAttribute(const char *attr);
 
+	std::string getID();
 	std::string getTitle();
 	
 	friend class IPhysical;
@@ -48,6 +51,10 @@ public:
 	void sendMsgExc(const char *msg, IPhysical &exclude);
 
 	void moveTo(IPhysical &new_loc);
+	void destroy();
+
+	void showLocation();
+	bool damage(int amount);
 
 	std::string getDoorState();
 	void setDoorState(const char *state);
@@ -57,6 +64,7 @@ public:
 	IPhysical getCurLoc2();
 
 	std::string getTitle();
+	std::string getID();
 
 	void addContained(IPhysical &target);
 	bool isContained(IPhysical &target);
@@ -120,6 +128,8 @@ public:
    ~IScript() {};
 
 	void loadVariable(const char *varname, IPhysical &variable);
+
+	void setInterval(float new_interval);
 
 	friend class IMUD;
 

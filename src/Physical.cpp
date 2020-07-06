@@ -559,6 +559,7 @@ bool Physical::incrAttribute(const char *attrib, int increase, int max) {
 	
 	int value = m_it->second->getInt();
 	value = ((max > 0) && (value + increase > max)) ? max : value + increase;
+	*(m_it->second) = value;
 	return true;
 }
 
@@ -674,7 +675,11 @@ bool Physical::close(std::string &errmsg) {
  *********************************************************************************************/
 
 int Physical::execSpecial(const char *trigger, 
-								std::vector<std::pair<std::string, std::shared_ptr<Physical>>> &variables) {
+								std::vector<std::pair<std::string, std::shared_ptr<Physical>>> &variables,
+                                    std::vector<std::pair<std::string, int>> *variable_ints,
+                                    std::vector<std::pair<std::string, float>> *variable_floats,
+                                    std::vector<std::pair<std::string, std::string>> *variable_strs)
+{
 
 	ScriptEngine &se = *engine.getScriptEngine();
 
@@ -688,6 +693,21 @@ int Physical::execSpecial(const char *trigger,
 				se.setVariable(variables[i].first.c_str(), variables[i].second);
 
 			se.setVariable("this", std::dynamic_pointer_cast<Physical>(_self));
+
+			if (variable_ints != NULL) {
+				for (unsigned int i=0; i<variable_ints->size(); i++)
+					se.setVariableConst((*variable_ints)[i].first.c_str(), (*variable_ints)[i].second);
+			}
+
+         if (variable_floats != NULL) {
+            for (unsigned int i=0; i<variable_floats->size(); i++)
+               se.setVariableConst((*variable_floats)[i].first.c_str(), (*variable_floats)[i].second);
+         }
+
+         if (variable_strs != NULL) {
+            for (unsigned int i=0; i<variable_strs->size(); i++)
+               se.setVariableConst((*variable_strs)[i].first.c_str(), (*variable_strs)[i].second.c_str());
+         }
 
 			int results = se.execute(_specials[i].second);
 			if (results == 1)

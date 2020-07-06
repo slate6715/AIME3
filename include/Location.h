@@ -55,8 +55,8 @@ public:
 	const char *getExitsStr(std::string &buf);
 
    // Send a message to this entity or its contents - class-specific behavior
-   virtual void sendMsg(const char *msg, std::shared_ptr<Physical> exclude=nullptr); 
-   virtual void sendMsg(std::string &msg, std::shared_ptr<Physical> exclude=nullptr); 
+   virtual void sendMsg(const char *msg, std::shared_ptr<Physical> exclude=nullptr, std::shared_ptr<Physical> exclude2=nullptr); 
+   virtual void sendMsg(std::string &msg, std::shared_ptr<Physical> exclude=nullptr, std::shared_ptr<Physical> exclude2=nullptr); 
 
 	static exitdirs getOppositeDir(exitdirs dir);
 

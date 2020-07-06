@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<social id="social:tickle" acttype="Trigger" parsetype="ActTarg" format="tickle person" pretrig="pretickle" posttrig="posttickle">
+<flag name="Target1Loc" />
+<message name="target">%n tickles you unmercifully!
+</message>
+<message name="target_actor">You tickle %t unmercifully! 
+</message>
+<message name="target_room">%n tickles %t relentlessly.
+</message>
+</social> 

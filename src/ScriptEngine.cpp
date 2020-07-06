@@ -27,7 +27,10 @@ ScriptEngine::ScriptEngine() {
 											.def("__iter__", range(&IPhysical::begin, &IPhysical::end))
                                  .def("sendMsg", &IPhysical::sendMsg)
                                  .def("sendMsgExc", &IPhysical::sendMsgExc)
+                                 .def("damage", &IPhysical::damage)
                                  .def("moveTo", &IPhysical::moveTo)
+                                 .def("destroy", &IPhysical::destroy)
+                                 .def("showLocation", &IPhysical::showLocation)
                                  .def("getCurLocID", &IPhysical::getCurLocID)
                                  .def("getCurLoc", &IPhysical::getCurLoc)
                                  .def("getCurLoc2", &IPhysical::getCurLoc2)
@@ -41,6 +44,7 @@ ScriptEngine::ScriptEngine() {
 											.def("getStrAttribute", &IPhysical::getStrAttribute)
                                  .def("hasAttribute", &IPhysical::hasAttribute)
                                  .def("getTitle", &IPhysical::getTitle)
+                                 .def("getID", &IPhysical::getID)
 											.def("setExit", &IPhysical::setExit)
 											.def("clrExit", &IPhysical::clrExit)
 											.def("isEquipped", &IPhysical::isEquipped)
@@ -51,10 +55,12 @@ ScriptEngine::ScriptEngine() {
                                  .def("getFloatAttribute", &IContained::getFloatAttribute)
                                  .def("getStrAttribute", &IContained::getStrAttribute)
                                  .def("hasAttribute", &IContained::hasAttribute)
-                                 .def("getTitle", &IContained::getTitle);
+                                 .def("getTitle", &IContained::getTitle)
+											.def("getID", &IContained::getID);
 
    (*_main_namespace)["Script"] = class_<IScript>("IScript", init<const IScript &>())
-                                 .def("loadVariable", &IScript::loadVariable);
+                                 .def("loadVariable", &IScript::loadVariable)
+											.def("setInterval", &IScript::setInterval);
 
 }
 

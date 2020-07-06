@@ -444,17 +444,17 @@ const char *Location::listContents(std::string &buf, const Physical *exclude) co
  *
  *********************************************************************************************/
 
-void Location::sendMsg(const char *msg, std::shared_ptr<Physical> exclude) {
+void Location::sendMsg(const char *msg, std::shared_ptr<Physical> exclude, std::shared_ptr<Physical> exclude2) {
    std::string unformatted = msg;
-   sendMsg(unformatted, exclude);
+   sendMsg(unformatted, exclude, exclude2);
 }
 
-void Location::sendMsg(std::string &msg, std::shared_ptr<Physical> exclude) {
+void Location::sendMsg(std::string &msg, std::shared_ptr<Physical> exclude, std::shared_ptr<Physical> exclude2) {
 	
 	auto cit = _contained.begin();
 	for ( ; cit != _contained.end(); cit++) {
 		// Compare against exclude - comparing shared pointers wasn't working
-		if (*cit != exclude)
+		if ((*cit != exclude) && (*cit != exclude2))
 			(*cit)->sendMsg(msg);
 	}	
 }

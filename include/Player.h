@@ -34,8 +34,8 @@ public:
 
 	virtual bool sendFile(const char *filename);
    // Send a message to this entity or its contents - class-specific behavior
-   virtual void sendMsg(const char *msg, std::shared_ptr<Physical> exclude=nullptr); 
-   virtual void sendMsg(std::string &msg, std::shared_ptr<Physical> exclude=nullptr);
+   virtual void sendMsg(const char *msg, std::shared_ptr<Physical> exclude=nullptr, std::shared_ptr<Physical> exclude2=nullptr); 
+   virtual void sendMsg(std::string &msg, std::shared_ptr<Physical> exclude=nullptr, std::shared_ptr<Physical> exclude2=nullptr);
 
    // Sends the prompt of the top message handler to the player
    virtual void sendPrompt();

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<social id="social:wave" acttype="Trigger" parsetype="ActOptTarg" format="wave [<person>|<object>]">
+<social id="social:wave" acttype="Trigger" parsetype="ActOptTarg" format="wave [<person>|<object>]" pretrig="prewave" posttrig="postwave">
 <flag name="Target1Inv" />
 <flag name="Target1Org" />
 <flag name="Target1Getable" />

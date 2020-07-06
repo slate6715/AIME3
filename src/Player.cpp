@@ -115,13 +115,14 @@ bool Player::sendFile(const char *filename) {
  *
  *********************************************************************************************/
 
-void Player::sendMsg(const char *msg, std::shared_ptr<Physical> exclude) {
+void Player::sendMsg(const char *msg, std::shared_ptr<Physical> exclude, std::shared_ptr<Physical> exclude2) {
 	std::string unformatted = msg;
-	sendMsg(unformatted, exclude);
+	sendMsg(unformatted, exclude, exclude2);
 }
 
-void Player::sendMsg(std::string &msg, std::shared_ptr<Physical> exclude) {
+void Player::sendMsg(std::string &msg, std::shared_ptr<Physical> exclude, std::shared_ptr<Physical> exclude2) {
 	(void) exclude;
+	(void) exclude2;
 
 	std::string formatted;
 	formatForTelnet(msg, formatted);

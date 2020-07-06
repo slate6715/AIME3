@@ -8,6 +8,11 @@
 #include "Script.h"
 #include "Equipment.h"
 
+void checkNull(std::shared_ptr<Physical> ptr) {
+	if (ptr == nullptr)
+		throw script_error("Method's object or parameter was null but was treated as non-null.");
+}
+
 IMUD::IMUD() {
 
 }
@@ -109,6 +114,8 @@ IPhysical::IPhysical(const IPhysical &copy_from):
  *********************************************************************************************/
 
 std::string IPhysical::getCurLocID() {
+	checkNull(_eptr);
+
 	if (_eptr->getCurLoc() == nullptr)
 		return "none";
 
@@ -121,6 +128,8 @@ IPhysical IPhysical::getCurLoc() {
 
 // For the other side of the door
 IPhysical IPhysical::getCurLoc2() {
+	checkNull(_eptr);
+
 	std::shared_ptr<Door> dptr = std::dynamic_pointer_cast<Door>(_eptr);
 
 	if (dptr == nullptr)
@@ -136,9 +145,23 @@ IPhysical IPhysical::getCurLoc2() {
  *********************************************************************************************/
 
 std::string IPhysical::getTitle() {
+	checkNull(_eptr);
+
 	std::string buf;
 	_eptr->getGameName(buf);
 	return buf;
+}
+
+/*********************************************************************************************
+ * getID - Gets the unique ID of this physical
+ *
+ *********************************************************************************************/
+
+std::string IPhysical::getID() {
+	if (_eptr == nullptr)
+		return std::string("none");
+
+   return std::string(_eptr->getID());
 }
 
 /*********************************************************************************************
@@ -148,6 +171,8 @@ std::string IPhysical::getTitle() {
  *********************************************************************************************/
 
 void IPhysical::sendMsg(const char *msg) {
+   checkNull(_eptr);
+
 	std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(_eptr);
 
 	// Send to an organism?
@@ -168,6 +193,7 @@ void IPhysical::sendMsg(const char *msg) {
 }
 
 void IPhysical::sendMsgExc(const char *msg, IPhysical &exclude) {
+   checkNull(_eptr);
 
 	// This function only works for location, hence the exclude function
    std::shared_ptr<Location> lptr = std::dynamic_pointer_cast<Location>(_eptr);
@@ -185,6 +211,8 @@ void IPhysical::sendMsgExc(const char *msg, IPhysical &exclude) {
  *********************************************************************************************/
 
 void IPhysical::moveTo(IPhysical &new_loc) {
+   checkNull(_eptr);
+
 	if (!_eptr->movePhysical(new_loc._eptr, _eptr)) {
       std::stringstream errmsg;
 
@@ -194,11 +222,72 @@ void IPhysical::moveTo(IPhysical &new_loc) {
 }
 
 /*********************************************************************************************
+ * destroy - for non-clones, actually just sets their location to null
+ *
+ *********************************************************************************************/
+
+void IPhysical::destroy() {
+   checkNull(_eptr);
+
+	std::shared_ptr<Physical> cur_loc = _eptr->getCurLoc();
+	if (cur_loc == nullptr) {
+		throw script_error("destroy function called on object with null location.");
+	}
+
+	if (!cur_loc->removePhysical(_eptr)) {
+      std::stringstream errmsg;
+
+      errmsg << "destroy special function failed for some reason with: " << _eptr->getID();
+      throw script_error(errmsg.str().c_str());
+   }
+	_eptr = nullptr;
+}
+
+/*********************************************************************************************
+ * showLocation - displays the location to the player, usually used after teleporting them
+ *
+ *********************************************************************************************/
+
+void IPhysical::showLocation() {
+   checkNull(_eptr);
+
+	std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(_eptr);
+	if (optr == nullptr)
+		throw script_error("showLocation called on non-organism.");
+
+	optr->sendCurLocation();
+}
+
+/*********************************************************************************************
+ * damage - damages the organism, killing them if health reaches zero
+ *
+ *********************************************************************************************/
+
+bool IPhysical::damage(int amount) {
+   checkNull(_eptr);
+
+	if (amount <= 0) {
+		throw script_error("damage function - damage amount must be greater than zero.");
+	}
+
+	std::shared_ptr<Organism> optr = std::dynamic_pointer_cast<Organism>(_eptr);
+
+	if (optr == nullptr) {
+		throw script_error("damage function called on non-Organism.\n");
+	}
+
+	return optr->damage((unsigned int) amount);
+}
+
+
+/*********************************************************************************************
  * getDoorState/setDoorState - gets and sets the door state. Options: open, closed, locked, magic
  *
  *********************************************************************************************/
 
 std::string IPhysical::getDoorState() {
+   checkNull(_eptr);
+
 	std::shared_ptr<Static> sptr = std::dynamic_pointer_cast<Static>(_eptr);
 
 	if (sptr == nullptr) {
@@ -210,6 +299,7 @@ std::string IPhysical::getDoorState() {
 }
 
 void IPhysical::setDoorState(const char *state) {
+   checkNull(_eptr);
 
 	std::shared_ptr<Static> sptr = std::dynamic_pointer_cast<Static>(_eptr);
    if (sptr == nullptr) {
@@ -230,12 +320,14 @@ void IPhysical::setDoorState(const char *state) {
  *********************************************************************************************/
 
 bool IPhysical::isContained(IPhysical &target) {
+   checkNull(_eptr);
 	return _eptr->containsPhysical(target._eptr);	
 }
 	
 
 
 bool IPhysical::isContainedID(const char *id) {
+   checkNull(_eptr);
    EntityDB &edb = *(engine.getEntityDB());
    std::shared_ptr<Physical> eptr = edb.getPhysical(id);
 
@@ -257,14 +349,17 @@ bool IPhysical::isContainedID(const char *id) {
  *********************************************************************************************/
 
 bool IPhysical::addIntAttribute(const char *attr, int value) {
+   checkNull(_eptr);
 	return _eptr->addAttribute(attr, value);
 }
 
 bool IPhysical::addFloatAttribute(const char *attr, float value) {
+   checkNull(_eptr);
    return _eptr->addAttribute(attr, value);
 }
 
 bool IPhysical::addStrAttribute(const char *attr, const char *value) {
+   checkNull(_eptr);
    return _eptr->addAttribute(attr, value);
 }
 
@@ -275,14 +370,17 @@ bool IPhysical::addStrAttribute(const char *attr, const char *value) {
  *********************************************************************************************/
 
 int IPhysical::getIntAttribute(const char *attr) {
+   checkNull(_eptr);
    return _eptr->getAttribInt(attr);
 }
 
 float IPhysical::getFloatAttribute(const char *attr) {
+   checkNull(_eptr);
    return _eptr->getAttribFloat(attr);
 }
 
 std::string IPhysical::getStrAttribute(const char *attr) {
+   checkNull(_eptr);
 	std::string buf;
    return std::string(_eptr->getAttribStr(attr, buf));
 }
@@ -293,6 +391,7 @@ std::string IPhysical::getStrAttribute(const char *attr) {
  *********************************************************************************************/
 
 bool IPhysical::hasAttribute(const char *attr) {
+   checkNull(_eptr);
    return _eptr->hasAttribute(attr);
 }
 
@@ -302,6 +401,7 @@ bool IPhysical::hasAttribute(const char *attr) {
  *********************************************************************************************/
 
 bool IPhysical::isEquipped(const char *name, const char *group, IPhysical &equip_ptr) {
+   checkNull(_eptr);
 	if ((group == NULL) && (name == NULL)) {
 		throw script_error("isEquipped body part group and name both null not supported yet.");
 	}
@@ -319,6 +419,7 @@ bool IPhysical::isEquipped(const char *name, const char *group, IPhysical &equip
 }
 
 bool IPhysical::isEquippedContained(const char *name, const char *group, IContained &equip_ptr) {
+   checkNull(_eptr);
    if ((group == NULL) && (name == NULL)) {
       throw script_error("isCEquipped body part group and name both null not supported yet.");
    }
@@ -342,6 +443,7 @@ bool IPhysical::isEquippedContained(const char *name, const char *group, IContai
  *********************************************************************************************/
 
 bool IPhysical::setExit(const char *exit, IPhysical &new_exit) {
+   checkNull(_eptr);
    std::shared_ptr<Location> locptr = std::dynamic_pointer_cast<Location>(_eptr);
 
    if (locptr == nullptr) {
@@ -357,6 +459,7 @@ bool IPhysical::setExit(const char *exit, IPhysical &new_exit) {
 }
 
 bool IPhysical::clrExit(const char *exit) {
+   checkNull(_eptr);
    std::shared_ptr<Location> locptr = std::dynamic_pointer_cast<Location>(_eptr);
 
    if (locptr == nullptr) {
@@ -381,11 +484,13 @@ bool IPhysical::operator != (const IPhysical &comp) {
 
 IPhysical::iterator IPhysical::begin() 
 { 
+   checkNull(_eptr);
 	return IPhysical::iterator(_eptr->begin()); 
 }
 
 IPhysical::iterator IPhysical::end() 
 { 
+   checkNull(_eptr);
 	return IPhysical::iterator(_eptr->end()); 
 }
 
@@ -443,14 +548,17 @@ bool IPhysical::iterator::operator != (const iterator &rhs)
  *********************************************************************************************/
 
 int IContained::getIntAttribute(const char *attr) {
+   checkNull(_eptr);
    return _eptr->getAttribInt(attr);
 }
 
 float IContained::getFloatAttribute(const char *attr) {
+   checkNull(_eptr);
    return _eptr->getAttribFloat(attr);
 }
 
 std::string IContained::getStrAttribute(const char *attr) {
+   checkNull(_eptr);
 	std::string buf;
    return std::string(_eptr->getAttribStr(attr, buf));
 }
@@ -461,9 +569,20 @@ std::string IContained::getStrAttribute(const char *attr) {
  *********************************************************************************************/
 
 std::string IContained::getTitle() {
+   checkNull(_eptr);
    std::string buf;
    _eptr->getGameName(buf);
    return buf;
+}
+
+/*********************************************************************************************
+ * getID - Gets the unique ID of this physical
+ *
+ *********************************************************************************************/
+
+std::string IContained::getID() {
+   checkNull(_eptr);
+   return std::string(_eptr->getID());
 }
 
 /*********************************************************************************************
@@ -472,6 +591,7 @@ std::string IContained::getTitle() {
  *********************************************************************************************/
 
 bool IContained::hasAttribute(const char *attr) {
+   checkNull(_eptr);
    return _eptr->hasAttribute(attr);
 }
 
@@ -501,4 +621,17 @@ void IScript::loadVariable(const char *varname, IPhysical &variable) {
 	}
 }
 
+/*********************************************************************************************
+ * setInterval - changes the interval of this script
+ *
+ *    Params:  varname - string that the script will use to refer to the variable
+ *
+ *********************************************************************************************/
+
+void IScript::setInterval(float interval) {
+	if (interval < 0) {
+		throw script_error("Attempt to set interval to a value < 0");
+	}
+	_sptr->setInterval(interval);
+}
 

@@ -230,7 +230,7 @@ bool Social::parseCommand(const char *cmd, std::string &errmsg) {
       return true;
 
 	// Check for invalid parse types for a social
-	if ((getParseType() != Action::ActTarg) || (getParseType() == Action::ActOptTarg) ||
+	if ((getParseType() != Action::ActTarg) && (getParseType() != Action::ActOptTarg) &&
 		 (getParseType() != Action::SocialStyle)) {
 		std::string errmsg("ParseType not allowed with social '");
 		errmsg += getID();
@@ -248,7 +248,12 @@ bool Social::parseCommand(const char *cmd, std::string &errmsg) {
 	// Look for an amplifier
 	pos = buf.size() - 1;
 
-	std::string poss_amp = getToken(pos);
+	std::string poss_amp;
+	if (numTokens() > 1)
+		poss_amp = getToken(1);
+	else
+		poss_amp = getToken(0);
+
 	lower(poss_amp);
 
 	_selected_amp = _amplifiers.find(poss_amp);
@@ -334,6 +339,22 @@ int Social::execute() {
       if ((m_it = _messages.find("room")) != _messages.end()) {
          sformat.formatStr(m_it->second.c_str(), buf);
          getActor()->getCurLoc()->sendMsg(buf.c_str(), getActor());
+      }
+
+	} else {
+      if ((m_it = _messages.find("target_actor")) != _messages.end()) {
+         sformat.formatStr(m_it->second.c_str(), buf);
+         getActor()->sendMsg(buf.c_str());
+      }
+	
+		if ((m_it = _messages.find("target")) != _messages.end()) {
+         sformat.formatStr(m_it->second.c_str(), buf);
+         getTarget1()->sendMsg(buf.c_str());
+		}
+
+      if ((m_it = _messages.find("target_room")) != _messages.end()) {
+         sformat.formatStr(m_it->second.c_str(), buf);
+         getActor()->getCurLoc()->sendMsg(buf.c_str(), getActor(), getTarget1());
       }
 
 	}

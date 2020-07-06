@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<action id="action:hit" acttype="Hardcoded" parsetype="ActTargOptCont" format="hit <target> [with <weapon>]" function="hitcom" pretrig="prehit" posttrig="posthit" >
+<flag name="Target1Loc" />
+<flag name="VisibleOnly" />
+<flag name="Target2Inv" />
+</action> 

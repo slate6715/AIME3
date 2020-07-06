@@ -784,4 +784,25 @@ bool Organism::canSee() {
 	return false;
 }
 
+/*********************************************************************************************
+ * damage - damages the organism by decrementing the health attribute. If it falls below zero,
+ *				then kills them
+ *
+ *		Params:	amount - the amount to damage the player
+ *
+ *		Returns: true if they die, false otherwise
+ *
+ *********************************************************************************************/
 
+bool Organism::damage(unsigned int amount) {
+	if (!incrAttribute("health", - (int) amount)) {
+		throw std::runtime_error("Health attribute not found in this organism.");
+	}	
+
+	if (getAttribInt("health") <= 0) {
+		sendMsg("You have died!\n");
+		kill();
+		return true;
+	}
+	return false;
+}

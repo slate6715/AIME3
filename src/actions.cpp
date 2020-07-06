@@ -94,6 +94,21 @@ int gocom(MUD &engine, Action &act_used) {
 		exit_loc = door_ptr->getOppositeLoc(actor->getCurLoc());
 	}
 
+   // Look for onexit specials in the location
+   std::vector<std::pair<std::string, std::shared_ptr<Physical>>> variables;
+	std::vector<std::pair<std::string, std::string>> variable_strs;
+
+	variables.push_back(std::pair<std::string, std::shared_ptr<Physical>>("actor", actor));
+	variables.push_back(std::pair<std::string, std::shared_ptr<Physical>>("toloc", exit_loc));
+	variables.push_back(std::pair<std::string, std::shared_ptr<Physical>>("fromloc", cur_loc));
+
+	variable_strs.push_back(std::pair<std::string, std::string>("exit", dir.c_str()));
+
+	int results;
+   if ((results = cur_loc->execSpecial("onexit", variables, NULL, NULL, &variable_strs)) == 2) {
+      return 0;
+   }
+
 	std::string reviewstr;
 	actor->getReviewProcessed(Organism::Leaving, reviewstr, exitval, dir.c_str());
 
@@ -105,6 +120,10 @@ int gocom(MUD &engine, Action &act_used) {
 	exit_loc->sendMsg(reviewstr, actor);
 	exit_loc->sendMsg("\n");
 	actor->sendCurLocation();
+
+   if ((results = exit_loc->execSpecial("onentry", variables, NULL, NULL, &variable_strs)) == 2) {
+      return 0;
+   }
 
 	if (exit_loc->isFlagSet("Death")) {
 		actor->sendMsg("You have died.\n");

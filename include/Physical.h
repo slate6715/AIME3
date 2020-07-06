@@ -92,16 +92,19 @@ public:
 													{ (void) str; (void) allow_abbrev; return false; };
 
 	// Send a message to this physity or its contphyss - class-specific behavior
-   virtual void sendMsg(const char *msg, std::shared_ptr<Physical> exclude=nullptr) 
-																				{ (void) msg; (void) exclude; };
-   virtual void sendMsg(std::string &msg, std::shared_ptr<Physical> exclude=nullptr) 
-																				{ (void) msg; (void) exclude; };
+   virtual void sendMsg(const char *msg, std::shared_ptr<Physical> exclude=nullptr, std::shared_ptr<Physical> exclude2=nullptr) 
+																				{ (void) msg; (void) exclude; (void) exclude2; };
+   virtual void sendMsg(std::string &msg, std::shared_ptr<Physical> exclude=nullptr, std::shared_ptr<Physical> exclude2=nullptr) 
+																				{ (void) msg; (void) exclude; (void) exclude2; };
 
 	// Removes all references to the parameter from the Entities in the database so 
 	// it can be safely removed
 	virtual size_t purgePhysical(std::shared_ptr<Physical> item);
 
-	int execSpecial(const char *trigger, std::vector<std::pair<std::string, std::shared_ptr<Physical>>> &variables);
+	int execSpecial(const char *trigger, std::vector<std::pair<std::string, std::shared_ptr<Physical>>> &variables,
+												std::vector<std::pair<std::string, int>> *variable_ints = NULL, 
+												std::vector<std::pair<std::string, float>> *variable_floats = NULL, 
+												std::vector<std::pair<std::string, std::string>> *variable_strs = NULL);
 
 	std::list<std::shared_ptr<Physical>>::const_iterator beginContained(){ return _contained.begin(); };
 	std::list<std::shared_ptr<Physical>>::const_iterator endContained(){ return _contained.end(); };

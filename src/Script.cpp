@@ -1,7 +1,10 @@
 #include <iostream>
 #include <sstream>
 #include "global.h"
+#include "misc.h"
 #include "Script.h"
+
+const char *scrflag_list[] = {"indefinite", "placeholder", NULL};
 
 Script::Script(const char *id):
 								Action(id),
@@ -152,7 +155,8 @@ int Script::execute() {
 		se.setVariable(_variables[i].first.c_str(), _variables[i].second);
 	}
 
-	_count--;
+	if (!isScriptFlagSet(Indefinite))
+		_count--;
 
 	se.setVariableConst("count", (int) _count);
 	se.setVariableConst("interval", _interval);
@@ -171,4 +175,69 @@ int Script::execute() {
 	return 1;
 }
 
+/*********************************************************************************************
+ * isActFlagSet - A faster version of isFlagSet which operates off the enum type for fast
+ *                lookup, but only checks Action flags
+ *
+ *********************************************************************************************/
+
+bool Script::isScriptFlagSet(script_flags stype) {
+   return _scriptflags[(unsigned int) stype];
+}
+
+
+/*********************************************************************************************
+ * setFlagInternal - given the flag string, first checks the parent for the flag, then checks
+ *                   this class' flags
+ *
+ *
+ *********************************************************************************************/
+
+bool Script::setFlagInternal(const char *flagname, bool newval) {
+   if (Action::setFlagInternal(flagname, newval))
+      return true;
+
+   std::string flagstr = flagname;
+   lower(flagstr);
+
+   size_t i=0;
+   while ((scrflag_list[i] != NULL) && (flagstr.compare(scrflag_list[i]) != 0))
+      i++;
+
+   if (scrflag_list[i] == NULL)
+      return false;
+
+   _scriptflags[i] = true;
+   return true;
+}
+
+/*********************************************************************************************
+ * isFlagSetInternal - given the flag string, first checks the parent for the flag, then checks
+ *                   this class' flags
+ *
+ *    Params:  flagname - flag to set
+ *             results - if found, what the flag is set to
+ *
+ *    Returns: true if the flag was found, false otherwise
+ *
+ *********************************************************************************************/
+
+bool Script::isFlagSetInternal(const char *flagname, bool &results) {
+   if (Action::isFlagSetInternal(flagname, results))
+      return true;
+
+   std::string flagstr = flagname;
+   lower(flagstr);
+
+   size_t i=0;
+   while ((scrflag_list[i] != NULL) && (flagstr.compare(scrflag_list[i]) != 0))
+      i++;
+
+   if (scrflag_list[i] == NULL)
+      return false;
+
+   results =_scriptflags[i];
+   return true;
+
+}
 
