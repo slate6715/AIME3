@@ -19,11 +19,11 @@ Getable::Getable(const char *id):
 {
 	_typename = "Getable";
 
-   // Make sure we have at least the bare minimum roomdesc
-   _roomdesc.assign(Custom, std::pair<std::string, std::string>("", ""));
-
 	addAttribute("weight", 0);
 	addAttribute("size", 0);
+
+
+	_roomdesc.assign((size_t) Custom, std::pair<std::string, std::string>("",""));
 }
 
 // Copy constructor
@@ -89,25 +89,31 @@ int Getable::loadData(pugi::xml_node &entnode) {
 
 		lower(label);
 
+		std::string desc = anode.child_value();
+
+		// Get rid of one space at the beginning
+		if (desc[0] == ' ')
+			desc.erase(0,1);
+
 		if (label.compare("pristine") == 0) {
-			setRoomDesc(Pristine, anode.child_value());
+			setRoomDesc(Pristine, desc.c_str());
 		} else if (label.compare("dropped") == 0) {
-         setRoomDesc(Dropped, anode.child_value());
+         setRoomDesc(Dropped, desc.c_str());
       } else if (label.compare("lit") == 0) {
-         setRoomDesc(Lit, anode.child_value());
+         setRoomDesc(Lit, desc.c_str());
       } else if (label.compare("extinguished") == 0) {
-         setRoomDesc(Extinguished, anode.child_value());
+         setRoomDesc(Extinguished, desc.c_str());
 		} else if (label.compare("open") == 0) {
-			setRoomDesc(Open, anode.child_value());	
+			setRoomDesc(Open, desc.c_str());	
 		} else if (label.compare("closed") == 0) {
-			setRoomDesc(Closed, anode.child_value());	
+			setRoomDesc(Closed, desc.c_str());	
       } else if (label.compare("custom") == 0) {
 			if ((attr = anode.attribute("customname")) == nullptr) {
 	         errmsg << "Getable Object '" << getID() << "' custom roomdesc missing mandatory customname attribute.";
 		      mudlog->writeLog(errmsg.str().c_str());
 			   return 0;
 			}
-         setRoomDesc(Custom, anode.child_value(), attr.value());
+         setRoomDesc(Custom, desc.c_str(), attr.value());
 		} else {
          errmsg << "Getable Object '" << getID() << "' roomdesc state '" << label << "' not a recognized state.";
          mudlog->writeLog(errmsg.str().c_str());
@@ -115,10 +121,37 @@ int Getable::loadData(pugi::xml_node &entnode) {
 		}
    }
 
-	if (_roomdesc.size() == 0) {
-      errmsg << "Getable '" << getID() << "' must have at least one roomdesc defined.";
-      mudlog->writeLog(errmsg.str().c_str());
-      return 0;
+	// Set the roomdesc to the appropriate one. First, pristine always has priority
+	_dstate = Custom;
+	if (_roomdesc[Pristine].first.size() > 0)
+		_dstate = Pristine;
+	else if ((isStaticFlagSet(Static::Lit)) && (_roomdesc[Lit].first.size() > 0))
+		_dstate = Lit;
+	else if (isStaticFlagSet(Static::Container)) {
+		if ((getDoorState() == Static::Closed) && (_roomdesc[Closed].first.size() > 0))
+			_dstate = Closed;
+      if ((getDoorState() == Static::Open) && (_roomdesc[Open].first.size() > 0))
+         _dstate = Open;
+	}
+	else if (isStaticFlagSet(Static::Extinguish) && (!isStaticFlagSet(Static::Lit)) &&
+				(_roomdesc[Extinguished].first.size() != 0))
+		_dstate = Extinguished;
+
+	// Default, other than custom
+	else if (_roomdesc[Dropped].first.size() > 0)
+		_dstate = Dropped;
+	
+	// If it never found a valid setting
+	if (_dstate == Custom) {
+		// If there is no custom roomdesc
+		if (_roomdesc.size() == Custom) {
+			errmsg << "Getable '" << getID() << "' must have at least one roomdesc defined.";
+			mudlog->writeLog(errmsg.str().c_str());
+			return 0;
+		}
+
+		// Custom it is!
+		return 1;
 	}
 
 	return 1;
@@ -224,25 +257,27 @@ bool Getable::changeRoomDesc(descstates new_state, const char *customname) {
 	if ((new_state == Custom) && (customname == NULL))
 		throw std::invalid_argument("Attempt to change to a Custom roomDesc but no customname is set");
 
+	// If the new state is custom, look for it
    std::string cname;
-	if (new_state == Custom)
+	if (new_state == Custom) {
 		cname = customname;
-
-   // Try to find it
-   for (unsigned int i=0; i<_roomdesc.size(); i++) {
-		if (i == (unsigned int) new_state) {
-			if (new_state == Custom) {
-				if (cname.compare(_roomdesc[i].second.c_str()) == 0) {
-					_dstate = i;
-					return true;
-				}
-				continue;
+		unsigned int i;
+		for (i=Custom-1; i<_roomdesc.size(); i++) {
+			if (cname.compare(_roomdesc[i].second.c_str()) == 0) {
+				_dstate = i;
+				return true;
 			}
-			_dstate = i;
-			return true;
 		}
+		if (i == _roomdesc.size())
+			return false;
    }
-	return false;
+
+	// It's not custom, see if it is empty
+	if (_roomdesc[new_state].first.size() == 0)
+		return false;
+	_dstate = new_state;
+
+	return true;
 }
 
 /*********************************************************************************************

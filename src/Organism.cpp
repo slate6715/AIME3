@@ -165,6 +165,11 @@ int Organism::loadData(pugi::xml_node &entnode) {
    for (pugi::xml_node review = entnode.child("reviewmsg"); review; review = 
 																					review.next_sibling("reviewmsg")) {
       try {
+			std::string desc = review.child_value();
+			// Get rid of one space at the beginning
+			if (desc[0] == ' ')
+				desc.erase(0,1);
+
          attr = review.attribute("type");
          if (attr == nullptr) {
             errmsg << getTypeName() << " '" << getID() << "' reviewmsg node missing mandatory type field.";
@@ -173,11 +178,11 @@ int Organism::loadData(pugi::xml_node &entnode) {
          }
          std::string reviewtype = attr.value();
 			if (reviewtype.compare("standing") == 0) {
-				setReview(Standing, review.child_value());
+				setReview(Standing, desc.c_str());
 			} else if (reviewtype.compare("entering") == 0)
-				setReview(Entering, review.child_value());
+				setReview(Entering, desc.c_str());
 			else if (reviewtype.compare("leaving") == 0) 
-				setReview(Leaving, review.child_value());
+				setReview(Leaving, desc.c_str());
 			else {
 				errmsg << getTypeName() << " '" << getID() << "' reviewmsg type not recognized.";
 				mudlog->writeLog(errmsg.str().c_str());
