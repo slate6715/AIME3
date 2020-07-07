@@ -29,6 +29,8 @@ public:
 
 	std::string getID();
 	std::string getTitle();
+
+	bool isFlagSet(const char *flagname);
 	
 	friend class IPhysical;
 	
@@ -65,6 +67,10 @@ public:
 
 	std::string getTitle();
 	std::string getID();
+
+	bool isFlagSet(const char *flagname);
+
+	bool isNull() { return (_eptr == nullptr); };
 
 	void addContained(IPhysical &target);
 	bool isContained(IPhysical &target);

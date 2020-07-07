@@ -1045,7 +1045,7 @@ int summoncom(MUD &engine, Action &act_used) {
 
 	// First, take care of moving the object and cur_loc messages
 	// If it is a getable object, place it in the actor's inventory
-	if (std::dynamic_pointer_cast<Getable>(target) != nullptr) {
+	if ((std::dynamic_pointer_cast<Getable>(target) != nullptr) && (!target->isFlagSet("NoGet"))) {
 		target->movePhysical(actor);
 		msg << "The " << target->getGameName(buf) << " soars through air, landing in your open hand.\n";
 		actor->sendMsg(msg.str().c_str());

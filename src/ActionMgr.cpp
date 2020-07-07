@@ -259,9 +259,9 @@ void ActionMgr::handleActions() {
 
 		int results = aptr->get()->execute();
 
-		// Check for post-action triggers
+		// Check for post-action triggers if the command was successful
 		std::string posttrig = aptr->get()->getPostTrig();
-		if (posttrig.size() > 0) {
+		if ((results > 0) && (posttrig.size() > 0)) {
 			handleSpecials(aptr->get(), posttrig.c_str());
 		}
 

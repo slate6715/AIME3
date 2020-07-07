@@ -45,6 +45,8 @@ ScriptEngine::ScriptEngine() {
                                  .def("hasAttribute", &IPhysical::hasAttribute)
                                  .def("getTitle", &IPhysical::getTitle)
                                  .def("getID", &IPhysical::getID)
+                                 .def("isNull", &IPhysical::isNull)
+                                 .def("isFlagSet", &IPhysical::isFlagSet)
 											.def("setExit", &IPhysical::setExit)
 											.def("clrExit", &IPhysical::clrExit)
 											.def("isEquipped", &IPhysical::isEquipped)
@@ -56,6 +58,7 @@ ScriptEngine::ScriptEngine() {
                                  .def("getStrAttribute", &IContained::getStrAttribute)
                                  .def("hasAttribute", &IContained::hasAttribute)
                                  .def("getTitle", &IContained::getTitle)
+                                 .def("isFlagSet", &IContained::isFlagSet)
 											.def("getID", &IContained::getID);
 
    (*_main_namespace)["Script"] = class_<IScript>("IScript", init<const IScript &>())

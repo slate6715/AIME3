@@ -104,6 +104,10 @@ int Door::loadData(pugi::xml_node &entnode) {
 		lower(state);
 	
 		std::string rdstr(anode.child_value() == NULL ? "" : anode.child_value());
+      // Get rid of one space at the beginning
+      if ((rdstr.size() > 0) && (rdstr[0] == ' '))
+         rdstr.erase(0,1);
+
 
 		if (state.compare("open") == 0)
 			_roomdesc[Open] = rdstr;

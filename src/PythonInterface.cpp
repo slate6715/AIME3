@@ -165,6 +165,23 @@ std::string IPhysical::getID() {
 }
 
 /*********************************************************************************************
+ * isFlagSet - Checks if the indicated flag is set
+ *
+ *********************************************************************************************/
+
+bool IPhysical::isFlagSet(const char *flagname) {
+   checkNull(_eptr);
+
+   bool results = false;
+   try {
+      results = _eptr->isFlagSet(flagname);
+   } catch (const std::invalid_argument &e) {
+      throw script_error(e.what());
+   }
+   return results;
+}
+
+/*********************************************************************************************
  * sendMsg - sends the text to an Organism associated with this Physical (or does nothing if not 
  *				 an Organism. Second version is for locations to exclude the actor
  *
@@ -583,6 +600,23 @@ std::string IContained::getTitle() {
 std::string IContained::getID() {
    checkNull(_eptr);
    return std::string(_eptr->getID());
+}
+
+/*********************************************************************************************
+ * isFlagSet - Checks if the indicated flag is set
+ *
+ *********************************************************************************************/
+
+bool IContained::isFlagSet(const char *flagname) {
+   checkNull(_eptr);
+
+	bool results = false;
+	try {
+		results = _eptr->isFlagSet(flagname);
+	} catch (const std::invalid_argument &e) {
+		throw script_error(e.what());
+	}
+	return results;
 }
 
 /*********************************************************************************************

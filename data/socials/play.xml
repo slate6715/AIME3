@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<social id="social:play" acttype="Trigger" parsetype="ActOptTarg" format="play [<target>]" pretrig="preplay" posttrig="postplay">
+<flag name="Target1Loc" />
+<flag name="Target1Inv" />
+<message name="room">%n plays the air guitar!
+</message>
+<message name="actor">You attempt to play Zepplin on your air guitar! 
+</message>
+<message name="target_actor">You attempt to play the %t but it makes no sound.
+</message>
+<message name="target_room">%n attempts to play the %t with little effect.
+</message>
+
+</social> 
